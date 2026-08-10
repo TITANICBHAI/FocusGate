@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install FocusGate on Chrome | FocusGate</title>
+    <meta name="description" content="A complete step-by-step guide to installing FocusGate on Google Chrome as an unpacked extension.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: {
+                            850: '#1f1f1f',
+                            950: '#0a0a0a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #f5f5f5;
+        }
+        .step-number {
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.08);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-500/30">
+
+    <nav class="fixed w-full z-50 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="index.html" class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">FocusGate</span>
+                </a>
+                <a href="index.html" class="text-neutral-300 hover:text-white text-sm font-medium transition-colors">
+                    &larr; Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 pb-24">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <header class="max-w-3xl mb-14">
+                <div class="inline-flex items-center gap-2 text-emerald-300 text-sm font-semibold uppercase tracking-widest mb-5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Chrome installation guide
+                </div>
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-6">Bring FocusGate to Chrome.</h1>
+                <p class="text-xl text-neutral-400 leading-relaxed">FocusGate is currently available for Edge and Firefox. You can also run it on Chrome today by loading the extension as an unpacked extension. It takes a few minutes, requires no developer account, and keeps your settings local.</p>
+            </header>
+
+            <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 mb-14 flex gap-4">
+                <div class="text-amber-300 text-xl shrink-0" aria-hidden="true">!</div>
+                <div>
+                    <h2 class="font-bold text-amber-200 mb-2">Before you begin</h2>
+                    <p class="text-amber-100/80 leading-relaxed">FocusGate does not have a Chrome Web Store listing yet. This guide uses Chrome's official <strong>Load unpacked</strong> option. Only load extension files from a source you trust, and keep the extracted folder on your computer after installing.</p>
+                </div>
+            </div>
+
+            <section aria-labelledby="requirements" class="mb-20">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="step-number w-10 h-10 rounded-full bg-emerald-500 text-neutral-950 font-black flex items-center justify-center">0</div>
+                    <h2 id="requirements" class="text-2xl sm:text-3xl font-bold">What you need</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                        <p class="text-emerald-400 text-sm font-semibold mb-2">Browser</p>
+                        <p class="text-neutral-200">Google Chrome on Windows, macOS, Linux, or ChromeOS.</p>
+                    </div>
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                        <p class="text-emerald-400 text-sm font-semibold mb-2">Extension files</p>
+                        <p class="text-neutral-200">The FocusGate project folder, extracted from its ZIP if necessary.</p>
+                    </div>
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                        <p class="text-emerald-400 text-sm font-semibold mb-2">A permanent folder</p>
+                        <p class="text-neutral-200">Chrome loads the extension from this location, so do not delete or move it afterwards.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="steps" class="mb-20">
+                <div class="flex items-center gap-4 mb-10">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 text-neutral-950 font-black flex items-center justify-center">1</div>
+                    <div>
+                        <p class="text-emerald-400 text-sm font-semibold uppercase tracking-widest">The full process</p>
+                        <h2 id="steps" class="text-2xl sm:text-3xl font-bold">Install FocusGate in Chrome</h2>
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <article class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8">
+                        <div class="flex gap-5">
+                            <div class="w-9 h-9 rounded-full bg-neutral-800 text-emerald-300 font-bold flex items-center justify-center shrink-0">1</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Get and extract the extension files</h3>
+                                <p class="text-neutral-400 leading-relaxed mb-4">Download the FocusGate source ZIP from the trusted project location, then extract it. If your download is named <code class="text-emerald-300 bg-neutral-950 px-2 py-1 rounded">FocusGate.zip</code>, right-click it and choose <strong class="text-neutral-200">Extract All</strong> on Windows, or double-click it on macOS and Linux.</p>
+                                <p class="text-neutral-400 leading-relaxed">Keep the extracted project folder somewhere permanent, such as a dedicated <code class="text-emerald-300 bg-neutral-950 px-2 py-1 rounded">Extensions</code> folder. Do not select the ZIP file itself in Chrome.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8">
+                        <div class="flex gap-5">
+                            <div class="w-9 h-9 rounded-full bg-neutral-800 text-emerald-300 font-bold flex items-center justify-center shrink-0">2</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Open Chrome's extensions page</h3>
+                                <p class="text-neutral-400 leading-relaxed">Open a new Chrome tab and enter <code class="text-emerald-300 bg-neutral-950 px-2 py-1 rounded">chrome://extensions</code> in the address bar. You can also open the three-dot menu, choose <strong class="text-neutral-200">Extensions</strong>, then <strong class="text-neutral-200">Manage Extensions</strong>.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8">
+                        <div class="flex gap-5">
+                            <div class="w-9 h-9 rounded-full bg-neutral-800 text-emerald-300 font-bold flex items-center justify-center shrink-0">3</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Turn on Developer mode</h3>
+                                <p class="text-neutral-400 leading-relaxed">Find the <strong class="text-neutral-200">Developer mode</strong> switch in the top-right corner and turn it on. Chrome will reveal three buttons, including <strong class="text-neutral-200">Load unpacked</strong>.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8">
+                        <div class="flex gap-5">
+                            <div class="w-9 h-9 rounded-full bg-neutral-800 text-emerald-300 font-bold flex items-center justify-center shrink-0">4</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Load the correct folder</h3>
+                                <p class="text-neutral-400 leading-relaxed mb-4">Click <strong class="text-neutral-200">Load unpacked</strong>, browse to the extracted FocusGate project, and select the folder that contains <code class="text-emerald-300 bg-neutral-950 px-2 py-1 rounded">manifest.json</code>. If Chrome says the manifest is missing, you are one folder too high or too low.</p>
+                                <div class="rounded-xl bg-neutral-950 border border-neutral-800 p-4 text-sm text-neutral-400">
+                                    <p class="text-neutral-500 mb-2">The selected folder should look similar to:</p>
+                                    <code class="text-emerald-300 leading-loose">FocusGate/<br>&nbsp;&nbsp;manifest.json<br>&nbsp;&nbsp;background.js<br>&nbsp;&nbsp;content.js<br>&nbsp;&nbsp;index.html</code>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8">
+                        <div class="flex gap-5">
+                            <div class="w-9 h-9 rounded-full bg-neutral-800 text-emerald-300 font-bold flex items-center justify-center shrink-0">5</div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-3">Pin and open FocusGate</h3>
+                                <p class="text-neutral-400 leading-relaxed">Chrome should show a FocusGate card in your extensions list. Click the puzzle-piece icon in the toolbar, find FocusGate, and click the pin icon so it is always easy to reach. Select the FocusGate shield icon to open its popup and configure your first blocked sites or focus session.</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section aria-labelledby="after-install" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
+                <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-7">
+                    <h2 id="after-install" class="text-xl font-bold text-emerald-200 mb-4">After installation</h2>
+                    <ul class="space-y-3 text-neutral-300">
+                        <li class="flex gap-3"><span class="text-emerald-400">✓</span><span>Leave Developer mode enabled while using the unpacked build.</span></li>
+                        <li class="flex gap-3"><span class="text-emerald-400">✓</span><span>Keep the extension folder in place; Chrome reads the extension from that folder.</span></li>
+                        <li class="flex gap-3"><span class="text-emerald-400">✓</span><span>To apply a new version, replace the folder contents and click <strong>Reload</strong> on the FocusGate card.</span></li>
+                        <li class="flex gap-3"><span class="text-emerald-400">✓</span><span>If Chrome disables it after a browser update, return to <code class="text-emerald-300">chrome://extensions</code> and load or reload it again.</span></li>
+                    </ul>
+                </div>
+                <div class="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-7">
+                    <h2 class="text-xl font-bold text-blue-200 mb-4">Browser support</h2>
+                    <p class="text-neutral-300 leading-relaxed mb-4">FocusGate is currently distributed for Edge and Firefox. Chrome and Edge both support the Chromium extension format, so the unpacked process is very similar in both browsers.</p>
+                    <p class="text-neutral-400 leading-relaxed">Firefox uses its own Add-ons flow and may handle individual Chrome APIs differently. Use the browser-specific build and permissions provided by the project; do not assume every Chrome-only behavior works identically in Firefox.</p>
+                </div>
+            </section>
+
+            <section aria-labelledby="troubleshooting" class="max-w-3xl">
+                <p class="text-emerald-400 text-sm font-semibold uppercase tracking-widest mb-3">Need a hand?</p>
+                <h2 id="troubleshooting" class="text-3xl font-bold mb-8">Common fixes</h2>
+                <div class="space-y-3">
+                    <details class="group bg-neutral-900 border border-neutral-800 rounded-xl">
+                        <summary class="cursor-pointer list-none p-5 font-semibold flex items-center justify-between">Chrome says “Manifest file is missing or unreadable” <span class="text-emerald-400 group-open:rotate-45 transition-transform text-xl">+</span></summary>
+                        <p class="px-5 pb-5 text-neutral-400 leading-relaxed">Select the folder that directly contains <code class="text-emerald-300">manifest.json</code>. ZIP files and parent folders containing the project are not valid selections. If the file is present but still fails, download or extract the project again.</p>
+                    </details>
+                    <details class="group bg-neutral-900 border border-neutral-800 rounded-xl">
+                        <summary class="cursor-pointer list-none p-5 font-semibold flex items-center justify-between">The FocusGate icon is missing from my toolbar <span class="text-emerald-400 group-open:rotate-45 transition-transform text-xl">+</span></summary>
+                        <p class="px-5 pb-5 text-neutral-400 leading-relaxed">Click Chrome's puzzle-piece Extensions button, find FocusGate, and click the pin. If it is not in the list, check <code class="text-emerald-300">chrome://extensions</code> for an error on the FocusGate card.</p>
+                    </details>
+                    <details class="group bg-neutral-900 border border-neutral-800 rounded-xl">
+                        <summary class="cursor-pointer list-none p-5 font-semibold flex items-center justify-between">The extension shows an error after I moved the folder <span class="text-emerald-400 group-open:rotate-45 transition-transform text-xl">+</span></summary>
+                        <p class="px-5 pb-5 text-neutral-400 leading-relaxed">Chrome stores the folder path for an unpacked extension. Put the folder back, or remove the old card from <code class="text-emerald-300">chrome://extensions</code> and use <strong>Load unpacked</strong> to select its new location.</p>
+                    </details>
+                    <details class="group bg-neutral-900 border border-neutral-800 rounded-xl">
+                        <summary class="cursor-pointer list-none p-5 font-semibold flex items-center justify-between">Chrome says the extension is blocked by an administrator <span class="text-emerald-400 group-open:rotate-45 transition-transform text-xl">+</span></summary>
+                        <p class="px-5 pb-5 text-neutral-400 leading-relaxed">Your device or browser may be managed by a school, employer, or family administrator. Only that administrator can allow Developer mode or unpacked extensions. Do not try to bypass an organization policy.</p>
+                    </details>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-neutral-950 py-12 border-t border-neutral-900">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <span class="font-bold text-neutral-300">FocusGate</span>
+            <div class="flex gap-6 text-sm font-medium text-neutral-500">
+                <a href="index.html" class="hover:text-neutral-300 transition-colors">Home</a>
+                <a href="privacy-policy.html" class="hover:text-neutral-300 transition-colors">Privacy Policy</a>
+                <a href="terms-of-service.html" class="hover:text-neutral-300 transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
