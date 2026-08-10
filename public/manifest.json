@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "FocusGate",
+  "version": "1.0",
+  "description": "Stay focused, block distractions, and filter out addictive content.",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "FocusGate"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "webNavigation",
+    "alarms",
+    "declarativeNetRequest",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "commands": {
+    "toggle-focus": {
+      "suggested_key": {
+        "default": "Alt+Shift+F"
+      },
+      "description": "Toggle Focus Session"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "incognito": "spanning"
+}
