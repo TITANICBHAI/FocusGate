@@ -1,19 +1,44 @@
 # What to do after publishing FocusGate
 
-Publishing the docs site and submitting store listings are two different
-steps. Use this sequence after the public docs site is live.
+Publishing the docs site and submitting a store listing are two different
+steps. Start with Edge using the sequence below.
 
-## 1. Copy the public docs URL
+## 1. Publish the FocusGate website
 
-Open the published site and confirm these pages work in an incognito window:
+In Replit, click **Publish** and publish the configured static site. The
+deployment is configured to serve the `docs/` folder.
 
-- `https://your-published-domain/privacy-policy.html`
-- `https://your-published-domain/support.html`
+After publishing, copy the public site URL and confirm these pages work in an
+incognito window:
 
-Replace the placeholder URLs in `STORE_LISTING.md` with that real public URL.
-Do not use a `.replit.dev` preview URL for store listings.
+- `https://YOUR-PUBLISHED-DOMAIN/privacy-policy.html`
+- `https://YOUR-PUBLISHED-DOMAIN/support.html`
 
-## 2. Build the final upload bundle
+Replace the placeholder URL fields in `STORE_LISTING.md` with that real public
+URL. Do not use a `.replit.dev` preview URL for store listings.
+
+## 2. Create the Edge listing and upload the extension
+
+Open the official Microsoft Edge Add-ons developer dashboard:
+
+<https://partner.microsoft.com/dashboard/microsoftedge/public/login>
+
+1. Sign in with the Microsoft account that will own the extension.
+2. Register as an Edge extension developer if Microsoft asks you to do so.
+3. Choose **Create new extension**.
+4. Upload `build/store-submission/focusgate-extension.zip`.
+5. Use the name, descriptions, permission explanations, privacy URL, support
+   URL, icon, and screenshots from `STORE_LISTING.md` and
+   `build/store-submission/store-assets/`.
+6. Choose public visibility and the markets where you want FocusGate
+   available.
+7. Submit the listing for certification.
+
+Upload only the Chromium package for Edge. Do not upload `focusgate-firefox.zip`,
+`zipFile.zip`, the repository ZIP, the `dist/` folder, or the whole `build/`
+folder. The uploaded ZIP must contain `manifest.json` at its root.
+
+## 3. Build the final upload bundle
 
 Run:
 
@@ -29,7 +54,7 @@ Use the files inside `build/store-submission/`:
 - `store-assets/` — upload the icon and screenshots.
 - `LICENSE` — keep with the release materials.
 
-## 3. Submit to Chrome Web Store
+## 4. Submit to Chrome Web Store
 
 1. Create or open the FocusGate item in the Chrome Web Store developer
    dashboard.
@@ -45,13 +70,12 @@ Use the files inside `build/store-submission/`:
    - Focus rules and statistics stay in browser-local storage.
 7. Submit for review.
 
-## 4. Submit to Microsoft Edge Add-ons
+## 5. Submit to Microsoft Edge Add-ons
 
-Repeat the same process in Microsoft Partner Center using the same
-`focusgate-extension.zip`. Edge accepts the Chromium package, but its listing
-and review are separate from Chrome.
+Edge submission is documented in Step 2 above. Edge accepts the Chromium
+package, but its listing and review are separate from Chrome.
 
-## 5. Submit to Firefox Add-ons
+## 6. Submit to Firefox Add-ons
 
 Only do this after loading and testing `focusgate-firefox.zip` in Firefox.
 The Firefox package includes Gecko metadata, but store readiness also requires
@@ -60,7 +84,7 @@ runtime compatibility testing.
 Upload `focusgate-firefox.zip`, then provide the same privacy URL, support URL,
 listing copy, screenshots, and permission explanations.
 
-## 6. After each store approves
+## 7. After each store approves
 
 1. Install the approved listing from that store.
 2. Test a fresh install and an update over the previous version.
@@ -69,7 +93,7 @@ listing copy, screenshots, and permission explanations.
 4. Check the browser's extensions page for errors.
 5. Keep the store listing, privacy policy, and actual behavior synchronized.
 
-## 7. Future releases
+## 8. Future releases
 
 For every release:
 
