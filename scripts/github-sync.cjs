@@ -125,7 +125,7 @@ async function waitForExtensionBuild(commitSha) {
     const run = data.workflow_runs?.find(
       (candidate) =>
         candidate.head_sha === commitSha &&
-        candidate.path?.endsWith(`/.github/workflows/${workflowFile}`),
+        candidate.path?.endsWith(`.github/workflows/${workflowFile}`),
     );
 
     if (!run) {
