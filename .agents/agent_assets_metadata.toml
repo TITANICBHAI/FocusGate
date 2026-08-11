@@ -1,0 +1,9 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "yoY3HP6_V3WjtdkpuEZNg"
+uri = "file://build/focusgate-extension.zip"
+type = "unspecified"
+title = "FocusGate browser extension ZIP"
+description = "Manifest V3 extension package built and validated locally. Extract it, then load the extracted folder containing manifest.json in Chrome or Edge Developer mode."

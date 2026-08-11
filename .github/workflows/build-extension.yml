@@ -1,0 +1,64 @@
+name: Build browser extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and package FocusGate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build extension
+        run: bun run build:extension
+
+      - name: Package extension
+        run: bun run package:extension
+
+      - name: Validate packaged extension
+        run: |
+          unzip -l build/focusgate-extension.zip
+          unzip -p build/focusgate-extension.zip manifest.json | node -e '
+            let input = "";
+            process.stdin.on("data", chunk => input += chunk);
+            process.stdin.on("end", () => {
+              const manifest = JSON.parse(input);
+              if (manifest.manifest_version !== 3) process.exit(1);
+              if (!manifest.background?.service_worker) process.exit(1);
+              console.log(`Validated ${manifest.name} ${manifest.version}`);
+            });
+          '
+
+      - name: Upload extension ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: focusgate-extension-${{ github.sha }}
+          path: build/focusgate-extension.zip
+          if-no-files-found: error
+          retention-days: 30

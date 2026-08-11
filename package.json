@@ -7,6 +7,8 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "docs:dev": "vite --config vite.config.ts docs --host 0.0.0.0 --port 5000",
     "build": "vite build",
+    "build:extension": "vite build",
+    "package:extension": "node scripts/package-extension.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
