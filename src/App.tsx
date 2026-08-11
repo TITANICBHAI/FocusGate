@@ -886,6 +886,24 @@ function BlockerView({ key }: { key?: string }) {
     requestAction('add_whitelist', { wUrl });
   };
 
+  const addSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newScheduleDays.length === 0) return;
+
+    requestAction('add_schedule', {
+      schedule: {
+        id: Date.now().toString(),
+        isActive: true,
+        startTime: newScheduleStart,
+        endTime: newScheduleEnd,
+        days: newScheduleDays,
+        sites,
+        keywords
+      }
+    });
+    setShowScheduleForm(false);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, x: -10 }}
@@ -1095,7 +1113,7 @@ function BlockerView({ key }: { key?: string }) {
               Add Custom Schedule
             </button>
           ) : (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex flex-col gap-3 shrink-0">
+            <form onSubmit={addSchedule} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex flex-col gap-3 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex-1 flex flex-col gap-1">
                   <label className="text-xs text-neutral-500">Start Time</label>
@@ -1110,34 +1128,21 @@ function BlockerView({ key }: { key?: string }) {
                 <label className="text-xs text-neutral-500">Days of Week</label>
                 <div className="flex gap-1 justify-between">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                    <button key={idx} onClick={() => setNewScheduleDays(prev => prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx])} className={cn("w-8 h-8 rounded-md text-xs font-semibold flex items-center justify-center transition-colors", newScheduleDays.includes(idx) ? "bg-purple-500 text-neutral-950" : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700")}>
+                    <button type="button" key={idx} onClick={() => setNewScheduleDays(prev => prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx])} className={cn("w-8 h-8 rounded-md text-xs font-semibold flex items-center justify-center transition-colors", newScheduleDays.includes(idx) ? "bg-purple-500 text-neutral-950" : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700")}>
                       {day}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="flex gap-2 mt-2">
-                <button onClick={() => setShowScheduleForm(false)} className="flex-1 py-2 text-sm font-semibold text-neutral-400 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors">
+                <button type="button" onClick={() => setShowScheduleForm(false)} className="flex-1 py-2 text-sm font-semibold text-neutral-400 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors">
                   Cancel
                 </button>
-                <button onClick={() => {
-                  requestAction('add_schedule', {
-                    schedule: {
-                      id: Date.now().toString(),
-                      isActive: true,
-                      startTime: newScheduleStart,
-                      endTime: newScheduleEnd,
-                      days: newScheduleDays,
-                      sites: sites,
-                      keywords: keywords
-                    }
-                  });
-                  setShowScheduleForm(false);
-                }} disabled={newScheduleDays.length === 0} className="flex-1 py-2 text-sm font-semibold text-neutral-950 bg-purple-500 rounded-lg hover:bg-purple-400 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={newScheduleDays.length === 0} className="flex-1 py-2 text-sm font-semibold text-neutral-950 bg-purple-500 rounded-lg hover:bg-purple-400 transition-colors disabled:opacity-50">
                   Save Schedule
                 </button>
               </div>
-            </div>
+            </form>
           )}
           
           <div className="flex-1 overflow-y-auto space-y-3">
@@ -1557,7 +1562,12 @@ function StatsView({ key }: { key?: string }) {
   
   const todayStart = new Date().setHours(0,0,0,0);
   const todaySessions = history.filter(s => s.startTime >= todayStart);
-  const todayAttempts = temptationLog.filter(log => log.timestamp >= todayStart).length;
+  const todayAttemptLogs = temptationLog.filter(log => log.timestamp >= todayStart);
+  const todayAttempts = todayAttemptLogs.length;
+  const attemptsByDomain = todayAttemptLogs.reduce<Record<string, number>>((counts, log) => {
+    counts[log.domain] = (counts[log.domain] || 0) + 1;
+    return counts;
+  }, {});
   
   const totalFocusTime = todaySessions
     .filter(s => s.status === 'completed')
@@ -1628,23 +1638,23 @@ function StatsView({ key }: { key?: string }) {
         </div>
       </div>
 
-      <div className="mt-4 mb-8">
-        <h3 className="text-sm font-semibold text-neutral-400 mb-3 px-1">Recent Blocked Attempts</h3>
-        <div className="flex flex-col gap-2">
-          {temptationLog.length === 0 ? (
-            <p className="text-sm text-neutral-600 text-center py-4">No blocked attempts recorded yet.</p>
-          ) : (
-            [...temptationLog].reverse().slice(0, 10).map((log, i) => (
-              <div key={i} className="bg-neutral-950 border border-neutral-800 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-orange-400 truncate pr-4">{log.domain}</span>
-                <span className="text-xs text-neutral-500 font-mono whitespace-nowrap">
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            ))
-          )}
+      {todayAttemptLogs.length > 0 && (
+        <div className="mt-4 mb-8">
+          <h3 className="text-sm font-semibold text-neutral-400 mb-3 px-1">Today's Block Attempts</h3>
+          <div className="flex flex-col gap-2">
+            {Object.entries(attemptsByDomain)
+              .sort(([, countA], [, countB]) => countB - countA)
+              .map(([domain, count]) => (
+                <div key={domain} className="bg-neutral-950 border border-neutral-800 rounded-lg p-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-orange-400 truncate pr-4">{domain}</span>
+                  <span className="text-xs text-neutral-500 font-mono whitespace-nowrap">
+                    blocked {count} {count === 1 ? 'time' : 'times'}
+                  </span>
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }
