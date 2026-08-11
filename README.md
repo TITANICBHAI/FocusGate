@@ -54,6 +54,26 @@ For a permanent, named download, create a Git tag such as `v1.0.0`. The
 workflow will still upload the ZIP as a workflow artifact; a GitHub Release
 can then be created from that tag and the ZIP attached to it.
 
+## Automatic GitHub sync from Replit
+
+The Replit project includes a persistent `FocusGate GitHub Sync` workflow. It
+checks the current branch every 60 seconds, commits tracked changes, and pushes
+them to:
+
+```text
+https://github.com/TITANICBHAI/FocusGate
+```
+
+The workflow reads `GITHUB_PERSONAL_ACCESS_TOKEN` only from Replit Secrets.
+The token is never stored in the repository or embedded in the Git remote URL.
+Set `GITHUB_SYNC_INTERVAL_SECONDS` if a different polling interval is needed
+(the minimum is 15 seconds).
+
+Secrets do not travel with GitHub commits. After importing this project into a
+different Replit account, add `GITHUB_PERSONAL_ACCESS_TOKEN` to that account's
+Secrets again. The workflow definition itself is stored in `.replit`, so it
+returns with the project import.
+
 ## Install an unpacked build
 
 ### Chrome or Edge

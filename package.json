@@ -8,6 +8,7 @@
     "docs:dev": "vite --config vite.config.ts docs --host 0.0.0.0 --port 5000",
     "build": "vite build",
     "build:extension": "vite build",
+    "github:sync": "node scripts/github-sync.cjs",
     "package:extension": "node scripts/package-extension.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
