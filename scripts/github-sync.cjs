@@ -4,7 +4,7 @@ const {execFileSync} = require('node:child_process');
 
 const projectRoot = path.resolve(__dirname, '..');
 const askpassScript = path.join(__dirname, 'github-askpass.cjs');
-const repositoryUrl = 'https://github.com/TITANICBHAI/FocusGate.git';
+const repositoryUrl = 'https://github.com/TITANICBHAI/FocusFlow-Web.git';
 const actionPollMs = Math.max(
   15_000,
   Number.parseInt(process.env.GITHUB_ACTION_POLL_SECONDS || '20', 10) *
@@ -74,9 +74,9 @@ function commitChanges(branch) {
   git(
     [
       '-c',
-      'user.name=FocusGate Replit Sync',
+      'user.name=FocusFlow-web Replit Sync',
       '-c',
-      'user.email=focusgate-replit-sync@users.noreply.github.com',
+      'user.email=focusflow-web-replit-sync@users.noreply.github.com',
       'commit',
       '-m',
       'chore: sync Replit changes',
@@ -113,7 +113,7 @@ async function githubRequest(url) {
 
 async function waitForExtensionBuild(commitSha) {
   const apiBase =
-    'https://api.github.com/repos/TITANICBHAI/FocusGate/actions/workflows';
+    'https://api.github.com/repos/TITANICBHAI/FocusFlow-Web/actions/workflows';
   const runsUrl = `${apiBase}/${workflowFile}/runs?head_sha=${commitSha}&event=push&per_page=20`;
   const startedAt = Date.now();
   let lastStatus = '';
@@ -147,7 +147,7 @@ async function waitForExtensionBuild(commitSha) {
       }
 
       const artifacts = await githubRequest(
-        `https://api.github.com/repos/TITANICBHAI/FocusGate/actions/runs/${run.id}/artifacts`,
+        `https://api.github.com/repos/TITANICBHAI/FocusFlow-Web/actions/runs/${run.id}/artifacts`,
       );
       const artifact = artifacts.artifacts?.find(
         (candidate) => !candidate.expired,
