@@ -5,11 +5,17 @@ const {execFileSync} = require('node:child_process');
 const projectRoot = path.resolve(__dirname, '..');
 const askpassScript = path.join(__dirname, 'github-askpass.cjs');
 const repositoryUrl = 'https://github.com/TITANICBHAI/FocusGate.git';
-const intervalMs = Math.max(
+const actionPollMs = Math.max(
   15_000,
-  Number.parseInt(process.env.GITHUB_SYNC_INTERVAL_SECONDS || '60', 10) *
+  Number.parseInt(process.env.GITHUB_ACTION_POLL_SECONDS || '20', 10) *
     1_000,
 );
+const actionTimeoutMs = Math.max(
+  60_000,
+  Number.parseInt(process.env.GITHUB_ACTION_TIMEOUT_SECONDS || '900', 10) *
+    1_000,
+);
+const workflowFile = 'build-extension.yml';
 
 fs.chmodSync(askpassScript, 0o755);
 
@@ -58,45 +64,122 @@ function hasStagedChanges() {
   }
 }
 
-function syncOnce() {
-  if (!process.env.GITHUB_PERSONAL_ACCESS_TOKEN) {
-    log(
-      'GITHUB_PERSONAL_ACCESS_TOKEN is not configured; waiting for the secret before syncing.',
+function commitChanges(branch) {
+  const status = git(['status', '--porcelain']);
+  if (!status) return;
+
+  git(['add', '--all'], {stdio: 'inherit'});
+  if (!hasStagedChanges()) return;
+
+  git(
+    [
+      '-c',
+      'user.name=FocusGate Replit Sync',
+      '-c',
+      'user.email=focusgate-replit-sync@users.noreply.github.com',
+      'commit',
+      '-m',
+      'chore: sync Replit changes',
+    ],
+    {stdio: 'inherit'},
+  );
+  log(`Committed local changes on ${branch}.`);
+}
+
+function pushChanges(branch) {
+  git(['push', 'origin', branch], {stdio: 'inherit'});
+  const commitSha = git(['rev-parse', 'HEAD']);
+  log(`Pushed ${branch} to GitHub at ${commitSha}.`);
+  return commitSha;
+}
+
+async function githubRequest(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(
+      `GitHub API returned ${response.status}: ${details.slice(0, 240)}`,
     );
-    return;
+  }
+  return response.json();
+}
+
+async function waitForExtensionBuild(commitSha) {
+  const apiBase =
+    'https://api.github.com/repos/TITANICBHAI/FocusGate/actions/workflows';
+  const runsUrl = `${apiBase}/${workflowFile}/runs?head_sha=${commitSha}&event=push&per_page=20`;
+  const startedAt = Date.now();
+  let lastStatus = '';
+
+  log(`Waiting for ${workflowFile} to start for ${commitSha}.`);
+
+  while (Date.now() - startedAt < actionTimeoutMs) {
+    const data = await githubRequest(runsUrl);
+    const run = data.workflow_runs?.find(
+      (candidate) =>
+        candidate.head_sha === commitSha &&
+        candidate.path?.endsWith(`/.github/workflows/${workflowFile}`),
+    );
+
+    if (!run) {
+      await new Promise((resolve) => setTimeout(resolve, actionPollMs));
+      continue;
+    }
+
+    const state = `${run.status}:${run.conclusion || ''}`;
+    if (state !== lastStatus) {
+      lastStatus = state;
+      log(`Extension build #${run.run_number}: ${run.status}.`);
+    }
+
+    if (run.status === 'completed') {
+      if (run.conclusion !== 'success') {
+        throw new Error(
+          `Extension build ${run.conclusion}. Review ${run.html_url}`,
+        );
+      }
+
+      const artifacts = await githubRequest(
+        `https://api.github.com/repos/TITANICBHAI/FocusGate/actions/runs/${run.id}/artifacts`,
+      );
+      const artifact = artifacts.artifacts?.find(
+        (candidate) => !candidate.expired,
+      );
+      log(
+        artifact
+          ? `Extension build succeeded. Download artifact: ${artifact.archive_download_url}`
+          : `Extension build succeeded. Review ${run.html_url}`,
+      );
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, actionPollMs));
+  }
+
+  throw new Error(
+    `Timed out waiting for ${workflowFile}. Check ${apiBase}/${workflowFile}`,
+  );
+}
+
+async function syncOnce() {
+  if (!process.env.GITHUB_PERSONAL_ACCESS_TOKEN) {
+    throw new Error(
+      'GITHUB_PERSONAL_ACCESS_TOKEN is not configured in Replit Secrets.',
+    );
   }
 
   ensureOrigin();
   const branch = currentBranch();
-  const status = git(['status', '--porcelain']);
-
-  if (status) {
-    git(['add', '--all'], {stdio: 'inherit'});
-    if (hasStagedChanges()) {
-      git(
-        [
-          '-c',
-          'user.name=FocusGate Replit Sync',
-          '-c',
-          'user.email=focusgate-replit-sync@users.noreply.github.com',
-          'commit',
-          '-m',
-          'chore: sync Replit changes',
-        ],
-        {stdio: 'inherit'},
-      );
-      log(`Committed local changes on ${branch}.`);
-    }
-  }
-
-  try {
-    git(['push', 'origin', branch], {stdio: 'inherit'});
-    log(`Pushed ${branch} to GitHub.`);
-  } catch (error) {
-    log(
-      `Push could not complete: ${error.message.split('\n')[0]}. Will retry.`,
-    );
-  }
+  commitChanges(branch);
+  const commitSha = pushChanges(branch);
+  await waitForExtensionBuild(commitSha);
 }
 
 if (!fs.existsSync(path.join(projectRoot, '.git'))) {
@@ -104,26 +187,13 @@ if (!fs.existsSync(path.join(projectRoot, '.git'))) {
   process.exit(1);
 }
 
-log(
-  `Watching ${repositoryUrl} every ${Math.round(intervalMs / 1000)} seconds.`,
-);
-
-let running = true;
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => {
-    running = false;
-    log(`Received ${signal}; stopping.`);
-  });
-}
-
 async function main() {
-  while (running) {
-    try {
-      syncOnce();
-    } catch (error) {
-      log(`Sync check failed: ${error.message.split('\n')[0]}. Will retry.`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  try {
+    await syncOnce();
+    log('Sync and extension build watch completed; exiting.');
+  } catch (error) {
+    console.error(`[github-sync] ${error.message}`);
+    process.exitCode = 1;
   }
 }
 
