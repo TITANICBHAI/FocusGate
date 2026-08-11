@@ -26,7 +26,7 @@ Open the official Microsoft Edge Add-ons developer dashboard:
 1. Sign in with the Microsoft account that will own the extension.
 2. Register as an Edge extension developer if Microsoft asks you to do so.
 3. Choose **Create new extension**.
-4. Upload `build/store-submission/focusgate-extension.zip`.
+4. Upload `build/store-submission/focusgate-edge.zip`.
 5. Use the name, descriptions, permission explanations, privacy URL, support
    URL, icon, and screenshots from `STORE_LISTING.md` and
    `build/store-submission/store-assets/`.
@@ -34,7 +34,8 @@ Open the official Microsoft Edge Add-ons developer dashboard:
    available.
 7. Submit the listing for certification.
 
-Upload only the Chromium package for Edge. Do not upload `focusgate-firefox.zip`,
+Upload only the Edge package for Edge. Do not upload `focusgate-chrome.zip`,
+`focusgate-firefox.zip`,
 `zipFile.zip`, the repository ZIP, the `dist/` folder, or the whole `build/`
 folder. The uploaded ZIP must contain `manifest.json` at its root.
 
@@ -48,7 +49,8 @@ npm run package:all
 
 Use the files inside `build/store-submission/`:
 
-- `focusgate-extension.zip` — upload to Chrome Web Store and Edge Add-ons.
+- `focusgate-chrome.zip` — upload to Chrome Web Store.
+- `focusgate-edge.zip` — upload to Edge Add-ons.
 - `focusgate-firefox.zip` — upload to Firefox Add-ons after Firefox testing.
 - `STORE_LISTING.md` — copy the descriptions and disclosures.
 - `store-assets/` — upload the icon and screenshots.
@@ -58,7 +60,7 @@ Use the files inside `build/store-submission/`:
 
 1. Create or open the FocusGate item in the Chrome Web Store developer
    dashboard.
-2. Upload `focusgate-extension.zip`.
+2. Upload `focusgate-chrome.zip`.
 3. Copy the name, short description, detailed description, category, and
    permission explanations from `STORE_LISTING.md`.
 4. Add the public privacy-policy URL and support URL.

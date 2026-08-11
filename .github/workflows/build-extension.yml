@@ -38,8 +38,11 @@ jobs:
       - name: Build extension
         run: bun run build:extension
 
-      - name: Package extension
-        run: bun run package:extension
+      - name: Package Chrome extension
+        run: bun run package:chrome
+
+      - name: Package Edge extension
+        run: bun run package:edge
 
       - name: Package Firefox extension
         run: bun run package:firefox
@@ -49,7 +52,7 @@ jobs:
 
       - name: Validate packaged extensions
         run: |
-          for archive in build/focusgate-extension.zip build/focusgate-firefox.zip; do
+          for archive in build/focusgate-chrome.zip build/focusgate-edge.zip build/focusgate-firefox.zip; do
             unzip -l "$archive"
             unzip -p "$archive" manifest.json | node -e '
               let input = "";
@@ -64,10 +67,14 @@ jobs:
             '
           done
 
-      - name: Upload extension ZIP
+      - name: Upload browser packages and store submission
         uses: actions/upload-artifact@v4
         with:
           name: focusgate-store-submission-${{ github.sha }}
-          path: build/store-submission
+          path: |
+            build/focusgate-chrome.zip
+            build/focusgate-edge.zip
+            build/focusgate-firefox.zip
+            build/store-submission
           if-no-files-found: error
           retention-days: 30

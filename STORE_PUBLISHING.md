@@ -1,13 +1,13 @@
 # Browser store publishing checklist
 
-This project produces a Chromium-compatible Manifest V3 ZIP. Store review is
-separate from building the ZIP: each store requires its own listing, assets,
+This project produces browser-specific Manifest V3 ZIPs. Store review is
+separate from building the ZIPs: each store requires its own listing, assets,
 privacy disclosures, and review submission.
 
 ## Chrome Web Store
 
 1. Create a Chrome Web Store developer account.
-2. Upload `build/focusgate-extension.zip` from a successful GitHub Actions run.
+2. Upload `build/focusgate-chrome.zip` from a successful GitHub Actions run.
 3. Add the store name, short and detailed descriptions, category, language,
    screenshots, and a 1280×800 or 640×400 promotional image if requested.
 4. Explain why the extension needs each permission, especially broad host

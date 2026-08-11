@@ -66,7 +66,8 @@ database, and does not sell or transmit browsing history.
 
 The build produces:
 
-- `build/focusgate-extension.zip` — Chrome Web Store and Edge Add-ons package.
+- `build/focusgate-chrome.zip` — Chrome Web Store package.
+- `build/focusgate-edge.zip` — Edge Add-ons package.
 - `build/focusgate-firefox.zip` — Firefox Add-ons package with Gecko metadata.
 - `store-assets/icon-128.png` — Store icon.
 - `store-assets/screenshot-popup.png`

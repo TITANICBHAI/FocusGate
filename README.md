@@ -5,8 +5,8 @@ filtering content by keyword, managing focus sessions, and tracking local focus
 statistics.
 
 The extension is built with React, TypeScript, and Vite. The compiled extension
-is the contents of `dist/`; the packaged ZIP is written to
-`build/focusgate-extension.zip`.
+is the contents of `dist/`; browser-specific packaged ZIPs are written to
+`build/`.
 
 ## Build locally
 
@@ -19,22 +19,20 @@ Install dependencies and create the extension ZIP:
 
 ```bash
 bun install
-bun run build:extension
-bun run package:extension
+bun run package:all
 ```
 
 With npm, the equivalent commands are:
 
 ```bash
 npm install
-npm run build:extension
-npm run package:extension
+npm run package:all
 ```
 
 The ZIP is ready to load after extraction because `manifest.json` is at the
 archive root. Do not upload the repository ZIP or the `dist` folder wrapped in
 another parent folder. `npm run package:all` also creates
-`build/store-submission/`, containing both browser packages, the MIT license,
+`build/store-submission/`, containing all three browser packages, the MIT license,
 listing copy, icon, and store screenshots.
 
 ## GitHub Actions build
@@ -50,7 +48,7 @@ To download a build:
 2. Select **Build browser extension** and open a completed run.
 3. Download the `focusgate-store-submission-...` artifact.
 4. Use the package and listing files inside that artifact. It contains the
-   Chrome/Edge ZIP, Firefox ZIP, listing copy, license, icon, and screenshots.
+   Chrome ZIP, Edge ZIP, Firefox ZIP, listing copy, license, icon, and screenshots.
 
 For a permanent, named download, create a Git tag such as `v1.0.0`. The
 workflow will still upload the ZIP as a workflow artifact; a GitHub Release
@@ -82,7 +80,7 @@ returns with the project import.
 
 ### Chrome or Edge
 
-1. Extract `focusgate-extension.zip` to a permanent folder.
+1. Extract the browser-specific ZIP to a permanent folder.
 2. Open `chrome://extensions` or `edge://extensions`.
 3. Enable **Developer mode**.
 4. Choose **Load unpacked**.

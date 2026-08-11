@@ -146,7 +146,7 @@ Validation:
 
 ## Submission notes
 
-- The extension package to upload is `build/focusgate-extension.zip`.
+- The extension package to upload is `build/focusgate-edge.zip`.
 - Upload the ZIP produced for the Edge/Chromium build, not the repository ZIP
   and not the `dist/` directory wrapped in another folder.
 - Review the screenshots in the Edge upload form after upload because the

@@ -6,7 +6,8 @@ const buildDir = path.join(projectRoot, 'build');
 const submissionDir = path.join(buildDir, 'store-submission');
 
 const requiredFiles = [
-  'focusgate-extension.zip',
+  'focusgate-chrome.zip',
+  'focusgate-edge.zip',
   'focusgate-firefox.zip',
 ];
 const requiredAssets = [

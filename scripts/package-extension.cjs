@@ -5,7 +5,18 @@ const {execFileSync} = require('node:child_process');
 const projectRoot = path.resolve(__dirname, '..');
 const distDir = path.join(projectRoot, 'dist');
 const buildDir = path.join(projectRoot, 'build');
-const archivePath = path.join(buildDir, 'focusgate-extension.zip');
+const browser = (process.argv[2] || 'chrome').toLowerCase();
+const archiveNames = {
+  chrome: 'focusgate-chrome.zip',
+  edge: 'focusgate-edge.zip',
+};
+
+if (!archiveNames[browser]) {
+  console.error('Usage: node scripts/package-extension.cjs <chrome|edge>');
+  process.exit(1);
+}
+
+const archivePath = path.join(buildDir, archiveNames[browser]);
 
 if (!fs.existsSync(path.join(distDir, 'manifest.json'))) {
   console.error('dist/manifest.json was not found. Run "npm run build:extension" first.');
@@ -35,8 +46,8 @@ if (!manifest.icons || !manifest.action?.default_icon) {
   process.exit(1);
 }
 
-fs.rmSync(buildDir, {recursive: true, force: true});
 fs.mkdirSync(buildDir, {recursive: true});
+fs.rmSync(archivePath, {force: true});
 
 try {
   execFileSync('zip', ['-r', archivePath, '.'], {

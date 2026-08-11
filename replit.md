@@ -8,10 +8,11 @@
 
 ## Store release files
 
-- `build/focusgate-extension.zip` is the Chromium package for Chrome and Edge.
+- `build/focusgate-chrome.zip` is the Chrome package.
+- `build/focusgate-edge.zip` is the Edge package.
 - `build/focusgate-firefox.zip` is the Firefox package with stable Gecko
   metadata.
-- `build/store-submission/` is the complete upload bundle with both ZIPs,
+- `build/store-submission/` is the complete upload bundle with all three ZIPs,
   listing text, license, icon, and store screenshots.
 - `STORE_LISTING.md` contains the store copy, permission justifications, data
   disclosures, and required URLs.
