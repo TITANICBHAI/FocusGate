@@ -76,6 +76,44 @@ Upload:
 Leave blank unless a public product demonstration video has been published.
 Do not use a private, unlisted-with-access-restrictions, or placeholder URL.
 
+## Notes for certification
+
+Paste this into the Edge Add-ons **Notes for certification** field:
+
+> FocusGate is a productivity extension that helps users avoid distracting
+> websites and content during focused work.
+>
+> To test the extension:
+>
+> 1. Install the extension and open the FocusGate popup. The first launch
+> displays onboarding, where a tester can add a website to block.
+> 2. Open the Rules tab to add or remove blocked websites and keywords.
+> 3. Start a Focus Session from the timer screen. While the session is active,
+> visit a blocked website. The page should be redirected to the local
+> FocusGate blocked screen.
+> 4. Add keywords and visit a supported site such as YouTube, Google Search,
+> Reddit, X/Twitter, Instagram, TikTok, or LinkedIn. Matching visible content
+> is hidden while focus mode is active.
+> 5. Test Settings features, including scheduled blocking, standalone blocking,
+> daily website allowances, allow-listed URLs, and optional strict or
+> commitment locks.
+> 6. Open the Stats tab to review locally stored focus sessions, blocked
+> attempts, and usage summaries.
+>
+> No account, sign-in, payment, or external service is required. FocusGate does
+> not use remote executable code, advertising, analytics, or a
+> developer-controlled data server. Settings, rules, navigation domains needed
+> for blocking, focus history, usage data, and statistics are stored locally in
+> the browser. The extension processes URLs and visible page text locally only
+> to enforce user-created rules and filter matching content. It does not
+> transmit, sell, or share browsing data.
+>
+> The extension requires access across websites because users can choose any
+> website to block and the keyword-filtering content script supports multiple
+> sites. The requested permissions are used for local storage, tab and
+> navigation monitoring, browser-level blocking, background timers, and local
+> notifications.
+
 ## Search terms
 
 Use these seven search terms, one per field:
