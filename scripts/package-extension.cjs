@@ -21,6 +21,20 @@ if (manifest.manifest_version !== 3) {
   process.exit(1);
 }
 
+const requiredIcons = ['16', '32', '48', '128'];
+for (const size of requiredIcons) {
+  const iconPath = path.join(distDir, 'icons', `icon-${size}.png`);
+  if (!fs.existsSync(iconPath)) {
+    console.error(`Missing required extension icon: ${path.relative(projectRoot, iconPath)}`);
+    process.exit(1);
+  }
+}
+
+if (!manifest.icons || !manifest.action?.default_icon) {
+  console.error('The extension manifest must declare toolbar and package icons.');
+  process.exit(1);
+}
+
 fs.rmSync(buildDir, {recursive: true, force: true});
 fs.mkdirSync(buildDir, {recursive: true});
 

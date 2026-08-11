@@ -33,7 +33,9 @@ npm run package:extension
 
 The ZIP is ready to load after extraction because `manifest.json` is at the
 archive root. Do not upload the repository ZIP or the `dist` folder wrapped in
-another parent folder.
+another parent folder. `npm run package:all` also creates
+`build/store-submission/`, containing both browser packages, the MIT license,
+listing copy, icon, and store screenshots.
 
 ## GitHub Actions build
 
@@ -46,9 +48,9 @@ To download a build:
 
 1. Open the repository's **Actions** tab.
 2. Select **Build browser extension** and open a completed run.
-3. Download the `focusgate-extension-...` artifact.
-4. Extract the downloaded artifact. The extracted
-   `focusgate-extension.zip` is the browser extension package.
+3. Download the `focusgate-store-submission-...` artifact.
+4. Use the package and listing files inside that artifact. It contains the
+   Chrome/Edge ZIP, Firefox ZIP, listing copy, license, icon, and screenshots.
 
 For a permanent, named download, create a Git tag such as `v1.0.0`. The
 workflow will still upload the ZIP as a workflow artifact; a GitHub Release

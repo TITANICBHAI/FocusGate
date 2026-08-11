@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy - FocusGate</title>
+    <meta name="description" content="FocusGate's privacy policy: local storage, no analytics, and transparent browser permissions.">
+    <link rel="icon" type="image/png" sizes="128x128" href="assets/focusgate-icon-128.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -54,11 +56,11 @@
         <div class="prose prose-invert prose-emerald max-w-none space-y-6 text-neutral-300 leading-relaxed">
             <p><strong>Last Updated: August 10, 2026</strong></p>
 
-            <p>At FocusGate, we believe your data is yours. This Privacy Policy explains how our Chrome extension collects, uses, and protects your information. Spoiler alert: We don't collect anything.</p>
+            <p>At FocusGate, we believe your data is yours. This Privacy Policy explains how the FocusGate browser extension stores and uses information. FocusGate is designed so the extension does not collect or transmit personal information.</p>
 
             <h2 class="text-2xl font-bold text-white mt-10 mb-4">1. Data Storage is 100% Local</h2>
             <p>FocusGate is designed to operate entirely on your device. All your settings, blocked websites, focus history, schedules, and temptation logs are stored locally using the Chrome Storage API on your computer.</p>
-            <p>We do not have servers, databases, or cloud storage. Your data never leaves your device.</p>
+            <p>We do not operate a server, database, or cloud storage for extension data. Your FocusGate data stays on your device unless you choose to share it yourself, such as when opening a support issue.</p>
 
             <h2 class="text-2xl font-bold text-white mt-10 mb-4">2. No Analytics or Tracking</h2>
             <p>We do not use any third-party analytics services (like Google Analytics or Mixpanel) inside the extension. We do not track how you use the extension, which websites you block, or how often you fail a focus session.</p>
@@ -67,7 +69,8 @@
             <p>To function correctly, FocusGate requires certain permissions in Chrome. Here is exactly why we need them:</p>
             <ul class="list-disc pl-6 space-y-2">
                 <li><strong><code>storage</code>:</strong> Used to save your settings, blocked lists, and statistics locally on your device.</li>
-                <li><strong><code>tabs</code> &amp; <code>webNavigation</code>:</strong> Used to detect when you attempt to visit a blocked website so the extension can intervene.</li>
+                <li><strong><code>tabs</code> &amp; <code>webNavigation</code>:</strong> Used to detect when you attempt to visit a blocked website and intervene when a page or route changes.</li>
+                <li><strong><code>&lt;all_urls&gt;</code> host access:</strong> Used to inspect and redirect pages across websites selected by you. Page contents and browsing data are not uploaded.</li>
                 <li><strong><code>declarativeNetRequest</code>:</strong> Used to efficiently block web requests to distracting sites at the browser network level.</li>
                 <li><strong><code>alarms</code>:</strong> Used to run background timers for daily allowances, scheduled blocks, and weekly digests.</li>
                 <li><strong><code>notifications</code>:</strong> Used to send you alerts, such as when a focus session ends or when your weekly digest is ready.</li>
@@ -80,7 +83,7 @@
             <p>Since we do not collect data, this policy is unlikely to change drastically. However, we may update it from time to time to reflect changes in the extension's features. Any updates will be reflected on this page.</p>
 
             <h2 class="text-2xl font-bold text-white mt-10 mb-4">6. Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy or the open-source code, you can inspect the source code on GitHub or open an issue in our repository.</p>
+            <p>If you have any questions about this Privacy Policy or the open-source code, visit the <a href="support.html" class="text-emerald-400 hover:underline">Support page</a>, inspect the source code on GitHub, or open an issue in our repository.</p>
         </div>
     </main>
 
