@@ -96,6 +96,8 @@ Temporary testing is available from `about:debugging` → **This Firefox** →
 **Load Temporary Add-on**, then select the extracted `manifest.json`.
 
 See [`STORE_PUBLISHING.md`](STORE_PUBLISHING.md) before submitting to a store.
+After the docs site is published, follow [`AFTER_PUBLISHING.md`](AFTER_PUBLISHING.md)
+for the exact upload and post-approval checklist.
 
 ## Project layout
 
@@ -127,7 +129,3 @@ Run the documentation site:
 ```bash
 npm run docs:dev
 ```
-
-The Gemini API key described in `.env.example` is not required for the
-extension packaging workflow unless the application code is changed to use
-that API at build time.

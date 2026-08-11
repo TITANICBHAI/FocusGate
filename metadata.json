@@ -2,7 +2,5 @@
   "name": "FocusGate",
   "description": "A Chrome extension for blocking distractions, managing tasks, and running focus timers.",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": []
 }

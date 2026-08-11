@@ -15,6 +15,8 @@
   listing text, license, icon, and store screenshots.
 - `STORE_LISTING.md` contains the store copy, permission justifications, data
   disclosures, and required URLs.
+- `AFTER_PUBLISHING.md` explains what to do after the docs site and store
+  listings are published.
 - `docs/privacy-policy.html` and `docs/support.html` must be published before
   submitting store listings.
 
