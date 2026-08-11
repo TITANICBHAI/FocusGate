@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const prompt = (process.argv[2] || '').toLowerCase();
 const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
 

@@ -11,9 +11,11 @@ const intervalMs = Math.max(
     1_000,
 );
 
+fs.chmodSync(askpassScript, 0o755);
+
 const gitEnvironment = {
   ...process.env,
-  GIT_ASKPASS: `${process.execPath} "${askpassScript}"`,
+  GIT_ASKPASS: askpassScript,
   GIT_TERMINAL_PROMPT: '0',
 };
 
