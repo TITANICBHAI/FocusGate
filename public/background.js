@@ -182,7 +182,7 @@ async function updateDNRRules() {
     return currentM >= startTotal && currentM <= endTotal;
   });
 
-  const isStandaloneActive = standaloneMode || (standaloneUntil > Date.now());
+  const isStandaloneActive = (standaloneMode && standaloneUntil === 0) || (standaloneUntil > Date.now());
   const shouldBlock = (isSessionActive && sessionMode !== 'break') || isStandaloneActive || isAnyScheduleActive;
 
   if (shouldBlock) {
@@ -285,7 +285,7 @@ function isUrlBlocked(urlStr) {
     const searchString = searchParams.join(' ').toLowerCase();
 
     // 1. Session or Standalone block
-    if ((isSessionActive && sessionMode !== 'break') || standaloneMode || (standaloneUntil > Date.now())) {
+    if ((isSessionActive && sessionMode !== 'break') || (standaloneMode && standaloneUntil === 0) || (standaloneUntil > Date.now())) {
       if (blockedSites.some(site => {
         const cleanSite = site.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
         return domain === cleanSite || domain.endsWith('.' + cleanSite);
@@ -417,7 +417,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 
   if (alarm.name === 'standalone_expire') {
-    chrome.storage.local.set({ standaloneUntil: 0 });
+    chrome.storage.local.set({ standaloneUntil: 0, standaloneMode: false });
   }
   if (alarm.name === "allowanceTracker") {
     const today = new Date().toLocaleDateString();

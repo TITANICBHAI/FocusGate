@@ -7,3 +7,31 @@ uri = "file://build/focusgate-extension.zip"
 type = "unspecified"
 title = "FocusGate browser extension ZIP"
 description = "Manifest V3 extension package built and validated locally. Extract it, then load the extracted folder containing manifest.json in Chrome or Edge Developer mode."
+
+[[outputs]]
+id = "rQeLlnBY0nara1kJ3M7jN"
+uri = "file://build/focusgate-chrome.zip"
+type = "unspecified"
+title = "FocusGate Chrome build — refreshed"
+description = "Chrome package with corrected standalone expiry behavior."
+
+[[outputs]]
+id = "kX7OTfiVxBfaHYauOLZ7P"
+uri = "file://build/focusgate-edge.zip"
+type = "unspecified"
+title = "FocusGate Edge build — refreshed"
+description = "Edge package with corrected standalone expiry behavior."
+
+[[outputs]]
+id = "O1-oir4WYE-f7XPl47XOs"
+uri = "file://build/focusgate-firefox.zip"
+type = "unspecified"
+title = "FocusGate Firefox build — refreshed"
+description = "Firefox package with Gecko metadata and corrected standalone expiry behavior."
+
+[[outputs]]
+id = "srN3I63BtzzvRYXx75mWn"
+uri = "file://build/store-submission/STORE_LISTING.md"
+type = "text"
+title = "FocusGate store listing copy"
+description = "Updated SEO/GEO-oriented store copy with the descriptive product name and privacy details."

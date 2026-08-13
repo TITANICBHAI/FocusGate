@@ -1,4 +1,4 @@
-# FocusGate store listing package
+# FocusGate: Website Blocker & Focus Timer store listing package
 
 This file is the ready-to-copy listing and disclosure text for the Chrome Web
 Store, Microsoft Edge Add-ons, and Firefox Add-ons. Store accounts, pricing,
@@ -7,8 +7,8 @@ account-owner actions in each store dashboard.
 
 ## Listing details
 
-- **Name:** FocusGate
-- **Short description:** Block distracting websites and commit to focused work sessions.
+- **Name:** FocusGate: Website Blocker & Focus Timer
+- **Short description:** Block distracting websites and keywords, schedule focus time, and stay on task with a privacy-first focus timer.
 - **Category:** Productivity
 - **Language:** English
 - **Website:** Publish the `docs/` site and use its public URL.
@@ -19,14 +19,35 @@ account-owner actions in each store dashboard.
 
 ## Detailed description
 
-FocusGate helps you protect your attention while you work. Create blocked-site
-and keyword rules, start a focus session, set schedules and daily allowances,
-lock settings with a deliberate commitment, and review local focus statistics.
+FocusGate: Website Blocker & Focus Timer is a privacy-first browser extension
+for Chrome, Edge, and Firefox. It blocks distracting websites and keywords,
+helps you run focused work sessions, and keeps your progress in local browser
+storage.
 
-FocusGate is privacy-first by design. Settings, blocked lists, schedules,
-session history, and focus statistics are stored in browser-local storage. The
-extension does not include analytics, advertising, accounts, or a remote
-database, and does not sell or transmit browsing history.
+### What can FocusGate do?
+
+- **Block distracting websites:** Add social media, video, news, gaming, or
+  any other website to a personal block list.
+- **Filter distracting keywords:** Hide matching content on supported sites
+  without blocking the entire website.
+- **Run focus sessions:** Start a timer and optionally add strict or commitment
+  locks to make impulsive changes harder.
+- **Create scheduled blocks:** Automatically enforce website and keyword rules
+  during work hours, evenings, or recurring routines.
+- **Use flexible standalone blocks:** Block without starting a focus timer for
+  any duration up to 1000 hours, or choose no limit.
+- **Set daily allowances:** Give selected websites a limited amount of guilt-free
+  time each day.
+- **Review local progress:** See focus sessions, blocked attempts, usage, and
+  local statistics without an online account.
+
+### Does FocusGate collect browsing history?
+
+No. FocusGate processes the URLs and visible page text needed to enforce
+user-created rules in the browser. Settings, blocked lists, schedules, session
+history, and focus statistics stay in browser-local storage. The extension has
+no analytics, advertising, accounts, or remote database, and does not sell or
+transmit browsing history.
 
 ## Permission justifications
 

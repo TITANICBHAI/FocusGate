@@ -2,13 +2,15 @@
 let blockedKeywords = [];
 let isSessionActive = false;
 let isStandaloneMode = false;
+let standaloneUntil = 0;
 
-chrome.storage.local.get(['blockedKeywords', 'timer_isActive', 'standaloneMode'], (result) => {
+chrome.storage.local.get(['blockedKeywords', 'timer_isActive', 'standaloneMode', 'standaloneUntil'], (result) => {
   if (result.blockedKeywords) blockedKeywords = result.blockedKeywords.map(k => k.toLowerCase());
   if (result.timer_isActive) isSessionActive = result.timer_isActive;
   if (result.standaloneMode) isStandaloneMode = result.standaloneMode;
+  if (result.standaloneUntil) standaloneUntil = result.standaloneUntil;
   
-  if (isSessionActive || isStandaloneMode) {
+  if (isSessionActive || isStandaloneActive()) {
     observeDOM();
     processElements();
   }
@@ -25,19 +27,26 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.standaloneMode !== undefined) {
       isStandaloneMode = changes.standaloneMode.newValue;
     }
+    if (changes.standaloneUntil !== undefined) {
+      standaloneUntil = changes.standaloneUntil.newValue || 0;
+    }
     
-    if (isSessionActive || isStandaloneMode) {
+    if (isSessionActive || isStandaloneActive()) {
       processElements();
       observeDOM();
     } else {
       // If neither session nor standalone is active, stop observing
-      if (!isSessionActive && !isStandaloneMode) {
+      if (!isSessionActive && !isStandaloneActive()) {
         if (observer) observer.disconnect();
         observer = null;
       }
     }
   }
 });
+
+function isStandaloneActive() {
+  return (isStandaloneMode && standaloneUntil === 0) || standaloneUntil > Date.now();
+}
 
 function hasBlockedKeyword(text) {
   if (!text) return false;
@@ -47,7 +56,7 @@ function hasBlockedKeyword(text) {
 }
 
 function processElements() {
-  if (!isSessionActive && !isStandaloneMode) return;
+  if (!isSessionActive && !isStandaloneActive()) return;
 
   // YouTube specific logic
   if (window.location.hostname.includes('youtube.com')) {
@@ -166,8 +175,8 @@ function observeDOM() {
 // Initial run
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    if (isSessionActive || isStandaloneMode) processElements();
+    if (isSessionActive || isStandaloneActive()) processElements();
   });
 } else {
-  if (isSessionActive || isStandaloneMode) processElements();
+  if (isSessionActive || isStandaloneActive()) processElements();
 }

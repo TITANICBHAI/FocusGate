@@ -799,8 +799,9 @@ function BlockerView({ key }: { key?: string }) {
   const [schedules, setSchedules] = useChromeStorage<any[]>('schedules', []);
   const [password] = useChromeStorage('app_password_hash', '');
   const [standaloneUntil] = useChromeStorage('standaloneUntil', 0);
+  const [standaloneMode] = useChromeStorage('standaloneMode', false);
   const [isSessionActive] = useChromeStorage('timer_isActive', false);
-  const isStandaloneActive = standaloneUntil > Date.now();
+  const isStandaloneActive = (standaloneMode && standaloneUntil === 0) || standaloneUntil > Date.now();
   const [verifyAction, setVerifyAction] = useState<{ type: string; payload?: any } | null>(null);
 
   const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -1242,7 +1243,7 @@ function HowToUse() {
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">4. Standalone Block</h4>
-                <p>Don't want to start a timer, but still want to block distractions? Use <strong>Standalone Block</strong>. It locks your rules for a set time (e.g., 2 hours). You won't be able to access blocked sites or reduce restrictions until the time is up.</p>
+                <p>Don't want to start a timer, but still want to block distractions? Use <strong>Standalone Block</strong>. Lock your rules for any duration up to 1000 hours, or choose no limit. You won't be able to access blocked sites or reduce restrictions while it is active.</p>
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">5. Daily Allowances</h4>
@@ -1259,12 +1260,14 @@ function HowToUse() {
 function SettingsView({ key }: { key?: string }) {
   const [password, setPassword] = useChromeStorage('app_password_hash', '');
   const [standaloneUntil, setStandaloneUntil] = useChromeStorage('standaloneUntil', 0);
+  const [standaloneMode, setStandaloneMode] = useChromeStorage('standaloneMode', false);
   const [isSessionActive] = useChromeStorage('timer_isActive', false);
-  const isStandaloneActive = standaloneUntil > Date.now();
+  const isStandaloneActive = (standaloneMode && standaloneUntil === 0) || standaloneUntil > Date.now();
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   
-  const [standaloneDuration, setStandaloneDuration] = useState(60);
+  const [standaloneDurationHours, setStandaloneDurationHours] = useState('1');
+  const [standaloneUnlimited, setStandaloneUnlimited] = useState(false);
 
   const [allowances, setAllowances] = useChromeStorage<Record<string, any>>('dailyAllowances', {});
   const [newAllowanceType, setNewAllowanceType] = useState('time');
@@ -1323,9 +1326,22 @@ function SettingsView({ key }: { key?: string }) {
   };
 
   const startStandalone = () => {
-    if (!isStandaloneActive) {
-      setStandaloneUntil(Date.now() + standaloneDuration * 60 * 1000);
+    if (isStandaloneActive) return;
+
+    if (standaloneUnlimited) {
+      setStandaloneMode(true);
+      setStandaloneUntil(0);
+      return;
     }
+
+    const hours = Number(standaloneDurationHours);
+    if (!Number.isFinite(hours) || hours <= 0 || hours > 1000) {
+      alert('Enter a duration greater than 0 and no more than 1000 hours.');
+      return;
+    }
+
+    setStandaloneMode(false);
+    setStandaloneUntil(Date.now() + hours * 60 * 60 * 1000);
   };
 
   const addAllowance = (e: React.FormEvent) => {
@@ -1447,30 +1463,55 @@ function SettingsView({ key }: { key?: string }) {
             <h3 className="font-semibold text-neutral-100">Standalone Block</h3>
           </div>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Lock your rules (sites, keywords) for a set time without starting a Focus Session. You cannot remove or reduce restrictions while active.
+             Lock your rules (sites, keywords) for any duration up to 1000 hours, or choose no limit. You cannot remove or reduce restrictions while active.
           </p>
 
           {isStandaloneActive ? (
             <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-between">
-              <span className="text-sm font-semibold text-blue-400">Active Until:</span>
+               <span className="text-sm font-semibold text-blue-400">{standaloneMode ? 'Status:' : 'Active Until:'}</span>
               <span className="text-sm font-mono text-blue-300">
-                {new Date(standaloneUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                 {standaloneMode
+                   ? 'No limit'
+                   : new Date(standaloneUntil).toLocaleString([], {
+                       dateStyle: 'short',
+                       timeStyle: 'short',
+                     })}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 mt-2">
-              <select
-                value={standaloneDuration}
-                onChange={(e) => setStandaloneDuration(parseInt(e.target.value))}
-                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-              >
-                <option value={15}>15 Minutes</option>
-                <option value={30}>30 Minutes</option>
-                <option value={60}>1 Hour</option>
-                <option value={120}>2 Hours</option>
-                <option value={240}>4 Hours</option>
-                <option value={480}>8 Hours</option>
-              </select>
+             <div className="flex flex-col gap-3 mt-2">
+               <div className="flex items-center gap-2">
+                 <label htmlFor="standalone-duration" className="sr-only">Standalone duration in hours</label>
+                 <input
+                   id="standalone-duration"
+                   type="number"
+                   min="0.01"
+                   max="1000"
+                   step="0.01"
+                   value={standaloneDurationHours}
+                   onChange={(e) => setStandaloneDurationHours(e.target.value)}
+                   disabled={standaloneUnlimited}
+                   className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                   aria-describedby="standalone-duration-help"
+                 />
+                 <span className="text-sm text-neutral-400">hours</span>
+                 <button
+                   type="button"
+                   onClick={() => setStandaloneUnlimited(!standaloneUnlimited)}
+                   className={cn(
+                     "ml-auto px-3 py-2 rounded-lg text-sm font-semibold border transition-colors",
+                     standaloneUnlimited
+                       ? "bg-blue-500/15 border-blue-500/50 text-blue-300"
+                       : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-neutral-200"
+                   )}
+                   aria-pressed={standaloneUnlimited}
+                 >
+                   No limit
+                 </button>
+               </div>
+               <p id="standalone-duration-help" className="text-[11px] text-neutral-500">
+                 Enter any duration from 0.01 to 1000 hours.
+               </p>
               <button 
                 onClick={startStandalone}
                 className="bg-blue-500 hover:bg-blue-400 text-neutral-950 px-4 py-2 rounded-lg font-bold text-sm transition-colors"

@@ -7,9 +7,10 @@ FocusGate. The image assets are in `store-assets/edge/`.
 
 Paste this into the Edge Add-ons **Description** field:
 
-> FocusGate helps you protect your attention and build consistent deep-work
-> habits. Create your own distraction rules, start a focus session, and let the
-> extension enforce your intentions directly in the browser.
+> FocusGate: Website Blocker & Focus Timer helps you protect your attention and
+> build consistent deep-work habits. Create your own distraction rules, start a
+> focus session, and let the extension enforce your intentions directly in the
+> browser.
 >
 > **Block distracting websites:** Add websites such as social media, video,
 > news, or gaming sites to your personal block list. During an active focus
@@ -24,7 +25,8 @@ Paste this into the Edge Add-ons **Description** field:
 > **Use flexible focus controls:** Start timed work sessions, configure
 > schedules, set daily allowances for selected websites, and add allow-list
 > exceptions. Focus sessions support optional strict or commitment locks to
-> add friction against impulsive changes.
+> add friction against impulsive changes. Standalone blocks can run for up to
+> 1000 hours or with no time limit.
 >
 > **Review local progress:** FocusGate provides session history, focus time,
 > daily usage, blocked-attempt counts, and a weekly digest notification so you
@@ -135,10 +137,10 @@ Validation:
 
 ## Listing metadata
 
-- **Name:** FocusGate
+- **Name:** FocusGate: Website Blocker & Focus Timer
 - **Category:** Productivity
 - **Language:** English
-- **Short description:** Block distracting websites and commit to focused work sessions.
+- **Short description:** Block distracting websites and keywords, schedule focus time, and stay on task with a privacy-first focus timer.
 - **Website:** Use the published documentation-site URL.
 - **Privacy policy:** `<published-site-url>/privacy-policy.html`
 - **Support page:** `<published-site-url>/support.html`

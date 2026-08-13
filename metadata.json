@@ -1,6 +1,6 @@
 {
-  "name": "FocusGate",
-  "description": "A Chrome extension for blocking distractions, managing tasks, and running focus timers.",
+  "name": "FocusGate: Website Blocker & Focus Timer",
+  "description": "A privacy-first browser extension for blocking distracting websites and keywords, scheduling focus time, and running focus timers.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
