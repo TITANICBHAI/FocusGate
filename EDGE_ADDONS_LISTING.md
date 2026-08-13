@@ -7,10 +7,11 @@ FocusGate. The image assets are in `store-assets/edge/`.
 
 Paste this into the Edge Add-ons **Description** field:
 
-> FocusGate: Website Blocker & Focus Timer helps you protect your attention and
-> build consistent deep-work habits. Create your own distraction rules, start a
-> focus session, and let the extension enforce your intentions directly in the
-> browser.
+> FocusGate: Website Blocker & Focus Timer is a privacy-first browser extension
+> for Chrome, Edge, and Firefox. Use it as a social media blocker, website
+> blocker, keyword blocker, and focus timer: block distracting sites, hide
+> unwanted topics, schedule deep-work time, and review local progress without
+> an account.
 >
 > **Block distracting websites:** Add websites such as social media, video,
 > news, or gaming sites to your personal block list. During an active focus
@@ -19,8 +20,8 @@ Paste this into the Edge Add-ons **Description** field:
 >
 > **Filter distracting keywords:** Add keywords to hide matching content on
 > supported sites, including YouTube, Google Search, Reddit, X/Twitter,
-> Instagram, TikTok, and LinkedIn. This helps keep useful sites available
-> while reducing distracting topics, feeds, and recommendations.
+> Instagram, TikTok, and LinkedIn. This keeps useful sites available while
+> reducing distracting topics, feeds, and recommendations.
 >
 > **Use flexible focus controls:** Start timed work sessions, configure
 > schedules, set daily allowances for selected websites, and add allow-list
@@ -121,10 +122,10 @@ Paste this into the Edge Add-ons **Notes for certification** field:
 Use these seven search terms, one per field:
 
 1. `website blocker`
-2. `focus timer`
-3. `productivity`
+2. `social media blocker`
+3. `focus timer`
 4. `distraction blocker`
-5. `keyword filter`
+5. `keyword blocker`
 6. `deep work`
 7. `time management`
 
@@ -140,7 +141,7 @@ Validation:
 - **Name:** FocusGate: Website Blocker & Focus Timer
 - **Category:** Productivity
 - **Language:** English
-- **Short description:** Block distracting websites and keywords, schedule focus time, and stay on task with a privacy-first focus timer.
+- **Short description:** Block social media, video, news, and keywords with a privacy-first website blocker and focus timer.
 - **Website:** Use the published documentation-site URL.
 - **Privacy policy:** `<published-site-url>/privacy-policy.html`
 - **Support page:** `<published-site-url>/support.html`

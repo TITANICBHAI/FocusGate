@@ -8,7 +8,7 @@ account-owner actions in each store dashboard.
 ## Listing details
 
 - **Name:** FocusGate: Website Blocker & Focus Timer
-- **Short description:** Block distracting websites and keywords, schedule focus time, and stay on task with a privacy-first focus timer.
+- **Short description:** Block social media, video, news, and keywords with a privacy-first website blocker and focus timer.
 - **Category:** Productivity
 - **Language:** English
 - **Website:** Publish the `docs/` site and use its public URL.
@@ -20,34 +20,45 @@ account-owner actions in each store dashboard.
 ## Detailed description
 
 FocusGate: Website Blocker & Focus Timer is a privacy-first browser extension
-for Chrome, Edge, and Firefox. It blocks distracting websites and keywords,
-helps you run focused work sessions, and keeps your progress in local browser
-storage.
+for Chrome, Edge, and Firefox. Use it as a social media blocker, website
+blocker, keyword blocker, and focus timer: block distracting sites, hide
+unwanted topics, schedule deep-work time, and review local progress without an
+account.
 
-### What can FocusGate do?
+### What can FocusGate block?
 
-- **Block distracting websites:** Add social media, video, news, gaming, or
-  any other website to a personal block list.
-- **Filter distracting keywords:** Hide matching content on supported sites
-  without blocking the entire website.
-- **Run focus sessions:** Start a timer and optionally add strict or commitment
-  locks to make impulsive changes harder.
-- **Create scheduled blocks:** Automatically enforce website and keyword rules
-  during work hours, evenings, or recurring routines.
-- **Use flexible standalone blocks:** Block without starting a focus timer for
-  any duration up to 1000 hours, or choose no limit.
-- **Set daily allowances:** Give selected websites a limited amount of guilt-free
-  time each day.
-- **Review local progress:** See focus sessions, blocked attempts, usage, and
-  local statistics without an online account.
+- **Websites:** Block social media, video, news, gaming, shopping, or any
+  distracting website with a personal block list.
+- **Keywords:** Hide matching content on supported sites without blocking the
+  entire website. Supported sites include YouTube, Google Search, Reddit,
+  X/Twitter, Instagram, TikTok, and LinkedIn.
+- **Routes and feeds:** Redirect matching pages to a local FocusGate block
+  screen while an active rule, session, schedule, or allowance restriction is
+  in effect.
+
+### How does FocusGate support deep work?
+
+- **Focus timer:** Start a timed work session and optionally add strict or
+  commitment locks to make impulsive changes harder.
+- **Scheduled website blocking:** Automatically enforce website and keyword
+  rules during work hours, evenings, or recurring routines.
+- **Standalone focus mode:** Block without starting a focus timer for any
+  duration up to 1000 hours, or choose no limit. Timed blocks use an absolute
+  end time and continue across browser restarts and computer shutdowns.
+- **Daily website limits:** Give selected websites a limited amount of
+  guilt-free time each day.
+
+### Can I use FocusGate without an account?
+
+Yes. FocusGate stores settings, blocked lists, schedules, session history,
+usage, and focus statistics in browser-local storage. The extension has no
+analytics, advertising, account system, or remote database.
 
 ### Does FocusGate collect browsing history?
 
-No. FocusGate processes the URLs and visible page text needed to enforce
-user-created rules in the browser. Settings, blocked lists, schedules, session
-history, and focus statistics stay in browser-local storage. The extension has
-no analytics, advertising, accounts, or remote database, and does not sell or
-transmit browsing history.
+No. FocusGate processes only the URLs and visible page text needed to enforce
+user-created rules in the browser. Browsing activity is not transmitted or
+sold.
 
 ## Permission justifications
 

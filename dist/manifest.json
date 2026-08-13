@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "FocusGate: Website Blocker & Focus Timer",
   "version": "1.0.1",
-  "description": "Block distracting websites and keywords, schedule focus time, and stay on task with a privacy-first focus timer.",
+  "description": "Block social media, video, news, and keywords with a privacy-first website blocker and focus timer.",
   "homepage_url": "https://github.com/TITANICBHAI/FocusGate",
   "icons": {
     "16": "icons/icon-16.png",
