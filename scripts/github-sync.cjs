@@ -68,7 +68,9 @@ function commitChanges(branch) {
   const status = git(['status', '--porcelain']);
   if (!status) return;
 
-  git(['add', '--all'], {stdio: 'inherit'});
+  // Only sync tracked project files; avoid committing uploads and build output
+  // that may exist as unrelated untracked files in the workspace.
+  git(['add', '-u'], {stdio: 'inherit'});
   if (!hasStagedChanges()) return;
 
   git(
@@ -149,14 +151,18 @@ async function waitForExtensionBuild(commitSha) {
       const artifacts = await githubRequest(
         `https://api.github.com/repos/TITANICBHAI/FocusGate/actions/runs/${run.id}/artifacts`,
       );
-      const artifact = artifacts.artifacts?.find(
-        (candidate) => !candidate.expired,
+      const availableArtifacts = (artifacts.artifacts || []).filter(
+        (artifact) => !artifact.expired,
       );
-      log(
-        artifact
-          ? `Extension build succeeded. Download artifact: ${artifact.archive_download_url}`
-          : `Extension build succeeded. Review ${run.html_url}`,
-      );
+      if (availableArtifacts.length) {
+        log(
+          `Extension build succeeded. Download artifacts:\n${availableArtifacts
+            .map((artifact) => `- ${artifact.name}: ${artifact.archive_download_url}`)
+            .join('\n')}`,
+        );
+      } else {
+        log(`Extension build succeeded, but no downloadable artifacts were found. Review ${run.html_url}`);
+      }
       return;
     }
 

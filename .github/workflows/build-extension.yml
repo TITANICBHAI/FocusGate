@@ -47,14 +47,12 @@ jobs:
       - name: Package Firefox extension
         run: bun run package:firefox
 
-      - name: Prepare store submission bundle
-        run: bun run prepare:store
-
       - name: Validate packaged extensions
         run: |
           for archive in build/focusgate-chrome.zip build/focusgate-edge.zip build/focusgate-firefox.zip; do
-            unzip -l "$archive"
-            unzip -p "$archive" manifest.json | node -e '
+            unzip -tq "$archive"
+            manifest="$(unzip -p "$archive" manifest.json)"
+            printf "%s" "$manifest" | ARCHIVE="$archive" node -e '
               let input = "";
               process.stdin.on("data", chunk => input += chunk);
               process.stdin.on("end", () => {
@@ -62,19 +60,41 @@ jobs:
                 if (manifest.manifest_version !== 3) process.exit(1);
                 if (!manifest.background?.service_worker) process.exit(1);
                 if (!manifest.icons?.["128"]) process.exit(1);
+                if (process.env.ARCHIVE.endsWith("focusgate-firefox.zip")) {
+                  const gecko = manifest.browser_specific_settings?.gecko;
+                  if (!manifest.background.scripts?.includes(manifest.background.service_worker)) {
+                    throw new Error("Firefox background.scripts fallback is missing.");
+                  }
+                  if (!gecko?.id) throw new Error("Firefox Gecko add-on ID is missing.");
+                  if (JSON.stringify(gecko.data_collection_permissions?.required) !== "[\"none\"]") {
+                    throw new Error("Firefox data_collection_permissions must declare required: [\"none\"].");
+                  }
+                }
                 console.log(`Validated ${manifest.name} ${manifest.version}`);
               });
             '
           done
 
-      - name: Upload browser packages and store submission
+      - name: Upload Chrome ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: focusgate-store-submission-${{ github.sha }}
-          path: |
-            build/focusgate-chrome.zip
-            build/focusgate-edge.zip
-            build/focusgate-firefox.zip
-            build/store-submission
+          name: focusgate-chrome-${{ github.sha }}
+          path: build/focusgate-chrome.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Edge ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: focusgate-edge-${{ github.sha }}
+          path: build/focusgate-edge.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Firefox ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: focusgate-firefox-${{ github.sha }}
+          path: build/focusgate-firefox.zip
           if-no-files-found: error
           retention-days: 30

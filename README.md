@@ -46,13 +46,15 @@ To download a build:
 
 1. Open the repository's **Actions** tab.
 2. Select **Build browser extension** and open a completed run.
-3. Download the `focusgate-store-submission-...` artifact.
-4. Use the package and listing files inside that artifact. It contains the
-   Chrome ZIP, Edge ZIP, Firefox ZIP, listing copy, license, icon, and screenshots.
+3. Download one of the three separate artifacts: `focusgate-chrome-...`,
+   `focusgate-edge-...`, or `focusgate-firefox-...`.
+4. Extract the downloaded GitHub artifact and upload its single browser ZIP to
+   that browser's store. The workflow validates Firefox's Gecko ID, background
+   scripts fallback, and data-collection declaration before uploading.
 
 For a permanent, named download, create a Git tag such as `v1.0.0`. The
-workflow will still upload the ZIP as a workflow artifact; a GitHub Release
-can then be created from that tag and the ZIP attached to it.
+workflow uploads the three browser ZIPs as separate workflow artifacts; a
+GitHub Release can then be created from that tag with the desired ZIPs attached.
 
 ## GitHub sync and extension build watch from Replit
 
