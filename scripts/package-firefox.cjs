@@ -19,6 +19,10 @@ if (manifest.manifest_version !== 3) {
   console.error('The Firefox manifest must use Manifest V3.');
   process.exit(1);
 }
+if (!manifest.background?.service_worker) {
+  console.error('The shared manifest must declare its Chromium service worker.');
+  process.exit(1);
+}
 
 fs.mkdirSync(buildDir, {recursive: true});
 fs.rmSync(firefoxDistDir, {recursive: true, force: true});
@@ -26,18 +30,27 @@ fs.cpSync(distDir, firefoxDistDir, {recursive: true});
 
 const firefoxManifest = {
   ...manifest,
-  background: {
-    ...manifest.background,
-    // Firefox requires a scripts fallback alongside service_worker in MV3.
-    scripts: [manifest.background.service_worker],
-  },
+  background: (() => {
+    const {service_worker: serviceWorker, ...backgroundSettings} =
+      manifest.background;
+    return {
+      ...backgroundSettings,
+      // Firefox MV3 uses background scripts rather than service workers.
+      scripts: [serviceWorker],
+    };
+  })(),
   browser_specific_settings: {
     gecko: {
       id: 'focusgate@tbtechs.com',
       data_collection_permissions: {
         required: ['none'],
       },
-      strict_min_version: '128.0',
+      // Firefox desktop added built-in data consent in version 140.
+      strict_min_version: '140.0',
+    },
+    gecko_android: {
+      // Firefox for Android added built-in data consent in version 142.
+      strict_min_version: '142.0',
     },
   },
 };

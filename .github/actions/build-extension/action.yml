@@ -46,17 +46,27 @@ runs:
             process.stdin.on("end", () => {
               const manifest = JSON.parse(input);
               if (manifest.manifest_version !== 3) process.exit(1);
-              if (!manifest.background?.service_worker) process.exit(1);
               if (!manifest.icons?.["128"]) process.exit(1);
               if (process.env.ARCHIVE.endsWith("focusgate-firefox.zip")) {
+                if (manifest.background?.service_worker) {
+                  throw new Error("Firefox must not include the unsupported service_worker key.");
+                }
                 const gecko = manifest.browser_specific_settings?.gecko;
-                if (!manifest.background.scripts?.includes(manifest.background.service_worker)) {
-                  throw new Error("Firefox background.scripts fallback is missing.");
+                if (!manifest.background?.scripts?.includes("background.js")) {
+                  throw new Error("Firefox background.scripts is missing.");
                 }
                 if (!gecko?.id) throw new Error("Firefox Gecko add-on ID is missing.");
                 if (JSON.stringify(gecko.data_collection_permissions?.required) !== "[\"none\"]") {
                   throw new Error("Firefox data_collection_permissions must declare required: [\"none\"].");
                 }
+                if (gecko.strict_min_version !== "140.0") {
+                  throw new Error("Firefox desktop minimum version must be 140.0 or newer.");
+                }
+                if (manifest.browser_specific_settings?.gecko_android?.strict_min_version !== "142.0") {
+                  throw new Error("Firefox for Android minimum version must be 142.0 or newer.");
+                }
+              } else if (!manifest.background?.service_worker) {
+                throw new Error("Chromium background service_worker is missing.");
               }
               console.log(`Validated ${manifest.name} ${manifest.version}`);
             });
