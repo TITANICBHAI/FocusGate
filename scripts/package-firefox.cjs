@@ -26,9 +26,17 @@ fs.cpSync(distDir, firefoxDistDir, {recursive: true});
 
 const firefoxManifest = {
   ...manifest,
+  background: {
+    ...manifest.background,
+    // Firefox requires a scripts fallback alongside service_worker in MV3.
+    scripts: [manifest.background.service_worker],
+  },
   browser_specific_settings: {
     gecko: {
       id: 'focusgate@tbtechs.com',
+      data_collection_permissions: {
+        required: ['none'],
+      },
       strict_min_version: '128.0',
     },
   },
