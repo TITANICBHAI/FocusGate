@@ -42,17 +42,18 @@ The workflow at
 runs on pushes to `main` or `master`, pull requests, version tags beginning
 with `v`, and manual dispatches.
 
-To download a browser ZIP directly without an extra artifact ZIP:
+Every Actions run uploads three separate browser artifacts:
 
-1. Push a version tag such as `v1.0.2`.
-2. Open the repository's **Releases** page.
-3. Download `focusgate-chrome.zip`, `focusgate-edge.zip`, or
-   `focusgate-firefox.zip` directly from the release assets.
+1. Open the repository's **Actions** tab and select a completed build.
+2. Download the `focusgate-chrome-...`, `focusgate-edge-...`, or
+   `focusgate-firefox-...` artifact.
+3. Extract that artifact to get its single browser-specific ZIP.
 
-The workflow creates or updates that GitHub Release and attaches the three
-browser ZIPs as-is. Branch pushes, pull requests, and manual runs build and
-validate the packages without publishing a release. The Firefox validation
-checks its Gecko ID, background scripts fallback, and data-collection declaration.
+GitHub wraps Actions artifacts in a download ZIP; that wrapper cannot be
+disabled. To download the browser ZIP itself without an extra wrapper, push a
+version tag such as `v1.0.2`, then download the ZIP directly from the resulting
+GitHub Release. The Firefox validation checks its Gecko ID, background scripts
+fallback, and data-collection declaration.
 
 ## GitHub sync and extension build watch from Replit
 

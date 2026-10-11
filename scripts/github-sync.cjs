@@ -147,8 +147,32 @@ async function waitForExtensionBuild(commitSha) {
         );
       }
 
+      const artifactResponse = await githubRequest(
+        `https://api.github.com/repos/TITANICBHAI/FocusGate/actions/runs/${run.id}/artifacts`,
+      );
+      const artifacts = (artifactResponse.artifacts || []).filter(
+        (artifact) => !artifact.expired,
+      );
+      const expectedNames = [
+        `focusgate-chrome-${commitSha}`,
+        `focusgate-edge-${commitSha}`,
+        `focusgate-firefox-${commitSha}`,
+      ];
+      const missingArtifacts = expectedNames.filter(
+        (name) => !artifacts.some((artifact) => artifact.name === name),
+      );
+      if (missingArtifacts.length) {
+        throw new Error(
+          `Build succeeded, but missing browser download artifacts: ${missingArtifacts.join(', ')}. Review ${run.html_url}`,
+        );
+      }
+
+      const artifactLinks = expectedNames.map((name) => {
+        const artifact = artifacts.find((candidate) => candidate.name === name);
+        return `- ${artifact.name}: ${artifact.archive_download_url}`;
+      });
       log(
-        `Extension build succeeded. It validates packages on branch pushes; direct browser ZIP downloads are attached to GitHub Releases for version tags. Review ${run.html_url}`,
+        `Extension build succeeded. Browser download artifacts:\n${artifactLinks.join('\n')}\nVersion tags also attach the ZIPs directly to GitHub Releases. Review ${run.html_url}`,
       );
       return;
     }

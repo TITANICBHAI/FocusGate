@@ -14,10 +14,10 @@
   metadata.
 - `build/store-submission/` is the complete upload bundle with all three ZIPs,
   listing text, license, icon, and store screenshots.
-- GitHub Actions attaches the Chrome, Edge, and Firefox ZIPs directly to a
-  GitHub Release when a `v*` tag is pushed; it does not wrap them in Actions
-  artifact ZIPs. Its Firefox validation checks the Gecko ID, scripts fallback,
-  and data-collection declaration.
+- GitHub Actions uploads Chrome, Edge, and Firefox as separate artifacts on
+  every build; each downloaded artifact contains one browser ZIP. A `v*` tag
+  also attaches the ZIPs directly to a GitHub Release. Firefox validation checks
+  the Gecko ID, Firefox-only background scripts, and data-collection declaration.
 - `STORE_LISTING.md` contains the store copy, permission justifications, data
   disclosures, and required URLs.
 - `AFTER_PUBLISHING.md` explains what to do after the docs site and store
