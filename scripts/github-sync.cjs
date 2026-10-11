@@ -148,21 +148,9 @@ async function waitForExtensionBuild(commitSha) {
         );
       }
 
-      const artifacts = await githubRequest(
-        `https://api.github.com/repos/TITANICBHAI/FocusGate/actions/runs/${run.id}/artifacts`,
+      log(
+        `Extension build succeeded. It validates packages on branch pushes; direct browser ZIP downloads are attached to GitHub Releases for version tags. Review ${run.html_url}`,
       );
-      const availableArtifacts = (artifacts.artifacts || []).filter(
-        (artifact) => !artifact.expired,
-      );
-      if (availableArtifacts.length) {
-        log(
-          `Extension build succeeded. Download artifacts:\n${availableArtifacts
-            .map((artifact) => `- ${artifact.name}: ${artifact.archive_download_url}`)
-            .join('\n')}`,
-        );
-      } else {
-        log(`Extension build succeeded, but no downloadable artifacts were found. Review ${run.html_url}`);
-      }
       return;
     }
 

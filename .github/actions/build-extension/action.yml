@@ -1,0 +1,64 @@
+name: Build and validate browser extensions
+description: Build FocusGate and package the Chrome, Edge, and Firefox ZIPs
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Build extension
+      shell: bash
+      run: bun run build:extension
+
+    - name: Package Chrome extension
+      shell: bash
+      run: bun run package:chrome
+
+    - name: Package Edge extension
+      shell: bash
+      run: bun run package:edge
+
+    - name: Package Firefox extension
+      shell: bash
+      run: bun run package:firefox
+
+    - name: Validate packaged extensions
+      shell: bash
+      run: |
+        for archive in build/focusgate-chrome.zip build/focusgate-edge.zip build/focusgate-firefox.zip; do
+          unzip -tq "$archive"
+          manifest="$(unzip -p "$archive" manifest.json)"
+          printf "%s" "$manifest" | ARCHIVE="$archive" node -e '
+            let input = "";
+            process.stdin.on("data", chunk => input += chunk);
+            process.stdin.on("end", () => {
+              const manifest = JSON.parse(input);
+              if (manifest.manifest_version !== 3) process.exit(1);
+              if (!manifest.background?.service_worker) process.exit(1);
+              if (!manifest.icons?.["128"]) process.exit(1);
+              if (process.env.ARCHIVE.endsWith("focusgate-firefox.zip")) {
+                const gecko = manifest.browser_specific_settings?.gecko;
+                if (!manifest.background.scripts?.includes(manifest.background.service_worker)) {
+                  throw new Error("Firefox background.scripts fallback is missing.");
+                }
+                if (!gecko?.id) throw new Error("Firefox Gecko add-on ID is missing.");
+                if (JSON.stringify(gecko.data_collection_permissions?.required) !== "[\"none\"]") {
+                  throw new Error("Firefox data_collection_permissions must declare required: [\"none\"].");
+                }
+              }
+              console.log(`Validated ${manifest.name} ${manifest.version}`);
+            });
+          '
+        done
