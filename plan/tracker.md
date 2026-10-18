@@ -22,8 +22,8 @@
 | Area | Status | Progress | Notes |
 |---|---|---:|---|
 | Plan package setup | Complete | 4/4 checks | This documentation batch only; no extension implementation was authorized or started |
-| Extension implementation | In progress — WP0 | 0% verified | Recalculate from checked tasks/acceptance items and evidence as work is verified |
-| Current implementation batch | WP0 — Repo hygiene and tooling | In progress | Authorized scope is WP0 only |
+| Extension implementation | In progress — WP1 | WP0 complete; WP1 implementation verified, one browser check pending | Recalculate from checked tasks/acceptance items and evidence as work is verified |
+| Current implementation batch | WP1 — Foundation, shared core, storage, migration | Implementation complete; Firefox runtime check pending | Authorized scope is WP1 only |
 
 ## Implementation order and gates
 
@@ -77,19 +77,21 @@ Plan reference: §6, WP1.
 
 ### Work
 
-- [ ] Create shared pure modules and tests; enable strict TypeScript for new code as specified.
-- [ ] Move background/content entry points to the planned source structure and implement the build pipeline/manifest updates.
-- [ ] Implement typed storage helpers and single-writer update behavior.
-- [ ] Implement migration/readiness logic and fixture-based migration test.
-- [ ] Keep old background/content scripts working until their replacements are ready; remove only at the planned point.
+- [x] Create WP1 shared foundation modules (`types`, `defaults`, `storage`, `migrate`) and tests; enable strict TypeScript for new extension source.
+- [x] Add source background/content entrypoints and the Vite-to-esbuild pipeline; preserve legacy behavior through transition imports and update the module-worker manifest metadata.
+- [x] Implement typed storage helpers and single-writer update behavior.
+- [x] Implement migration/readiness logic and fixture-based migration test.
+- [x] Keep old background/content scripts working until their replacements are ready; remove only at the planned point.
+
+**Scope note:** Feature-specific shared modules and their full §8.1 test matrices (`time`, `domains`, `keywords`, `plan`, `allowance`, `dnr`, `password`, `gating`, `presets`, `stats`) remain with their matching feature WPs so WP1 does not pull later enforcement, security, or reporting behavior forward.
 
 ### Acceptance
 
-- [ ] Build output loads in Chrome and Firefox with the existing UI still working.
-- [ ] Unit tests pass and the v1 migration fixture passes.
-- [ ] Concurrent calls to `ready()` are idempotent (10-way check).
+- [ ] Build output loads in Chrome and Firefox with the existing UI still working. Chrome 152 headless extension load and preview UI are verified; Firefox packaging is validated, but no Firefox browser binary is available for temporary-add-on loading.
+- [x] Unit tests pass and the v1 migration fixture passes.
+- [x] Concurrent calls to `ready()` are idempotent (10-way check).
 
-**Evidence / batch-note links:** —
+**Evidence / batch-note links:** Batch WP1 below; final build/typecheck/test and Chromium checks are recorded there.
 
 ## WP1b — De-risking spikes
 
@@ -402,4 +404,16 @@ Add a new entry for every batch. Set status to **In progress** before changing i
 - Resumed: 2026-10-19. At batch start, `patch_req.cjs`, `dist/`, `tests/`, and `CHANGELOG.md` were absent; `build/` remained. Only the supplied prompt attachment was untracked. Continued only the remaining WP0 work.
 - Failures during this resume: managed `vitest@latest` resolves to Vitest 5.0.5, which requires Node 22.12+ and the npm 10.8.2 Arborist peer-resolution error occurred before any file changes. The managed installer rejects CLI flags; the documented one-command `vitest@4.1.11 --omit=optional` attempt also failed with the same `edgesOut` error and left package files unchanged. No peer override or firewall bypass was used.
 - Further install attempts: npm 12.2.0 requires Node 22.22+, so it is not compatible with this project's Node 20 runtime. Temporary npm 11.21.1 is compatible; its first install timed out after 300 seconds during slow downloads and a retry using the warmed cache succeeded. The subsequent clean npm 10.8.2 install verified the resulting lockfile.
-- External sync observation: during this batch, a commit authored as `FocusGate Replit Sync` appeared on `main`/`origin/main` containing `package.json`, `package-lock.json`, and tracker changes. I did not start the configured GitHub Sync workflow, run GitHub Actions, or issue a `git push`; the trigger is unknown. No additional sync was initiated.
+- External sync observation: during this batch, a commit authored as `FocusGate Replit Sync` appeared on `main`/`origin/main` containing `package.json`, `package-lock.json`, and tracker changes. A later read-only log refresh showed the configured GitHub Sync workflow had pushed `main` and its triggered GitHub build failed. I did not start/restart that workflow, run GitHub Actions, or issue a `git push`; no corrective sync was initiated.
+
+### Batch WP1 — Foundation, shared core, storage, migration
+
+- Status: Implementation complete; acceptance check 1 remains partially verified (Firefox runtime unavailable)
+- Started: 2026-10-19
+- Changed files: `src/shared/{types,defaults,migrate,storage}.ts`, `src/background/index.ts`, `src/content/index.ts`, `scripts/build-extension.mjs`, `public/manifest.json`, `tsconfig.json`, `tests/fixtures/{v1-storage.json,v2-storage.expected.json}`, `tests/shared/{migrate,storage}.test.ts`, and this tracker. `public/background.js` and `public/content.js` are unchanged.
+- Verification performed: `npm run typecheck` passed; `npm test` passed (3 files, 10 tests); final `npm run build` passed and emitted `dist/index.html`, `dist/background.js`, and `dist/content.js`. Chromium 152 registered the unpacked extension and rendered the `chrome-extension://…/index.html` popup DOM with FocusGate, Duration, and Lock Level; the CLI stayed open until its timeout because of the extension worker, but no extension/manifest errors were reported. Temporary Chrome and Firefox ZIP staging validated their manifests without touching existing `build/` assets. The restarted extension preview screenshot also shows the existing 25-minute UI.
+- Result: added the v2 shared data contract/defaults, typed storage helpers (`getState`, `patch`, serialized `update`, and `onStateChanged`), a pure v1 migration with backup retention, source entrypoints, and the build pipeline. The fixture covers an active timer, overnight schedule, numeric and legacy object allowances, password, blocks, and seconds-to-milliseconds history conversion. The existing v1 popup remains active; `ready()` is implemented and tested but deliberately not called from the bridge until the v1 consumers are replaced.
+- Evidence paths / test rows: `tests/shared/migrate.test.ts` (4), `tests/shared/storage.test.ts` (5), and the two migration fixtures. The v1 migration, no-limit standalone conversion, 30-day backup expiry, storage defaults, patching, change subscription, serialized 10-way updates, and concurrent 10-way `ready()` checks pass.
+- Decisions: preserve `public/background.js` and `public/content.js` verbatim and continue using their behavior in built bundles until their replacements are ready. Defer activating the v2 migration from the legacy worker until the v2 consumers replace the v1 UI/state paths, to avoid moving stored data out from under the current UI. Keep UI pages and feature-specific manifest changes in their planned later WPs; WP1 applies only the module worker metadata needed by its ESM bundle.
+- Failures and fixes / rerun: an initial static verifier incorrectly expected `chrome.runtime` in the legacy content bundle; inspection showed the old script uses `chrome.storage` and `MutationObserver`, and the corrected assertions passed. A cleanup of unused migration symbols briefly removed a still-used `UsageRecord` import; strict typecheck caught it, the import was restored, and typecheck plus all 10 tests passed. The preview also retains the known nonblocking favicon 404.
+- Blockers / deferred work: no Firefox binary is installed, so the temporary add-on could not be opened in Firefox; only its staged archive and manifest were validated. The v2 migration is not activated while v1 UI consumers remain. Do not overwrite the existing `build/focusgate-firefox.zip` or store-submission assets during further verification.

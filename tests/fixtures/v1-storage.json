@@ -1,0 +1,74 @@
+{
+  "blockedSites": [
+    "WWW.Example.com",
+    "example.com",
+    "https://news.example.org/path",
+    "bad host",
+    "localhost"
+  ],
+  "blockedKeywords": [" Study ", "", "#gaming"],
+  "timer_isActive": true,
+  "timer_mode": "work",
+  "timer_timeLeft": 900,
+  "timer_totalTime": 1500,
+  "timer_lockLevel": "strict",
+  "timer_activeTaskId": "task-1",
+  "standaloneMode": true,
+  "standaloneUntil": 1792414800000,
+  "schedules": [
+    {
+      "id": "schedule-overnight",
+      "startTime": "22:00",
+      "endTime": "06:00",
+      "isActive": true,
+      "days": [1, 2],
+      "sites": ["example.com"],
+      "keywords": ["game"]
+    }
+  ],
+  "dailyAllowances": {
+    "example.com": 30,
+    "news.example.org": { "type": "time", "limit": 20 },
+    "video.example.net": { "type": "interval", "limit": 120 }
+  },
+  "dailyUsage": { "example.com": 35 },
+  "usageDate": "2026-10-19",
+  "cooldownEnd": {},
+  "whitelistedUrls": [
+    "https://www.example.com/docs/?view=1#section",
+    "bad url"
+  ],
+  "temptationLog": [
+    { "domain": "www.example.com", "timestamp": 1792404000000 },
+    { "domain": "news.example.org", "timestamp": 1788256800000 }
+  ],
+  "sessionHistory": [
+    {
+      "id": "history-complete",
+      "startTime": 1792314000000,
+      "duration": 1500,
+      "elapsed": 1200,
+      "status": "completed"
+    },
+    {
+      "id": "history-active",
+      "startTime": 1792407600000,
+      "duration": 600,
+      "elapsed": 120,
+      "status": "active"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Finish report",
+      "completed": false,
+      "durationMinutes": 25,
+      "scheduledTime": "09:30",
+      "isLocked": true,
+      "lockLevel": "commitment",
+      "createdAt": 1792310300000
+    }
+  ],
+  "app_password_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}

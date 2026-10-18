@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "session": {
+    "status": "work",
+    "sessionId": "migrated-1792411200000",
+    "phaseStartedAt": 1792410600000,
+    "phaseEndsAt": 1792412100000,
+    "phasePlannedMs": 1500000,
+    "plannedWorkMs": 1500000,
+    "extendedMs": 0,
+    "cycle": 0,
+    "lockLevel": "strict",
+    "taskId": "task-1",
+    "blockedAttempts": 0,
+    "lastHeartbeatAt": 1792411200000,
+    "gaps": []
+  },
+  "standalone": {
+    "active": true,
+    "startsAt": 1792411200000,
+    "until": 1792414800000,
+    "sites": ["example.com", "news.example.org", "localhost"],
+    "startedAt": 1792411200000,
+    "extendedMs": 0,
+    "blockedAttempts": 0,
+    "lastSites": ["example.com", "news.example.org", "localhost"]
+  },
+  "blockedSites": ["example.com", "news.example.org", "localhost"],
+  "alwaysBlockedSites": [],
+  "keywords": [
+    { "text": "Study", "mode": "both", "when": "blocks" },
+    { "text": "#gaming", "mode": "both", "when": "blocks" }
+  ],
+  "exceptions": ["example.com/docs?view=1"],
+  "schedules": [
+    {
+      "id": "schedule-overnight",
+      "name": "Schedule 1",
+      "enabled": true,
+      "days": [1, 2],
+      "start": "22:00",
+      "end": "06:00",
+      "sites": ["example.com"],
+      "keywords": ["game"],
+      "useGlobalLists": false
+    }
+  ],
+  "allowances": {
+    "example.com": { "mode": "time_budget", "limitMin": 30, "duringBlocks": true },
+    "news.example.org": { "mode": "time_budget", "limitMin": 20, "duringBlocks": true },
+    "video.example.net": {
+      "mode": "interval",
+      "allowMin": 5,
+      "everyMin": 120,
+      "duringBlocks": true
+    }
+  },
+  "usage": {},
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Finish report",
+      "durationMin": 25,
+      "scheduledTime": "09:30",
+      "priority": "medium",
+      "tags": [],
+      "recurring": "none",
+      "lockLevel": "commitment",
+      "completed": false,
+      "createdAt": 1792310300000
+    }
+  ],
+  "sessionHistory": [
+    {
+      "id": "history-complete",
+      "startedAt": 1792314000000,
+      "endedAt": 1792315200000,
+      "plannedMs": 1500000,
+      "elapsedMs": 1200000,
+      "status": "completed",
+      "lockLevel": "none",
+      "blockedAttempts": 0,
+      "gaps": []
+    },
+    {
+      "id": "history-active",
+      "startedAt": 1792407600000,
+      "endedAt": 1792407720000,
+      "plannedMs": 600000,
+      "elapsedMs": 120000,
+      "status": "abandoned",
+      "lockLevel": "none",
+      "blockedAttempts": 0,
+      "gaps": []
+    }
+  ],
+  "dayStats": {
+    "2026-10-19": {
+      "dateKey": "2026-10-19",
+      "focusMs": 0,
+      "sessionsCompleted": 0,
+      "sessionsAbandoned": 0,
+      "blocks": 1,
+      "blocksByDomain": { "example.com": 1 },
+      "tasksCompleted": 0
+    }
+  },
+  "recentBlocks": [
+    { "domain": "example.com", "reason": "legacy", "at": 1792404000000 },
+    { "domain": "news.example.org", "reason": "legacy", "at": 1788256800000 }
+  ],
+  "settings": {
+    "theme": "system",
+    "fontScale": 1,
+    "dailyGoalMin": 120,
+    "defaultDurationMin": 25,
+    "breaks": {
+      "enabled": true,
+      "shortMin": 5,
+      "longMin": 15,
+      "cyclesBeforeLong": 4,
+      "autoStartNext": false
+    },
+    "notifications": {
+      "sessionEnd": true,
+      "breakEnd": true,
+      "taskReminders": true,
+      "weeklyReport": true,
+      "achievements": true
+    },
+    "reminders": {
+      "preStartMin": [10, 5, 1],
+      "atStart": true,
+      "midSessionMin": [15, 30],
+      "almostDone": true,
+      "atEnd": true
+    },
+    "blockPage": {
+      "message": "You are supposed to be focusing right now.",
+      "quotes": [],
+      "showQuotes": false,
+      "sound": false
+    },
+    "contentFilters": {},
+    "keywords": {
+      "scope": { "searchQuery": true, "url": true, "title": false },
+      "match": "substring"
+    },
+    "allowOnly": { "enabled": false, "domains": [] },
+    "autoStartTasks": false
+  },
+  "password": {
+    "algo": "sha256-legacy",
+    "hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "health": {
+    "lastHeartbeatAt": 0,
+    "lastReconcileAt": 0,
+    "lastError": null,
+    "ruleCount": 0
+  },
+  "achievements": [],
+  "lastWeeklyReport": null,
+  "weeklyReports": [],
+  "keywordMatches": [],
+  "backup_v1": null
+}

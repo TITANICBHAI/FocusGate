@@ -4,6 +4,7 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
+    "strict": true,
     "lib": [
       "ES2022",
       "DOM",
@@ -22,5 +23,10 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "src/shared/**/*.ts",
+    "src/background/**/*.ts",
+    "src/content/**/*.ts"
+  ]
 }
