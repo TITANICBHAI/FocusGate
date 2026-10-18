@@ -1,0 +1,29 @@
+You are helping with the FocusGate browser extension. Read the following project files before responding:
+
+replit.md
+plan/README.md
+plan/focusgate-extension-implementation-plan.md
+plan/tracker.md
+Authorization gate — read-only until the owner starts you
+You are in pre-agent, read-only preparation mode. Read the files, inspect relevant code and the working tree only as needed to understand the project. Do not edit, create, rename, delete, install, or generate project files; do not change settings or workflows; do not update the tracker; and do not run commands that modify the workspace. Do not commit or push.
+
+After reading, reply with a concise context summary containing:
+
+the plan's scope and implementation order;
+the current relevant working-tree state and any existing user changes;
+the first batch you recommend after authorization;
+blockers, risks, or plan assumptions that need verification.
+Then stop and wait. Do not begin implementation until the owner explicitly tells you to start editing, such as “START IMPLEMENTATION” or “begin WP0.” Being given this prompt, asked to read the plan, or asked for a summary is not permission to edit. If the owner's message is ambiguous, remain read-only and ask whether to start.
+
+Rules after the owner explicitly starts implementation
+Work alone. Do not create, invoke, or delegate to sub-agents.
+Follow the plan's work-package order and the tracker. Do not widen scope or silently change the plan's contract. WP1b spikes must precede WP2 and WP3; do not start WP7 until the M1 gate is green; Tier C is backlog unless the owner asks for it.
+Before editing, inspect relevant current code, project instructions, and git status --short. Preserve unrelated user changes and user data. Do not assume the plan's snapshot of the repo is current; verify before acting.
+Respect the no-touch rules in the plan. Do not hand-edit dist/. Do not add network calls, analytics, or telemetry. Do not port OS-level enforcement mechanisms. Do not recreate files identified as missing until the plan's WP0 repository check is complete. Do not overwrite the supplied source attachment or unrelated user work.
+Treat task replacement and every other deletion or replacement of user data as destructive. Replacement stays disabled by default. Preserve explicit confirmation and required safety guards; do not perform destructive actions without the owner's authorization.
+At the start of each batch, mark it In progress in the tracker. After each meaningful change, update the relevant tracker note. For every completed batch, record changed files, the exact verification performed, and its result. Record decisions, failures, blockers, and deferred work; do not erase failed attempts. Tick a checkbox only when its work is complete and verified. If a check fails, keep the item unchecked until the fix and successful rerun are recorded.
+Keep plan, tracker, and prompt consistent. Change the implementation plan only when a plan assumption is disproven or the owner authorizes a change; document the reason and update the related tracker entries. Leave incomplete items unchecked and explain why before finishing.
+Do not push to GitHub or start, poll, or monitor GitHub Actions unless the owner explicitly asks. Use GitHub Actions for APK-building verification only when explicitly requested; otherwise clearly state that APK checks were not run. Run any relevant Gradle/Android tests on Replit using the existing workflow or scripts under scripts/.
+Never expose, copy into files, or print secrets or credentials.
+First authorized batch
+When the owner explicitly starts implementation, begin with the next unchecked work package in plan/tracker.md; the expected first package is WP0. Mark the batch in progress before editing. Re-check the working tree and applicable source files. Do not assume this pre-prompt itself started the work.
