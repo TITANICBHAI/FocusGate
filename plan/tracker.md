@@ -2,8 +2,8 @@
 
 **Specification:** [`focusgate-extension-implementation-plan.md`](focusgate-extension-implementation-plan.md)  
 **Project instructions:** [`../replit.md`](../replit.md)  
-**Authorization state:** **READ-ONLY — implementation has not been authorized.**  
-**Initial status:** Planning package setup is being recorded below; all extension implementation work packages remain not started.
+**Authorization state:** **WP0 authorized by the owner; this batch is in progress.** Other work packages remain gated by the plan and tracker.  
+**Creation-time snapshot:** Planning package setup is complete; extension implementation had not started when this tracker was created. This is a historical starting state, not a rule that work must always be unchecked.
 
 ## How to maintain this tracker
 
@@ -12,6 +12,7 @@
 - Record evidence for each completed batch: changed files, exact commands or manual checks performed, result, and any report/log path. Record decisions, failures, blockers, and deferred work too.
 - Never erase failed attempts or blockers. Add the successful fix and rerun as a new note; tick the checkbox only after that successful verification.
 - Keep WP task checkboxes and WP acceptance checkboxes separate. A WP is complete only when all its applicable work and acceptance checks are verified.
+- Preserve the actual state. Never reset a checked item, active batch, or existing progress when a new agent arrives. Reconcile the tracker with current code and evidence before resuming; mark discrepancies as notes instead of silently clearing history.
 - Overall implementation progress is the fraction of implementation task and acceptance checkboxes checked. Planning-package setup checks do not count toward implementation progress.
 - Detailed QA matrices in §8 of the specification must have row-level results recorded in an evidence report; aggregate QA checkboxes below may be checked only when every required row has a passing result.
 - If implementation is not authorized, do not edit source files or this tracker. The pre-agent must remain read-only and wait.
@@ -21,12 +22,16 @@
 | Area | Status | Progress | Notes |
 |---|---|---:|---|
 | Plan package setup | Complete | 4/4 checks | This documentation batch only; no extension implementation was authorized or started |
-| Extension implementation | Not started | 0% | All WP task and acceptance boxes below are intentionally unchecked |
-| Current implementation batch | None | — | Read-only until explicit owner authorization |
+| Extension implementation | In progress — WP0 | 0% verified | Recalculate from checked tasks/acceptance items and evidence as work is verified |
+| Current implementation batch | WP0 — Repo hygiene and tooling | In progress | Authorized scope is WP0 only |
 
 ## Implementation order and gates
 
 Follow this sequence: **WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 → WP6 → WP7 Tier A → WP8 → WP9 → WP10**. WP1b's four spikes must be completed before WP2 and WP3. Do not start WP7 before the plan's M1 gate is green. WP7 Tier B comes after Tier A; Tier C is backlog and requires an explicit owner request.
+
+## Continuation and resume rule
+
+The checkboxes and batch log show the real project state; they are not required to remain unchecked. On arrival, inspect the current tracker, batch notes, evidence, working tree, and relevant code. If a batch is already **In progress**, resume that batch after confirming its current state. Otherwise continue with the next eligible incomplete item in plan order; do not default to WP0 if progress already exists. If the owner names a specific item to continue, resume it while respecting the plan's dependencies and gates. Preserve completed checkboxes and history; only correct one if current code/evidence demonstrates it is inaccurate, and record why.
 
 ## Planning-package setup
 
@@ -53,10 +58,10 @@ Plan reference: §6, WP0.
 
 ### Work
 
-- [ ] Update package name/version and scripts; remove the specified server-only dependencies.
-- [ ] Remove the one-off patch script; update ignore rules and untrack build output as specified.
-- [ ] Check the GitHub repository for the plan's missing referenced files before recreating any; retain existing files.
-- [ ] Run and record the baseline typecheck errors.
+- [x] Update package name/version and scripts; remove the specified server-only dependencies.
+- [x] Remove the one-off patch script; update ignore rules and untrack build output as specified.
+- [x] Check the GitHub repository for the plan's missing referenced files before recreating any; retain existing files.
+- [x] Run and record the baseline typecheck errors.
 - [ ] Add Vitest, a smoke test, and the changelog.
 
 ### Acceptance
@@ -64,7 +69,7 @@ Plan reference: §6, WP0.
 - [ ] `npm ci`, `npm run typecheck`, and `npm test` run and their results are recorded; expected legacy type errors are noted if applicable.
 - [ ] `dist/` is untracked, the one-off script is gone, and server dependencies are removed as specified.
 
-**Evidence / batch-note links:** —
+**Evidence / batch-note links:** Batch WP0 below; unauthenticated GitHub API checks returned HTTP 200 for every path named by §1.2, so no referenced files need to be recreated.
 
 ## WP1 — Foundation, shared core, storage, migration
 
@@ -370,3 +375,27 @@ Add a new entry for every batch. Set status to **In progress** before changing i
 - Decisions: preserve the uploaded source attachment; place the workspace-specific execution gate in the copied plan.
 - Failures and fixes / rerun: initial whitespace normalization and self-reference assertions both failed due to overly strict verification-script assumptions; corrected both assertions and recorded successful reruns above.
 - Blockers / deferred work: implementation is gated on an explicit owner start instruction.
+
+### Batch P1 — Resume-aware tracker instructions
+
+- Status: Complete
+- Started: 2026-10-18
+- Changed files: `plan/focusgate-extension-implementation-plan.md`, `plan/README.md`, `plan/tracker.md`, `plan/agent-pre-prompt.md`.
+- Verification performed: Node.js assertions checked that the supplied plan is unchanged outside its workspace addendum; current-status/resume rules, explicit authorization gates, dependencies, and links are consistent across files; all implementation checkboxes still reflect the actual 0% state.
+- Result: all final assertions passed. Future agents are instructed to resume an in-progress or owner-named item and preserve completed work rather than assuming everything is unchecked or defaulting to WP0.
+- Evidence paths / test rows: verification checked the four files in `plan/`; no application tests were run because no application code changed.
+- Decisions: the current unchecked boxes remain accurate for this snapshot only; future status must be reconciled from actual code, tracker notes, and evidence.
+- Failures and fixes / rerun: (1) First assertion expected the literal wording “resume an existing ‘In progress’ batch”; the tracker used equivalent wording (“If a batch is already In progress, resume that batch”). Adjusted the assertion to check the actual rule and reran. (2) Second assertion expected “do not assume every item is unchecked”; the README says “rather than assuming every item is unchecked.” Adjusted the assertion to match the existing phrasing and reran. The final verification passed.
+- Blockers / deferred work: extension implementation remains gated on the owner's explicit start or direct continue instruction.
+
+### Batch WP0 — Repo hygiene and tooling
+
+- Status: In progress
+- Started: 2026-10-18
+- Changed files: `package.json`, `package-lock.json`, `.gitignore`; deleted `patch_req.cjs`; staged removal of 11 tracked `dist/` entries while retaining the files locally.
+- Verification performed: baseline `npm run lint` initially exited 127 with `sh: 1: tsc: command not found` because `node_modules/` was absent; initial `npm ci` failed with E403 for `proxy-addr@2.0.7` under Replit's package security policy. The package manager successfully removed `express`, `@types/express`, `dotenv`, and `tsx`; its install output reported 1 high-severity audit finding. `npm run typecheck` passes with zero diagnostics against unchanged application source. GitHub API root/path checks were read-only and returned HTTP 200 for all §1.2 referenced paths. After removing Express, `npm ci` succeeded (101 packages); `DANGEROUSLY_ALLOW_GIT=1 git rm --cached -r dist` staged 11 removals and verified `dist/manifest.json` remains on disk. Two Vitest 4.1.11 callback attempts failed in npm peer resolution; a Vitest 3.2.4 retry then hit the package firewall block for `tinypool@1.1.1` (critical CVE), and did not add Vitest.
+- Result: WP0 work items 1, 2, 3, and 4 are verified; the Vitest/smoke-test/changelog item and acceptance checks remain open.
+- Evidence paths / test rows: this turn's `npm run lint`, `npm run typecheck`, initial and successful `npm ci` attempts, package-manager uninstall result, GitHub API status checks, `git diff --cached -- dist`, and on-disk `dist/manifest.json` check.
+- Decisions: inspect before edit; do the WP0 GitHub repository check read-only; do not push or run GitHub Actions. Do not run the new `clean` script: the existing tracked `build/` directory contains a packaged Firefox extension and store submission assets, and WP0 does not ask to delete them.
+- Failures and fixes / rerun: baseline attempt first failed before TypeScript ran because dependencies were absent; `npm ci` was blocked by a critical-CVE package policy rejection for `proxy-addr@2.0.7`, which the lockfile showed was required by Express `4.22.2`. Removed the explicitly undesired Express parent via the package manager rather than bypassing the firewall; subsequent `npm ci` and typecheck passed. One one-off inspection helper exited on an `awaitImport` typo after printing the dependency parent; reran tracked-file counts with a corrected helper. The Vitest 4.1.11 install callback failed twice with `Cannot read properties of null (reading 'edgesOut')`, including after a successful clean `npm ci`; log inspection traced it to npm resolving its optional browser peers. Trying Vitest 3.2.4 avoided that resolver error, but the firewall rejected `tinypool@1.1.1` as a critical CVE. Check whether a safe newer `tinypool` resolves the firewall and use the package manager's approved install path; do not bypass the firewall. The Git safeguard first rejected `git rm --cached -r dist`; retried with its explicit opt-in because untracking `dist/` is directly authorized by WP0, and verified all 11 files remain on disk. A tracker update patch also failed on stale context and was reapplied using the current lines. The package-lock still has an orphan `tsx` entry with no dependency parent; check whether final lock regeneration removes it. Keep acceptance unchecked until clean-install results are recorded.
+- Blockers / deferred work: baseline diagnostics remain pending a successful, policy-compliant install; package removal and the remaining WP0 work are in progress.

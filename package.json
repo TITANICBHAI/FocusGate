@@ -1,12 +1,12 @@
 {
-  "name": "react-example",
+  "name": "focusgate",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0-dev",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "docs:dev": "vite --config vite.config.ts docs --host 0.0.0.0 --port 5000",
-    "build": "vite build",
+    "build": "node scripts/build-extension.mjs",
     "build:extension": "vite build",
     "github:sync": "node scripts/github-sync.cjs",
     "package:chrome": "node scripts/package-extension.cjs chrome",
@@ -16,15 +16,15 @@
     "prepare:store": "node scripts/prepare-store-submission.cjs",
     "package:all": "npm run build:extension && npm run package:chrome && npm run package:edge && npm run package:firefox && npm run prepare:store",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^5.2.0",
     "clsx": "^2.1.1",
-    "dotenv": "^17.4.2",
-    "express": "^4.22.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.43.0",
     "react": "^19.2.8",
@@ -33,12 +33,10 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.2.5",
-    "@types/express": "^4.17.25",
     "@types/node": "^22.20.1",
     "autoprefixer": "^10.5.4",
     "esbuild": "^0.25.12",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.12",
     "typescript": "~5.8.2",
     "vite": "^6.4.3"
   }

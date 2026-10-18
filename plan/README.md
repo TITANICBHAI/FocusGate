@@ -8,13 +8,14 @@ This folder contains the implementation specification, its working tracker, and 
 - [`tracker.md`](tracker.md) — checklists, progress, batch notes, evidence, decisions, failures, blockers, and deferred work. Update it as work proceeds; never mark an unverified item complete.
 - [`agent-pre-prompt.md`](agent-pre-prompt.md) — copy this prompt when giving a new agent context. It requires read-only preparation until you explicitly authorize editing.
 
-The uploaded source remains unchanged under `attached_assets/`. The implementation plan starts in a **read-only / not authorized** state. Supplying the pre-agent prompt does not authorize edits; only the owner can start implementation.
+The uploaded source remains unchanged under `attached_assets/`. At this plan package's creation, implementation was **read-only / not authorized**. Project status may change: use the current tracker and evidence rather than assuming every item is unchecked or implementation must start from WP0. Supplying the pre-agent prompt does not authorize edits; an explicit start or direct instruction to continue a named item does.
 
 ## Working agreement
 
 - Do not edit project files or settings until the owner explicitly tells the agent to start editing.
 - Once authorized, work alone and follow the plan's WP order and tracker. Do not widen scope or silently change requirements.
 - Before editing, inspect the relevant current code, project instructions, and working tree; preserve unrelated changes and user data.
+- Resume from the actual verified tracker state. Continue an existing in-progress batch or the item the owner explicitly asks to continue, subject to dependencies. Do not reset checkboxes or assume WP0 is next just because a new agent is involved.
 - Respect the source plan's no-touch rules. In particular, do not hand-edit `dist/`, do not add network calls or telemetry, and do not port OS-level enforcement features.
 - Keep replacement and destructive data operations disabled by default. Do not delete or replace user data without the owner's authorization and the plan's safety controls.
 - At the start of each batch, mark it in progress in the tracker. Update notes after meaningful changes. Tick checkboxes only after verification.

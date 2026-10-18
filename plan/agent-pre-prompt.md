@@ -22,12 +22,12 @@ After reading, reply with a concise context summary containing:
 - the first batch you recommend after authorization;
 - blockers, risks, or plan assumptions that need verification.
 
-Then stop and wait. **Do not begin implementation until the owner explicitly tells you to start editing**, such as “START IMPLEMENTATION” or “begin WP0.” Being given this prompt, asked to read the plan, or asked for a summary is not permission to edit. If the owner's message is ambiguous, remain read-only and ask whether to start.
+Then stop and wait. **Do not begin implementation until the owner explicitly authorizes editing**, such as “START IMPLEMENTATION,” “begin WP0,” or a direct request to “continue the current batch” / “continue WP3.” Being given this prompt, asked to read the plan, or asked for a summary is not permission to edit. If the owner's message is ambiguous, remain read-only and ask whether to start.
 
 ## Rules after the owner explicitly starts implementation
 
 1. Work alone. Do not create, invoke, or delegate to sub-agents.
-2. Follow the plan's work-package order and the tracker. Do not widen scope or silently change the plan's contract. WP1b spikes must precede WP2 and WP3; do not start WP7 until the M1 gate is green; Tier C is backlog unless the owner asks for it.
+2. **Resume the current state; do not assume everything is unchecked.** Before choosing work, inspect the current tracker, batch notes, evidence, working tree, and relevant code. If a batch is already marked In progress, resume it after confirming its current state. Otherwise continue the next eligible incomplete item in plan order, or the item the owner explicitly asks you to continue, respecting dependencies. Preserve verified checkboxes and history; do not reset progress. WP1b spikes must precede WP2 and WP3; do not start WP7 until the M1 gate is green; Tier C is backlog unless the owner asks for it.
 3. Before editing, inspect relevant current code, project instructions, and `git status --short`. Preserve unrelated user changes and user data. Do not assume the plan's snapshot of the repo is current; verify before acting.
 4. Respect the no-touch rules in the plan. Do not hand-edit `dist/`. Do not add network calls, analytics, or telemetry. Do not port OS-level enforcement mechanisms. Do not recreate files identified as missing until the plan's WP0 repository check is complete. Do not overwrite the supplied source attachment or unrelated user work.
 5. Treat task replacement and every other deletion or replacement of user data as destructive. Replacement stays disabled by default. Preserve explicit confirmation and required safety guards; do not perform destructive actions without the owner's authorization.
@@ -38,6 +38,6 @@ Then stop and wait. **Do not begin implementation until the owner explicitly tel
 
 ## First authorized batch
 
-When the owner explicitly starts implementation, begin with the next unchecked work package in `plan/tracker.md`; the expected first package is WP0. Mark the batch in progress before editing. Re-check the working tree and applicable source files. Do not assume this pre-prompt itself started the work.
+When the owner explicitly authorizes editing, first read the current tracker state. Resume a batch already marked In progress; otherwise work on the next eligible incomplete item in plan order, unless the owner directly names an item to continue. WP0 is first only if the tracker and dependencies show that it is. Mark the selected batch in progress before editing, then re-check the working tree and applicable source files. Do not assume this pre-prompt itself started the work.
 
 ---
