@@ -16,6 +16,7 @@ export const DEFAULT_STATE: AppState = {
     blockedAttempts: 0,
     lastHeartbeatAt: 0,
     gaps: [],
+    stopChallengeStartedAt: null,
   },
   standalone: {
     active: false,

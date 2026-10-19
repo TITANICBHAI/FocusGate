@@ -21,6 +21,7 @@ export interface SessionState {
   blockedAttempts: number;
   lastHeartbeatAt: number;
   gaps: SessionGap[];
+  stopChallengeStartedAt?: number | null;
 }
 
 export interface Schedule {
