@@ -55,7 +55,7 @@ version tag such as `v1.0.2`, then download the ZIP directly from the resulting
 GitHub Release. The Firefox validation checks its Gecko ID, background scripts
 fallback, and data-collection declaration.
 
-## GitHub sync and extension build watch from Replit
+## GitHub sync from Replit
 
 The Replit project includes a `FocusGate GitHub Sync` one-shot workflow. It
 commits tracked changes, pushes them to:
@@ -64,10 +64,8 @@ commits tracked changes, pushes them to:
 https://github.com/TITANICBHAI/FocusGate
 ```
 
-It then watches the `Build browser extension` GitHub Actions workflow for that
-commit. The Replit workflow exits after the GitHub build succeeds or fails; it
-does not stay running or poll forever. Set
-`GITHUB_ACTION_POLL_SECONDS` or `GITHUB_ACTION_TIMEOUT_SECONDS` if needed.
+The sync workflow exits after pushing. GitHub Actions builds the extension
+separately according to its configured triggers.
 
 The workflow reads `GITHUB_PERSONAL_ACCESS_TOKEN` only from Replit Secrets.
 The token is never stored in the repository or embedded in the Git remote URL.
