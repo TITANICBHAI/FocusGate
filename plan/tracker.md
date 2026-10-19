@@ -22,8 +22,8 @@
 | Area | Status | Progress | Notes |
 |---|---|---:|---|
 | Plan package setup | Complete | 4/4 checks | This documentation batch only; no extension implementation was authorized or started |
-| Extension implementation | In progress — WP1 | WP0 complete; WP1 implementation verified, one browser check pending | Recalculate from checked tasks/acceptance items and evidence as work is verified |
-| Current implementation batch | WP1 — Foundation, shared core, storage, migration | Implementation complete; Firefox runtime check pending | Authorized scope is WP1 only |
+| Extension implementation | In progress — WP1b | WP0 and WP1 implementation verified; WP1 Firefox check and WP1b spikes pending | Recalculate from checked tasks/acceptance items and evidence as work is verified |
+| Current implementation batch | WP1b — De-risking spikes | In progress | Authorized scope is WP1b only |
 
 ## Implementation order and gates
 
@@ -417,3 +417,16 @@ Add a new entry for every batch. Set status to **In progress** before changing i
 - Decisions: preserve `public/background.js` and `public/content.js` verbatim and continue using their behavior in built bundles until their replacements are ready. Defer activating the v2 migration from the legacy worker until the v2 consumers replace the v1 UI/state paths, to avoid moving stored data out from under the current UI. Keep UI pages and feature-specific manifest changes in their planned later WPs; WP1 applies only the module worker metadata needed by its ESM bundle.
 - Failures and fixes / rerun: an initial static verifier incorrectly expected `chrome.runtime` in the legacy content bundle; inspection showed the old script uses `chrome.storage` and `MutationObserver`, and the corrected assertions passed. A cleanup of unused migration symbols briefly removed a still-used `UsageRecord` import; strict typecheck caught it, the import was restored, and typecheck plus all 10 tests passed. The preview also retains the known nonblocking favicon 404.
 - Blockers / deferred work: no Firefox binary is installed, so the temporary add-on could not be opened in Firefox; only its staged archive and manifest were validated. The v2 migration is not activated while v1 UI consumers remain. Do not overwrite the existing `build/focusgate-firefox.zip` or store-submission assets during further verification.
+
+### Batch WP1b — De-risking spikes
+
+- Status: In progress
+- Started: 2026-10-19
+- Changed files at batch start: only `plan/tracker.md`; `docs/spikes.md` does not exist yet.
+- Initial environment: Chromium 152 is available; Firefox, Edge, Xvfb, and browser automation packages are not installed. `xdotool` exists, but a display server/windowing session has not yet been established.
+- Constraints: use only local test traffic and temporary spike artifacts; do not run GitHub Sync, trigger/poll GitHub Actions, or install browser packages from the network.
+- Verification performed: reread §6 WP1b and inspected the manifest, tracker, browser executables, docs directory, and worktree.
+- Result: experiments have not started yet; record each spike's exact cases, browser/OS, outcome, and limitation before changing any plan assumption.
+- Evidence paths / test rows: pending.
+- Failures and fixes / rerun: none yet.
+- Blockers / deferred work: cross-browser Firefox/Edge verification may be unavailable in this environment; determine whether any headful test surface is available before finalizing the gate.
