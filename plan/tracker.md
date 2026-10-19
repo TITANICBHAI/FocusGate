@@ -22,8 +22,8 @@
 | Area | Status | Progress | Notes |
 |---|---|---:|---|
 | Plan package setup | Complete | 4/4 checks | This documentation batch only; no extension implementation was authorized or started |
-| Extension implementation | In progress — WP1b | WP0 and WP1 implementation verified; WP1 Firefox check and WP1b spikes pending | Recalculate from checked tasks/acceptance items and evidence as work is verified |
-| Current implementation batch | WP1b — De-risking spikes | In progress | Authorized scope is WP1b only |
+| Extension implementation | In progress — WP1b | WP0 complete; WP1b runtime checks blocked by browser availability/control | Recalculate from checked tasks/acceptance items and evidence as work is verified |
+| Current implementation batch | WP1b — De-risking spikes | Blocked; WP2/WP3 remain gated | Authorized scope is WP1b only |
 
 ## Implementation order and gates
 
@@ -97,13 +97,13 @@ Plan reference: §6, WP1.
 
 Plan reference: §6, WP1b. Complete before WP2 and WP3.
 
-- [ ] S1: Redirect preserves the original URL; record browser versions, cases, result, and selected design.
-- [ ] S2: Attention sampling handles focused/minimized/idle/audible states; record OS/browser differences and decision.
-- [ ] S3: Alarm persistence, idempotency, and minimum period verified.
-- [ ] S4: Firefox MV3 APIs/permissions tested; limitations recorded.
-- [ ] `docs/spikes.md` records pass/fail for all four, chosen redirect design, and any changed plan assumption.
+- [ ] S1: Redirect preserves the original URL; record browser versions, cases, result, and selected design. Runtime test blocked; Plan B is provisional, not validated.
+- [ ] S2: Attention sampling handles focused/minimized/idle/audible states; record OS/browser differences and decision. Runtime sampling blocked; conservative fallback recorded.
+- [ ] S3: Alarm persistence, idempotency, and minimum period verified. Runtime test blocked; lifecycle re-arming fallback recorded.
+- [ ] S4: Firefox MV3 APIs/permissions tested; limitations recorded. Runtime test blocked; Firefox is unavailable.
+- [x] `docs/spikes.md` records the result for all four, provisional redirect design, and changed assumptions; runtime gate remains blocked.
 
-**Evidence / batch-note links:** —
+**Evidence / batch-note links:** `docs/spikes.md`; batch WP1b below.
 
 ## WP2 — Background-owned session engine
 
@@ -420,13 +420,13 @@ Add a new entry for every batch. Set status to **In progress** before changing i
 
 ### Batch WP1b — De-risking spikes
 
-- Status: In progress
+- Status: Blocked — browser runtime checks unavailable
 - Started: 2026-10-19
-- Changed files at batch start: only `plan/tracker.md`; `docs/spikes.md` does not exist yet.
-- Initial environment: Chromium 152 is available; Firefox, Edge, Xvfb, and browser automation packages are not installed. `xdotool` exists, but a display server/windowing session has not yet been established.
-- Constraints: use only local test traffic and temporary spike artifacts; do not run GitHub Sync, trigger/poll GitHub Actions, or install browser packages from the network.
-- Verification performed: reread §6 WP1b and inspected the manifest, tracker, browser executables, docs directory, and worktree.
-- Result: experiments have not started yet; record each spike's exact cases, browser/OS, outcome, and limitation before changing any plan assumption.
-- Evidence paths / test rows: pending.
-- Failures and fixes / rerun: none yet.
-- Blockers / deferred work: cross-browser Firefox/Edge verification may be unavailable in this environment; determine whether any headful test surface is available before finalizing the gate.
+- Changed files: `docs/spikes.md`, `plan/focusgate-extension-implementation-plan.md`, and `plan/tracker.md`. All browser harness artifacts were confined to `/tmp`; no app or dependency files changed.
+- Environment: Replit Linux kernel `6.18.57`; Chromium `152.0.7977.64`; no Firefox, Edge, Xvfb, Playwright, Puppeteer, or web-ext. `DISPLAY=:0` reports 800×600 and `xdotool` is available.
+- Constraints followed: DNR test hosts were mapped to loopback; no external sites or package installs were used. No GitHub Sync or GitHub Actions workflow was started, polled, or monitored.
+- Verification performed: reviewed §6 WP1b and confirmed the existing Chrome extension popup had passed its WP1 check; this does not validate DNR, attention sampling, alarms, or Firefox APIs.
+- Result: recorded blocked outcomes, attempted cases, environment, provisional design/fallbacks, and changed assumptions in `docs/spikes.md`. WP1b is not complete; WP2 and WP3 remain gated.
+- Evidence paths / test rows: `docs/spikes.md` S1–S4; plan validation update immediately after the WP1b table.
+- Failures and fixes / rerun: S1 DevTools WebSocket first received HTTP 403; adding the local origin allowance exposed a harness-client error, fixed on retry, after which the browser command timed out without a page result. Separate dynamic/static DNR `--dump-dom` runs also timed out without output; headful Chromium produced no inspectable window. Stopped after these distinct approaches rather than continuing unreliable browser attempts.
+- Blockers / deferred work: obtain a controllable Chrome/Edge/Firefox test environment and rerun S1–S4 before WP2/WP3. Existing WP1 Firefox packaging verification is not a substitute for Firefox API testing.

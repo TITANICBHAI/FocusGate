@@ -1,0 +1,1 @@
+- [Browser-spike validation limits](browser-spike-validation.md) — a CLI browser timeout is a harness failure, not evidence about extension APIs; keep gates blocked until page output is observed.

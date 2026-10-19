@@ -622,6 +622,8 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 | **S3 — Alarms and worker lifecycle** | `alarms.getAll()` before and after stopping the worker and after a browser restart; confirm that re-creating an alarm with the same name resets it (B13); confirm the minimum period | `ensureAlarms()` is idempotent and an alarm fires with the popup closed after the worker was stopped | Re-arm every alarm in `onStartup`, `onInstalled` and at the top of every handler |
 | **S4 — Firefox MV3** | `background.scripts` with `type: "module"`; DNR with `regexSubstitution` to a `moz-extension://` URL; host-permission opt-in (`permissions.contains` and a `request` on a user gesture); `idle`; `notifications` (no buttons); `storage.session` | Each works, or has a documented limitation that Protection status will show | Ship Firefox as best effort (§10 Q10) and gate the unsupported features behind feature detection |
 
+**Replit validation update (2026-10-19):** The Replit Linux session could not produce a controllable browser result for S1–S3, and no Firefox or Edge binary was available for S1/S4. These are blocked tests, not behavioral passes. Plan B is provisional for S1; use the conservative S2 fallback (focused + active only, background-audio opt-in off) and S3 lifecycle re-arming fallback. Firefox remains best effort with feature detection. Do not treat WP1b as green or start WP2/WP3 until the S1–S4 runtime checks are completed in a controllable browser environment. See `docs/spikes.md`.
+
 **AC:** `docs/spikes.md` exists with a pass/fail line per spike, the redirect design chosen (A, B or C), and any plan assumption that changed.
 
 ---
