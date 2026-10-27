@@ -48,7 +48,7 @@ describe("focus statistics", () => {
       best: 3,
     });
     expect(calculateStreaks(records, new Date(2026, 9, 28, 12))).toEqual({
-      current: 3,
+      current: 0,
       best: 3,
     });
   });

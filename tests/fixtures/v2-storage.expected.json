@@ -157,7 +157,8 @@
     "lastHeartbeatAt": 0,
     "lastReconcileAt": 0,
     "lastError": null,
-    "ruleCount": 0
+    "ruleCount": 0,
+    "skipped": []
   },
   "achievements": [],
   "lastWeeklyReport": null,

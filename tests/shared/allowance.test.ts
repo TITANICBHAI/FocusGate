@@ -63,7 +63,7 @@ describe("allowance ledger", () => {
     let record = applyAttention(undefined, allowance, 10_000, 30_000);
     record = applyAttention(record, allowance, 70_000, 30_000);
     expect(record.opens).toBe(1);
-    record = applyAttention(record, allowance, 10_000 + VISIT_GAP_MS + 1, 10_000);
+    record = applyAttention(record, allowance, 70_000 + VISIT_GAP_MS + 1, 10_000);
     expect(record.opens).toBe(2);
     expect(isExhausted(record, allowance, record.lastActiveAt + 1_000)).toBe(false);
     expect(isExhausted(record, allowance, record.lastActiveAt + VISIT_GAP_MS + 1)).toBe(

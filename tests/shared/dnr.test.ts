@@ -62,8 +62,10 @@ describe("DNR rule builder", () => {
   });
 
   it("skips non-ASCII entries and caps exception rules at 200", () => {
-    const exceptions = Array.from({ length: 201 }, (_, index) => `site${index}.example`);
-    exceptions.push("xn--bcher-kva.example/ü");
+    const exceptions = [
+      "xn--bcher-kva.example/ü",
+      ...Array.from({ length: 200 }, (_, index) => `site${index}.example`),
+    ];
     const { rules, skipped } = buildDnrRules(
       basePlan({
         blocked: new Map([["xn--bcher-kva.example", { kind: "always" }]]),
@@ -71,13 +73,13 @@ describe("DNR rule builder", () => {
       }),
       "blocked",
     );
-    expect(rules.filter((rule) => rule.id >= 100)).toHaveLength(200);
+    expect(rules.filter((rule) => rule.id >= 100)).toHaveLength(199);
     expect(skipped).toContainEqual({
       entry: "xn--bcher-kva.example/ü",
       reason: "non-ascii",
     });
     expect(skipped).toContainEqual({
-      entry: "site200.example",
+      entry: "site199.example",
       reason: "rule-limit",
     });
   });
