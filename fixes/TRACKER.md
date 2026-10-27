@@ -1,7 +1,7 @@
 # FocusGate Extension — Implementation Tracker
 
 Companion to [`plan.md`](plan.md) in this folder — the implementation contract — and [`AGENT_PROMPT.md`](AGENT_PROMPT.md) — the pre-prompt given to the implementing agent.
-Initialized **2026-10-25** by the setup agent. No work package has been started; no verification has been run yet (per the owner's setup, testing is delegated to the implementing agent — see §3).
+Initialized **2026-10-25**. Progress and verification notes are recorded below. Some implementation work is marked complete or in progress; verify the current files and evidence before relying on those entries. Existing “delegated testing” notes are historical plans, not verification results.
 
 **Status legend:** ☐ NOT STARTED · ◐ IN PROGRESS · ☑ COMPLETE (done **and** verified) · ⛔ BLOCKED · ⏭ DEFERRED (owner decision required)
 
@@ -22,24 +22,26 @@ Initialized **2026-10-25** by the setup agent. No work package has been started;
 
 ## 2. Operating rules (binding — mirrored in `plan.md` and `AGENT_PROMPT.md`)
 
-1. **Authorization gate.** The plan is the implementation contract, not authorization by itself. Do not begin app-code implementation until the owner explicitly authorizes it; stay read-only until then. If the requested scope or authorization is unclear, stop before changing app code and ask.
+1. **Authorization and pause.** The plan is the implementation contract, not authorization by itself. Reading, inspecting, and maintaining these planning documents is allowed before implementation begins. Do not edit app code, tests, build files, settings, or other behavior until the owner explicitly authorizes implementation. If scope or authorization is unclear, stop and ask.
 2. **Work alone.** Do not create, invoke, or delegate to sub-agents.
-3. **Follow the plan's implementation order and this tracker.** Do not silently widen scope or change the plan's contract.
-4. **Inspect before editing.** Before editing, inspect the relevant current code, project instructions, and the working tree. Preserve unrelated user changes and user data.
-5. **Respect the plan's no-touch list** unless the owner explicitly changes the scope: do not hand-edit `dist/` (plan §2.11); do not blindly recreate files missing from the upload (plan §1.2); do not port the "Do not port" features (plan §6 WP7), including the Discord webhook and any telemetry.
+3. **Follow the plan and tracker.** Work in plan order, use this tracker as the only progress record, and do not silently widen scope or change the plan's contract.
+4. **Inspect before editing.** Before any authorized implementation, inspect the relevant current code, project instructions, and working tree. Confirm current APIs and behavior instead of assuming the plan's code snapshot is current. Preserve unrelated user changes and user data.
+5. **Respect the no-touch list.** Unless the owner explicitly changes scope, do not hand-edit `dist/` (plan §2.11), blindly recreate files missing from the upload (plan §1.2), or port the "Do not port" features (plan §6 WP7), including the Discord webhook and any telemetry. Do not overwrite the separate root `plan/` folder; the active documents are in `fixes/`.
 6. **Destructive actions.** Treat task replacement and any other deletion of user data as destructive. Keep replacement disabled by default, preserve explicit confirmation and required safety guards, and do not perform destructive actions without the owner's authorization.
-7. **Testing environment.** Run Gradle or Android tests on Replit using the current workflow or scripts under `scripts/`. For this repo the equivalent checks are the npm scripts (`npm run typecheck`, `npm test`, `npm run build`) run the same way. Test only the production flavor — the flavors are fundamentally the same thing, so running the same test in both flavors equals the same results. Do not build APKs on Replit, and keep APK building out of test runs. If verification is needed, use GitHub Actions only when the owner explicitly requests APK-building verification; otherwise state clearly that those checks were not run.
+7. **Testing environment.** Run relevant checks on Replit using this project's existing workflows or scripts. For this browser extension, use the applicable npm scripts (`npm run typecheck`, `npm test`, `npm run build`); do not run Android tests or build APKs in this repository. If Android/APK verification is explicitly in scope, test only the production flavor, never build APKs on Replit, and use GitHub Actions for APK-building verification only when the owner explicitly asks. State plainly whenever a check was not run.
 8. **GitHub.** Do not push to GitHub or start, poll, or monitor GitHub Actions unless the owner explicitly asks.
 9. **Secrets.** Do not expose, copy into files, or print secrets or credentials.
 10. **Test style.** Use behavior tests with fake clocks and event sources. Do not add tests that read Kotlin source files as text. Logic under test must not call the system wall clock directly.
-11. **Tracker discipline.** Follow the tracker rules in §1 of this file at all times.
+11. **Tracker discipline.** Follow the tracker rules in §1 at all times.
+12. **Phase checkpoints.** Work on one work package at a time. At each phase boundary, stop and report; do not begin the next phase until the current phase's completion conditions and required checks pass. Respect all dependency gates in the plan.
 
 ---
 
 ## 3. Verification constraints (what counts as evidence)
 
-- Tests run on Replit via the current workflow or scripts under `scripts/`; production flavor only (see rule 2.7).
-- No APK building on Replit. APK-build verification via GitHub Actions only when the owner explicitly requests it. Otherwise record plainly: **"not run."** "Not run" is the record — never imply a check passed.
+- Run applicable checks on Replit using this project's existing workflow or scripts. For the browser extension, use `npm run typecheck`, `npm test`, and `npm run build` as required by the plan.
+- This repository does not need Android tests or APK builds. If Android/APK verification is explicitly in scope, test only the production flavor, do not build APKs on Replit, and use GitHub Actions for APK-building verification only when the owner explicitly requests it.
+- Record plainly when a check was **not run**; never imply an unobserved check passed.
 - Unit/behavior tests use fake clocks and injected event sources; logic under test must not call the system wall clock; no tests that read source files as text.
 - Manual browser checks (Chrome / Edge / Firefox temporary add-on) are recorded per browser with the exact repro steps and observed result.
 - The plan's shell examples are POSIX; on the owner's Windows machine, adapt commands or run them on Replit.
@@ -53,8 +55,8 @@ Guards: WP1b spikes must finish before WP2/WP3. Do not start WP7 before mileston
 
 | Phase | Title (plan §) | Status | Tasks | ACs | Blocked by |
 |---|---|---|---|---|---|
-| WP0 | Repo hygiene and tooling (§6 WP0) | ◐ | 4/5 | 0/1 | WP0.4 + AC need node (delegated to testing agent) |
-| WP1 | Foundation: shared core, build, storage, migration (§6 WP1) | ◐ | 0/5 (all code-complete, 1/5 verifiable by inspection) | 0/1 | every command verification delegated to testing agent |
+| WP0 | Repo hygiene and tooling (§6 WP0) | ◐ | 4/5 | 0/1 | WP0.4 + AC are NOT RUN; re-check the current environment before verification |
+| WP1 | Foundation: shared core, build, storage, migration (§6 WP1) | ◐ | 0/5 (prior tracker says code-complete; verify current files) | 0/1 | command-based verification remains NOT RUN |
 | WP1b | De-risking spikes (§6 WP1b) | ☐ | 0/4 | 0/1 | WP1 |
 | WP2 | Session engine owned by background (§6 WP2) | ☐ | 0/4 | 0/10 | WP1b |
 | WP3 | Blocking engine (§6 WP3) | ☐ | 0/12 | 0/10 | WP1b |
@@ -95,17 +97,17 @@ Guards: WP1b spikes must finish before WP2/WP3. Do not start WP7 before mileston
 
 ### WP0 — Repo hygiene and tooling (plan §6 WP0; fixes R01–R03, R05)
 
-Status: ◐ IN PROGRESS — file work complete 2026-10-26; typecheck baseline + AC await the delegated run · Progress: 4/5 tasks, 0/1 AC
+Status: ◐ IN PROGRESS — file work complete 2026-10-26; typecheck baseline and acceptance check remain NOT RUN · Progress: 4/5 tasks, 0/1 AC
 
 **Tasks**
 - [x] WP0.1 `package.json`: name `focusgate`, version `1.1.0-dev`; remove `express`, `@types/express`, `dotenv`, `tsx`; `clean` → `rm -rf dist build`; add `typecheck` (`tsc --noEmit`), `test` (`vitest run`), `build` (`node scripts/build-extension.mjs`) — found already at target state from a prior session; verified by inspection 2026-10-26
 - [x] WP0.2 Delete `patch_req.cjs`; add `.gitignore` (`node_modules`, `dist`, `build`, `*.log`); untrack `dist/` — `patch_req.cjs` absent, `.gitignore` covers node_modules/dist/build/coverage/*.log/.env*, `dist/` absent; `git rm` step N/A (folder is not a git repository)
 - [x] WP0.3 Check the GitHub repo for files missing from the upload (plan §1.2) — moot: `LICENSE` (MIT, © 2026 TBTechs), `STORE_LISTING.md`, `STORE_PUBLISHING.md`, `AFTER_PUBLISHING.md`, `docs/` (incl. `privacy-policy.html`), `store-assets/`, `.github/` all exist locally; left untouched
-- [ ] WP0.4 Run `npm run typecheck`; record the baseline error list (expect the L1197 comparison and prop-type hacks) — **NOT RUN 2026-10-26: no node/npm on this machine; delegated to the testing agent**
+- [ ] WP0.4 Run `npm run typecheck`; record the baseline error list (expect the L1197 comparison and prop-type hacks) — **NOT RUN 2026-10-26: the prior session recorded that node/npm was unavailable; no command result is present. Re-check the current environment before verification.**
 - [x] WP0.5 Add `vitest` and an empty `tests/` folder with one smoke test; add `CHANGELOG.md` — vitest ^4.1.11 in devDependencies, `tests/manifest.smoke.test.js` present, `CHANGELOG.md` has a 1.1.0-dev entry; verified by inspection
 
 **Acceptance criteria**
-- [ ] WP0.AC `npm ci && npm run typecheck && npm test` run (typecheck may still list legacy errors until WP5 deletes `App.tsx`); `dist/` untracked; `patch_req.cjs` gone; `package.json` has no server dependencies — **NOT RUN 2026-10-26: no node/npm on this machine; delegated to the testing agent (Replit)**
+- [ ] WP0.AC `npm ci && npm run typecheck && npm test` run (typecheck may still list legacy errors until WP5 deletes `App.tsx`); `dist/` untracked; `patch_req.cjs` gone; `package.json` has no server dependencies — **NOT RUN 2026-10-26: the prior session recorded that node/npm was unavailable; no command result is present. Re-check the current environment before verification.**
 
 **Evidence**
 
@@ -114,21 +116,21 @@ Status: ◐ IN PROGRESS — file work complete 2026-10-26; typecheck baseline + 
 | 2026-10-26 | WP0.1 | `package.json` (pre-existing at target state) | Static inspection: name/version/removed server deps/scripts confirmed by reading the file | PASS (inspection) |
 | 2026-10-26 | WP0.2 | `.gitignore` (pre-existing, read); `patch_req.cjs`, `dist/` confirmed absent | Static inspection + `dir` checks | PASS (inspection) |
 | 2026-10-26 | WP0.3 | none needed | `dir` of repo root + `docs/`: all §1.2 files present; left untouched | PASS (inspection) |
-| 2026-10-26 | WP0.4 | — | NOT RUN — no node/npm on this machine; delegated | NOT RUN |
+| 2026-10-26 | WP0.4 | — | NOT RUN — prior session recorded node/npm unavailable; no exact command result is present | NOT RUN |
 | 2026-10-26 | WP0.5 | `package.json` devDeps (vitest ^4.1.11, @types/chrome ^0.2.5), `tests/manifest.smoke.test.js`, `CHANGELOG.md` | Static inspection of the three files | PASS (inspection) |
 
 **Notes · decisions · blockers · history** (append-only; never delete entries)
 - 2026-10-26 — A prior session had already landed most WP0 file work (package.json, .gitignore, LICENSE, CHANGELOG, smoke test, patch_req.cjs deleted, dist/ removed). Verified by inspection and ticked above; nothing was redone.
 - 2026-10-26 — `clean` script is `rm -rf dist build` (POSIX, per plan). Works on Replit/bash; would need a shim under Windows cmd — left as-is per plan, recorded here.
-- 2026-10-26 — `package-lock.json` / `bun.lock` consistency with `package.json` NOT verified (no local npm). `npm ci` on Replit is the first command the testing agent should run.
+- 2026-10-26 — `package-lock.json` / `bun.lock` consistency with `package.json` NOT verified (no local npm in that session). Re-check the current environment and verify in an authorized implementation session.
 
 ---
 
 ### WP1 — Foundation: shared core, build pipeline, storage layer, migration (plan §6 WP1; fixes B02 part, R04, R06)
 
-Status: ◐ IN PROGRESS — all code and tests written 2026-10-26; nothing executed yet (delegated) · Progress: 0/5 tasks ticked (all code-complete), 10/10 §8.1 test files exist (0 executed), 0/1 AC
+Status: ◐ IN PROGRESS — prior tracker records code and tests written 2026-10-26; none executed in the recorded evidence · Progress: 0/5 tasks ticked (verify claimed code completion against current files), 10/10 §8.1 test files recorded (0 executed), 0/1 AC
 
-**Tasks** — all code-complete 2026-10-26; boxes tick only after the delegated verification run is green
+**Tasks** — previously recorded as code-complete; verify against current files. Tick only after the implementing agent observes the required work and verification.
 - [ ] WP1.1 Create `src/shared/*` as listed in plan §5.1; `tsconfig` `"strict": true` for new code (legacy files may be excluded until WP5) — code complete: all 14 modules exist, tsconfig strict with shared/background/content includes
 - [ ] WP1.2 Convert `public/background.js` + `public/content.js` into `src/background/*` + `src/content/*` as **empty shells importing shared**; write `scripts/build-extension.mjs` (plan §5.1 pipeline); update `manifest.json` — code complete: bridge shells keep v1 behaviour until WP2/WP4; build script pre-existing (vite → esbuild, §5.1 pipeline); manifest got `+idle`, `+minimum_chrome_version: "110"` (background `type: "module"` was already set); popup/WAR/options_ui/content-matches deferred to WP3/WP4/WP5 — see notes
 - [ ] WP1.3 `shared/storage.ts`: typed `getState()` (one `storage.local.get` of all known keys with defaults), `patch(partial)`, `update(key, fn)`, `onStateChanged(cb)` — code complete (single-writer queue, testable with a fake chrome area)
@@ -136,7 +138,7 @@ Status: ◐ IN PROGRESS — all code and tests written 2026-10-26; nothing execu
 - [x] WP1.5 Delete the old `public/background.js` / `public/content.js` **only** when WP3/WP4 replace them — verified 2026-10-26 by inspection: both files still present and bundled through the bridge shells
 
 **Unit tests required (plan §8.1 — each required before its matching WP is done)**
-**Status 2026-10-26:** all ten test files exist (`tests/shared/{time,domains,keywords,plan,allowance,dnr,migrate,password,gating,stats}.test.ts`; migrate/storage/session tests pre-existing). **None has been executed** — a box below is ticked only after the suite runs green on the testing agent's machine.
+**Status 2026-10-26:** the prior tracker records ten test files (`tests/shared/{time,domains,keywords,plan,allowance,dnr,migrate,password,gating,stats}.test.ts`; migrate/storage/session tests pre-existing). **None has an observed execution result here** — verify current files, then record each check as it is run.
 - [ ] `time.ts` — normal/overnight windows, `24:00`, start=end, end-exclusive, previous-day rule, `nextScheduleBoundary` across week end, local-date key around midnight, DST with fixed dates
 - [ ] `domains.ts` — valid/invalid inputs, alias groups, subdomain vs look-alike, exception table incl. `& ? #` boundaries
 - [ ] `keywords.ts` — comma/newline split, hashtags, whole-word vs substring, per-host param extraction, `p` ignored on non-Yahoo
@@ -149,21 +151,21 @@ Status: ◐ IN PROGRESS — all code and tests written 2026-10-26; nothing execu
 - [ ] `stats.ts` — streak, focus score, insights, weekly totals, h/min formatting
 
 **Acceptance criteria**
-- [ ] WP1.AC `npm run build` produces a `dist/` that loads in Chrome (unpacked) and Firefox (temporary add-on) with the existing UI still working; `npm test` green; migration test passes on the v1 fixture; `ready()` idempotent when called concurrently 10× — **NOT RUN 2026-10-26: no node/npm on this machine; delegated to the testing agent**
+- [ ] WP1.AC `npm run build` produces a `dist/` that loads in Chrome (unpacked) and Firefox (temporary add-on) with the existing UI still working; `npm test` green; migration test passes on the v1 fixture; `ready()` idempotent when called concurrently 10× — **NOT RUN 2026-10-26: the prior session recorded node/npm unavailable; no command or browser result is present. Re-check the current environment before verification.**
 
 **Evidence**
 
 | Date | Item | Changed files | Verification (exact command / repro) | Result |
 |---|---|---|---|---|
-| 2026-10-26 | WP1.1 | NEW: `src/shared/time.ts`, `domains.ts`, `keywords.ts`, `allowance.ts`, `dnr.ts`, `plan.ts`, `gating.ts`, `password.ts`, `stats.ts`, `presets.ts` (10 modules; types/defaults/storage/migrate/session pre-existing); `types.ts` +`UsageRecord.visitStartMs?`, +`Task.allowOnlyDomains?` | Static inspection against plan §5.1/§5.2/A.1–A.7/E.3–E.4; suite execution delegated | WRITTEN, NOT RUN |
+| 2026-10-26 | WP1.1 | NEW: `src/shared/time.ts`, `domains.ts`, `keywords.ts`, `allowance.ts`, `dnr.ts`, `plan.ts`, `gating.ts`, `password.ts`, `stats.ts`, `presets.ts` (10 modules; types/defaults/storage/migrate/session pre-existing); `types.ts` +`UsageRecord.visitStartMs?`, +`Task.allowOnlyDomains?` | Static inspection against plan §5.1/§5.2/A.1–A.7/E.3–E.4; no suite execution result is recorded | WRITTEN, NOT RUN |
 | 2026-10-26 | WP1.1 dedup | `migrate.ts`, `session.ts` now import `normalizeDomain`/`normalizeException` (domains.ts) and `localDateKey` (time.ts); private copies removed | Static inspection; behaviour pinned by existing migrate/session tests | WRITTEN, NOT RUN |
-| 2026-10-26 | WP1.2 | `public/manifest.json` (+`idle` permission, +`minimum_chrome_version: "110"`); shells + `scripts/build-extension.mjs` pre-existing (inspected, match §5.1) | Static inspection; `npm run build` + browser load delegated | WRITTEN, NOT RUN |
-| 2026-10-26 | WP1 tests | NEW: 9 test files in `tests/shared/` (time, domains, keywords, plan, allowance, dnr, password, gating, stats); fixtures from prior session kept | `npm test` delegated (vitest run, node environment) | WRITTEN, NOT RUN |
+| 2026-10-26 | WP1.2 | `public/manifest.json` (+`idle` permission, +`minimum_chrome_version: "110"`); shells + `scripts/build-extension.mjs` pre-existing (inspected, match §5.1) | Static inspection; `npm run build` and browser load have no observed result | WRITTEN, NOT RUN |
+| 2026-10-26 | WP1 tests | NEW: 9 test files in `tests/shared/` (time, domains, keywords, allowance, dnr, password, gating, stats); fixtures from prior session kept | `npm test` has no observed result | WRITTEN, NOT RUN |
 | 2026-10-26 | WP1 bugfix | `gating.ts` — guard() checked the lock source before the weakening set, which would have locked strengthening actions (extend/add/import) under a lock; reordered so strengthening is always allowed (E.4) | Caught while writing the E.4 table-driven test; fixed 2026-10-26 | FIXED (pending run) |
 
 **Notes · decisions · blockers · history** (append-only)
 - 2026-10-26 — Prior session had already written `types/defaults/storage/migrate/session`, the bridge shells, `build-extension.mjs`, the v1→v2 fixtures and 3 test files. Inventory taken before writing anything; new code matches its conventions (`.ts` import extensions, fake `chrome` injection in tests, fixed `now` parameters).
-- 2026-10-26 — See §7 Decisions D1–D6 (bridge shells, incremental §5.1 manifest scope, helper dedup, schema additions, G.1-vs-A.3 resolution, delegated verification) and §7 Deferred (migration notice, DST delta check, session clock-skew, block-page default copy).
+- 2026-10-26 — See §7 Decisions D1–D6 (bridge shells, incremental §5.1 manifest scope, helper dedup, schema additions, G.1-vs-A.3 resolution, verification status) and §7 Deferred (migration notice, DST delta check, session clock-skew, block-page default copy).
 
 ---
 
@@ -539,7 +541,8 @@ Status: ☐ NOT STARTED · Start note: _none yet_ · Progress: 0/5 tasks, 0/4 AC
 | 2026-10-26 | WP1 | Deduplicated shared helpers: `normalizeDomain`/`normalizeException`/`matchException`/`escapeRegex` live in `domains.ts`, `localDateKey`/`startOfNextLocalDay` in `time.ts`; `migrate.ts` and `session.ts` import them instead of private copies | Plan §5.1 file ownership + R04 (duplicated logic); migration fixture test pins the behaviour |
 | 2026-10-26 | WP1 | Additive schema changes to §5.2: `UsageRecord.visitStartMs?` (enforces F.3's 30-minute visit cap / VISIT_MAX_MS) and `Task.allowOnlyDomains?` (B4's three-way allow-only) — both optional | Required by plan Appendices A.2/F.3 and WP7-B4; optional so v1 migration and existing fixtures are unaffected |
 | 2026-10-26 | WP1 | G.1 vs A.3 step 5 conflict (do global "During blocks" keywords apply while a *schedule* window is active?) resolved per G.1: yes — blocks context = session work OR active standalone block OR any active schedule | G.1 is the feature spec ("During blocks (default; only while a focus session, standalone block or schedule applies)"); A.3 step 5 lists the same contexts minus schedules |
-| 2026-10-26 | WP0/WP1 | All command-based verification (typecheck baseline, `npm ci`, `npm test`, `npm run build`, browser loads) is delegated to the owner's testing agent on Replit; this machine has no node/npm. Every such box is recorded NOT RUN, never implied to pass | Owner directive of 2026-10-25/26; tracker rules §1.4/§3 |
+| 2026-10-26 | WP0/WP1 | Verification was planned for the owner's testing agent because node/npm was unavailable in that session; no test result is recorded. Superseded by the 2026-10-27 no-delegation rule below. | Owner directive of 2026-10-25/26; tracker rules §1.4/§3 |
+| 2026-10-27 | — | Verification must be performed by the implementing agent; no sub-agents or delegated testing. The 2026-10-26 delegation notes above are historical plans only. No check is complete without an exact command/repro and an observed result recorded in this tracker. | Owner's current operating rules; plan §Operating rules |
 
 ### Blockers and failures
 | Date | WP | What happened | Exact command / repro | Outcome (append when resolved) |

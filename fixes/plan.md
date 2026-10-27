@@ -10,21 +10,22 @@
 
 ---
 
-## Operating rules for the implementing agent (owner-added 2026-10-25)
+## Operating rules for the implementing agent (owner-added 2026-10-25; updated 2026-10-27)
 
-These rules bind every implementing agent in addition to everything below. They are mirrored in `fixes/TRACKER.md` (§1–§2) and `fixes/AGENT_PROMPT.md` (the pre-prompt). The tracker for this plan is `fixes/TRACKER.md`.
+These rules bind every implementing agent in addition to everything below. They are mirrored in `fixes/TRACKER.md` (§1–§2) and `fixes/AGENT_PROMPT.md` (the pre-prompt). `fixes/TRACKER.md` is the only progress record for this plan.
 
-1. **Authorization gate.** This plan is the implementation contract, not authorization by itself. Do not begin app-code implementation until the owner explicitly authorizes it, and stay read-only until then. If the requested scope or authorization is unclear, stop before changing app code and ask.
+1. **Authorization and pause.** This plan is the implementation contract, not authorization by itself. Reading, inspecting, and maintaining these planning documents is allowed before implementation begins. Do not edit app code, tests, build files, settings, or other behavior until the owner explicitly authorizes implementation. If scope or authorization is unclear, stop and ask.
 2. **Work alone.** Do not create, invoke, or delegate to sub-agents.
-3. **Follow the plan's implementation order and the tracker.** Do not silently widen scope or change the plan's contract.
-4. **Inspect before editing.** Before editing, inspect the relevant current code, project instructions, and the working tree. Preserve unrelated user changes and user data.
-5. **Respect the no-touch list** unless the owner explicitly changes the scope: do not hand-edit `dist/` (§2.11); do not blindly recreate files missing from the upload (§1.2 — check the GitHub repo first); do not port the "Do not port" features (§6 WP7), including the Discord webhook and any telemetry.
+3. **Follow the plan and tracker.** Work in the order below, use the tracker as the progress record, and do not silently widen scope or change this plan's contract.
+4. **Inspect before editing.** Before any authorized implementation, inspect the relevant current code, project instructions, and working tree. Confirm current APIs and behavior instead of assuming this plan's code snapshot is current. Preserve unrelated user changes and user data.
+5. **Respect the no-touch list.** Unless the owner explicitly changes scope, do not hand-edit `dist/` (§2.11), blindly recreate files missing from the upload (§1.2 — check the GitHub repo first), or port the "Do not port" features (§6 WP7), including the Discord webhook and any telemetry. Do not overwrite the separate root `plan/` folder; the active documents are in `fixes/`.
 6. **Destructive actions.** Treat task replacement and any other deletion of user data as destructive. Keep replacement disabled by default, preserve explicit confirmation and required safety guards, and do not perform destructive actions without the owner's authorization.
-7. **Testing environment.** Run Gradle or Android tests on Replit using the current workflow or scripts under `scripts/`. For this repo the equivalent checks are the npm scripts (`npm run typecheck`, `npm test`, `npm run build`) run the same way. Test only the production flavor — the flavors are fundamentally the same thing, so running the same test in both flavors equals the same results. Do not build APKs on Replit, and keep APK building out of test runs. If verification is needed, use GitHub Actions only when the owner explicitly requests APK-building verification; otherwise state clearly that those checks were not run.
+7. **Testing environment.** Run relevant checks on Replit using this project's existing workflows or scripts. For this browser extension, use the applicable npm scripts (`npm run typecheck`, `npm test`, `npm run build`); do not run Android tests or build APKs in this repository. If Android/APK verification is explicitly in scope, test only the production flavor, never build APKs on Replit, and use GitHub Actions for APK-building verification only when the owner explicitly asks. State plainly whenever a check was not run.
 8. **GitHub.** Do not push to GitHub or start, poll, or monitor GitHub Actions unless the owner explicitly asks.
 9. **Secrets.** Do not expose, copy into files, or print secrets or credentials.
 10. **Test style.** Use behavior tests with fake clocks and event sources. Do not add tests that read Kotlin source files as text. Logic under test must not call the system wall clock directly.
-11. **Tracker discipline.** Follow the tracker rules at the top of `fixes/TRACKER.md`: dated start notes, updates after every meaningful change, tick only complete-and-verified work, record evidence (changed files, exact verification, result), never erase failures or blockers, and reconcile the tracker with reality before finishing.
+11. **Tracker discipline.** Follow the tracker rules at the top of `fixes/TRACKER.md`: record dated phase starts, update after meaningful changes and each check, tick only complete-and-verified work, record evidence and failures, preserve history, and reconcile the tracker with reality before finishing.
+12. **Phase checkpoints.** Work on one work package at a time. At each phase boundary, stop and report; do not begin the next phase until the current phase's completion conditions and required checks pass. Respect all dependency gates in §6 and §9.
 
 ---
 
