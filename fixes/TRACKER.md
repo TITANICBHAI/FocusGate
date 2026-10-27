@@ -4,12 +4,12 @@
 
 ## Overall status
 
-- **Status:** NOT STARTED
-- **Progress:** 0% (0/156 required checklist items verified)
-- **Current work package:** None — waiting for the owner's explicit implementation authorization
+- **Status:** BLOCKED — `npm test` has a failing session test
+- **Progress:** 3.2% (5/156 required checklist items verified)
+- **Current work package:** WP0 — repo hygiene and tooling
 - **Last updated:** 2026-10-27
 - **Run order:** WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
-- **Reset:** The owner confirmed that prior completion claims did not reflect work actually done. All progress and completion marks are reset here; the planned work remains listed and must still be completed. No previous pass or completion claim is credited.
+- **Reset:** Prior completion claims were invalidated on 2026-10-27. WP0 is now being re-evaluated with fresh evidence after owner authorization; no previous pass or completion claim is credited.
 
 **Progress calculation:** The 156 required items are the WP0–WP10 task, unit-test, spike, and acceptance-criteria checkboxes. The C01–C40 claims regression and global Definition of Done are separate final gates and are not double-counted.
 
@@ -31,7 +31,7 @@
 
 | Work package | Status | Verified progress | Started | Completed | Blocked by |
 |---|---|---:|---|---|---|
-| WP0 — Repo hygiene and tooling | NOT STARTED | 0/6 | — | — | None |
+| WP0 — Repo hygiene and tooling | BLOCKED — `npm test` failure | 5/6 | 2026-10-27 | — | `tests/shared/session.test.ts` failure |
 | WP1 — Foundation, build, storage, migration | NOT STARTED | 0/16 | — | — | WP0 |
 | WP1b — De-risking spikes | NOT STARTED | 0/5 | — | — | WP1 |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | WP1b |
@@ -43,7 +43,7 @@
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **NOT STARTED** | **0/156** | — | — | |
+| **Total** | **BLOCKED** | **5/156** | — | — | WP0 acceptance test failure |
 
 **Implementation gates:** WP1b must finish before WP2 and WP3. Do not start WP7 until milestone M1 (WP0–WP3) is green. Follow the phase order and other dependencies in [`plan.md`](plan.md).
 
@@ -60,20 +60,32 @@
 
 ## WP0 — Repo hygiene and tooling
 
-**Plan:** §6 WP0 · **Blocked by:** None · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/6
+**Plan:** §6 WP0 · **Blocked by:** `npm test` failure in the existing session suite · **Status:** BLOCKED · **Started:** 2026-10-27 · **Completed:** — · **Progress:** 5/6
 
-- [ ] WP0.1 Set `package.json` name to `focusgate`, version to `1.1.0-dev`; remove `express`, `@types/express`, `dotenv`, and `tsx`; set `clean` to remove `dist` and `build`; add `typecheck` (`tsc --noEmit`), `test` (`vitest run`), and `build` (`node scripts/build-extension.mjs`).
-- [ ] WP0.2 Delete `patch_req.cjs`; ignore `node_modules`, `dist`, `build`, and `*.log`; untrack `dist/`.
-- [ ] WP0.3 Check the GitHub repository for files missing from the upload (plan §1.2), including LICENSE, store documentation, docs/privacy policy, store assets, and `.github/`; do not recreate them blindly.
-- [ ] WP0.4 Run `npm run typecheck` and record the baseline error list, including the expected legacy comparison/prop-type errors if present.
-- [ ] WP0.5 Add Vitest and an empty `tests/` folder with one smoke test; add `CHANGELOG.md`.
+- [x] WP0.1 Set `package.json` name to `focusgate`, version to `1.1.0-dev`; remove `express`, `@types/express`, `dotenv`, and `tsx`; set `clean` to remove `dist` and `build`; add `typecheck` (`tsc --noEmit`), `test` (`vitest run`), and `build` (`node scripts/build-extension.mjs`).
+- [x] WP0.2 Delete `patch_req.cjs`; ignore `node_modules`, `dist`, `build`, and `*.log`; untrack `dist/`.
+- [x] WP0.3 Check the GitHub repository for files missing from the upload (plan §1.2), including LICENSE, store documentation, docs/privacy policy, store assets, and `.github/`; do not recreate them blindly.
+- [x] WP0.4 Run `npm run typecheck` and record the baseline error list, including the expected legacy comparison/prop-type errors if present.
+- [x] WP0.5 Add Vitest and an empty `tests/` folder with one smoke test; add `CHANGELOG.md`.
 - [ ] WP0.AC Run `npm ci && npm run typecheck && npm test`; verify `dist/` is untracked, `patch_req.cjs` is gone, and `package.json` has no server dependencies. Legacy type errors may remain until WP5 removes the old app.
 
-**Notes / progress:** Not started. Inspect the current checkout before deciding whether any task has already been fulfilled; do not credit previous tracker claims.
+**Notes / progress:**
+- 2026-10-27 — Owner authorized WP0. Status set to IN PROGRESS before repo inspection. Re-evaluate each task from the current checkout; prior tracker claims are not credited.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-27 | WP0.1 | None; target configuration was already present. | Inline Node assertions checked package name/version, exact scripts, absence of the four server dependencies, build-script existence, and package-lock root name/version. | PASS — all assertions passed. |
+| 2026-10-27 | WP0.2 | None; target hygiene was already present. | Inspected `.gitignore`; looped over `patch_req.cjs` and generated paths; `git ls-files 'dist/**' 'dist'` returned no paths. | PASS — script absent; required ignores present; no tracked `dist/`. |
+| 2026-10-27 | WP0.3 | None; all listed support/release files were present. | `git ls-files --error-unmatch` and `test -s` for LICENSE, STORE_LISTING.md, STORE_PUBLISHING.md, AFTER_PUBLISHING.md, docs/privacy-policy.html, and `.github/workflows/build-extension.yml`; `git ls-files 'store-assets/*'` found 12 files. | PASS — nothing from plan §1.2 is missing in this checkout, so no remote lookup or file recreation was needed. |
+| 2026-10-27 | WP0.AC prerequisite | `node_modules/` installed from the existing lockfile; it is ignored by Git. | `npm ci` — completed successfully; 123 packages added. npm reported 4 dependency vulnerabilities (2 moderate, 2 high); no automatic audit fix was applied. | PASS — clean install completed; remaining AC checks are pending. |
+| 2026-10-27 | WP0.4 | None. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — baseline typecheck is clean. |
+| 2026-10-27 | WP0.5 | None; Vitest, tests, and changelog already existed. | Inspected `package.json`, `tests/manifest.smoke.test.js`, and `CHANGELOG.md`; `npm test` ran the manifest smoke test successfully. | PASS — the required tooling/smoke test/changelog are present; another existing session test fails, recorded below. |
+| 2026-10-27 | WP0.AC test suite | None. | `npm test` — exit 1; 4 test files, 15 tests: 14 passed, 1 failed. `tests/shared/session.test.ts > session transitions > marks a phase interrupted when the lost-time gap exceeds half its duration`: expected session status `idle`, received `shortBreak` (`tests/shared/session.test.ts:73`). | FAIL — WP0.AC remains unchecked; do not change this out-of-scope session behavior in WP0. |
+
+**Failures / blockers:**
+- 2026-10-27 — `npm test` fails in the existing shared-session test described above. This blocks the WP0 acceptance criterion; fixing it belongs to the relevant session work package, not WP0.
 
 **Decisions / deferred work:** None recorded.
 
@@ -508,3 +520,6 @@ Append dated entries; do not replace earlier history.
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
 | 2026-10-27 | Tracker reset | Owner clarified that prior completion claims were inaccurate. Reset all work-package and final-gate progress to NOT STARTED / unchecked; retained the planned work for later completion. | No app code or tests changed as part of this reset. Previous completion claims are not credited; re-check current files and record fresh evidence after authorization. |
+| 2026-10-27 | WP0 started | Owner authorized WP0. Set WP0 to IN PROGRESS before inspection. | Repo inspection and verification pending. |
+| 2026-10-27 | WP0.1–WP0.5 current-state audit | Verified the package manifest, repo hygiene, support files, baseline typecheck, Vitest smoke test, and changelog against the current checkout. | WP0.1–WP0.5 marked verified based on observed files/commands; no implementation files required edits. |
+| 2026-10-27 | WP0 test gate | `npm ci` and `npm run typecheck` passed; `npm test` ran but had one failure in an existing session test. | 123 packages installed; typecheck exit 0; test suite 14/15 passed. WP0.AC remains open and WP0 is blocked at its boundary. |
