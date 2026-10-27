@@ -113,8 +113,8 @@ export interface DayStats {
 
 export interface KeywordRule {
   text: string;
-  mode: "both";
-  when: "blocks";
+  mode: "block" | "hide" | "both";
+  when: "blocks" | "always";
 }
 
 export interface BlockRecord {
@@ -190,6 +190,15 @@ export interface Health {
   lastReconcileAt: number;
   lastError: string | null;
   ruleCount: number;
+  skipped?: { entry: string; reason: string }[];
+}
+
+export interface BlockPreset {
+  id: string;
+  name: string;
+  emoji: string;
+  domains: string[];
+  builtIn: boolean;
 }
 
 export interface BackupV1 {

@@ -92,6 +92,7 @@ export const DEFAULT_STATE: AppState = {
     lastReconcileAt: 0,
     lastError: null,
     ruleCount: 0,
+    skipped: [],
   },
   achievements: [],
   lastWeeklyReport: null,

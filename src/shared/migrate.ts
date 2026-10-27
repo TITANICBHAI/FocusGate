@@ -161,10 +161,15 @@ function normalizeKeywordRules(value: unknown): KeywordRule[] {
     const rule = asRecord(entry);
     const text = stringValue(rule.text).trim();
     if (text) {
+      const mode =
+        rule.mode === "block" || rule.mode === "hide" || rule.mode === "both"
+          ? rule.mode
+          : "both";
+      const when = rule.when === "always" ? "always" : "blocks";
       rules.push({
         text,
-        mode: "both",
-        when: "blocks",
+        mode,
+        when,
       });
     }
   }

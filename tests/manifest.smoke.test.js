@@ -11,6 +11,8 @@ const manifest = JSON.parse(
 describe("extension manifest smoke test", () => {
   it("uses Manifest V3 and points to existing source entrypoints", () => {
     expect(manifest.manifest_version).toBe(3);
+    expect(manifest.minimum_chrome_version).toBe("110");
+    expect(manifest.permissions).toContain("idle");
     expect(manifest.action.default_popup).toBeTruthy();
     expect(
       existsSync(resolve(projectRoot, manifest.action.default_popup)),
@@ -24,11 +26,26 @@ describe("extension manifest smoke test", () => {
     ).toBe(true);
 
     for (const contentScript of manifest.content_scripts ?? []) {
+      expect(contentScript.matches).not.toContain("<all_urls>");
       for (const scriptPath of contentScript.js ?? []) {
         expect(
           existsSync(resolve(projectRoot, "public", scriptPath)),
         ).toBe(true);
       }
     }
+  });
+
+  it("limits the content script to hosts supported by the current script", () => {
+    const matches = manifest.content_scripts[0].matches;
+    expect(matches).toEqual([
+      "*://*.youtube.com/*",
+      "*://*.google.com/*",
+      "*://*.reddit.com/*",
+      "*://*.twitter.com/*",
+      "*://*.x.com/*",
+      "*://*.instagram.com/*",
+      "*://*.tiktok.com/*",
+      "*://*.linkedin.com/*",
+    ]);
   });
 });

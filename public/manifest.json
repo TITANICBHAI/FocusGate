@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "FocusGate: Website Blocker & Focus Timer",
   "version": "1.0.1",
-  "description": "Block social media, video, news, and keywords with a privacy-first website blocker and focus timer.",
+  "description": "Block distracting websites and keywords with a focus timer. Your data stays in your browser.",
   "homepage_url": "https://github.com/TITANICBHAI/FocusGate",
   "icons": {
     "16": "icons/icon-16.png",
@@ -26,7 +26,8 @@
     "webNavigation",
     "alarms",
     "declarativeNetRequest",
-    "notifications"
+    "notifications",
+    "idle"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -46,7 +47,14 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "*://*.youtube.com/*",
+        "*://*.google.com/*",
+        "*://*.reddit.com/*",
+        "*://*.twitter.com/*",
+        "*://*.x.com/*",
+        "*://*.instagram.com/*",
+        "*://*.tiktok.com/*",
+        "*://*.linkedin.com/*"
       ],
       "js": [
         "content.js"
@@ -54,5 +62,6 @@
       "run_at": "document_start"
     }
   ],
-  "incognito": "spanning"
+  "incognito": "spanning",
+  "minimum_chrome_version": "110"
 }

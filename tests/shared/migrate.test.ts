@@ -47,6 +47,23 @@ describe("v1 storage migration", () => {
     ]);
   });
 
+  it("preserves v2 keyword modes while defaulting legacy strings to both/during-blocks", () => {
+    const result = migrateV1(
+      {
+        blockedKeywords: ["legacy"],
+        keywords: [
+          { text: "hidden", mode: "hide", when: "always" },
+          { text: "blocked", mode: "block", when: "blocks" },
+        ],
+      },
+      NOW,
+    );
+    expect(result.set.keywords).toEqual([
+      { text: "hidden", mode: "hide", when: "always" },
+      { text: "blocked", mode: "block", when: "blocks" },
+    ]);
+  });
+
   it("expires rollback backups at 30 days", () => {
     expect(isBackupExpired({ createdAt: NOW - 30 * 24 * 60 * 60 * 1000 }, NOW)).toBe(true);
     expect(isBackupExpired({ createdAt: NOW - 29 * 24 * 60 * 60 * 1000 }, NOW)).toBe(false);

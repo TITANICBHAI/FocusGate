@@ -103,7 +103,7 @@
 
 ## WP1 — Foundation: shared core, build, storage, migration
 
-**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** Owner authorization to begin WP1 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/16
+**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** None · **Status:** IN PROGRESS · **Started:** 2026-10-27 · **Completed:** — · **Progress:** 0/16
 
 ### Tasks
 
@@ -127,11 +127,26 @@
 - [ ] WP1.T10 `stats.ts`: streak, focus score, insights, weekly totals, and hour/minute formatting.
 - [ ] WP1.AC `npm run build` produces a `dist/` that loads in Chrome (unpacked) and Firefox (temporary add-on) with existing UI working; `npm test` is green; migration fixture passes; `ready()` is idempotent across 10 concurrent calls.
 
-**Notes / progress:** Not started. Recheck every file and test against the plan when authorized.
+**Notes / progress:**
+- 2026-10-27 — Owner authorized WP1. Status set to IN PROGRESS before implementation review. Recheck current files and tests against the plan; preserve the existing `.replit` change.
+- 2026-10-27 — Added missing shared algorithm modules and their initial tests; extended keyword types/migration for v2 rules; updated the manifest to the current supported content hosts and added the `idle` permission/minimum Chrome version. Do not count these tasks complete until the full relevant checks pass.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-27 | WP1 environment setup | `node_modules/` only (ignored). | `npm ci` — exit 0; 123 packages added. | PASS — restored packages from the committed lockfile; npm reported 4 dependency vulnerabilities (2 moderate, 2 high); no audit fix applied. |
+| 2026-10-27 | WP1 dependency baseline | None. | `npm ls --depth=0` — exit 0; all 16 declared top-level packages resolved. `git status --short -- package.json package-lock.json` returned no paths. | PASS — lockfile and package declarations unchanged. |
+| 2026-10-27 | WP1 typecheck baseline | None. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — current shared core compiles before WP1 additions. |
+| 2026-10-27 | WP1 test baseline | None. | `npm test` — exit 0; 4 test files, 15 tests passed. | PASS — baseline suite is green. |
+| 2026-10-27 | Shared-module compile checkpoint | `src/shared/types.ts`, `defaults.ts`, `time.ts`, `domains.ts`, `keywords.ts`, `allowance.ts`, `plan.ts`, `dnr.ts`, `gating.ts`, `password.ts`, `presets.ts`, `stats.ts`. | `npm run typecheck` — exit 0 after fixing the recorded TS2322 tuple/result mismatch in `plan.ts`. | PASS — all current shared modules compile; unit coverage and full acceptance checks remain pending. |
+
+**Failures / blockers:**
+- 2026-10-27 — Baseline dependency check `npm ls --depth=0` exited 1 because all declared packages are missing from `node_modules/`. Restore dependencies from the existing lockfile before project checks; no package declarations should change.
+- 2026-10-27 — Replit-managed package installation for the already-declared Node dependencies failed with npm internal error `Cannot read properties of null (reading 'edgesOut')`; the package-manager output was exit 16. Retry with a lockfile-preserving install; verify `package.json` and `package-lock.json` remain unchanged.
+- 2026-10-27 — `npm ci` succeeded and restored the dependencies. The two earlier failures are retained as history; confirm package manifests are unchanged before continuing.
+- 2026-10-27 — First post-module `npm run typecheck` failed with one TS2322 in `src/shared/plan.ts`: `aliasAllowance` returned an entry tuple instead of the declared `{ key, value }` shape. Fix the return mapping, then rerun typecheck.
+- 2026-10-27 — Corrected the `aliasAllowance` result mapping; `npm run typecheck` then exited 0 with no diagnostics.
 
 **Decisions / deferred work:** None recorded.
 
