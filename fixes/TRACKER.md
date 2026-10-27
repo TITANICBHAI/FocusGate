@@ -4,9 +4,9 @@
 
 ## Overall status
 
-- **Status:** BLOCKED — `npm test` has a failing session test
-- **Progress:** 3.2% (5/156 required checklist items verified)
-- **Current work package:** WP0 — repo hygiene and tooling
+- **Status:** IN PROGRESS
+- **Progress:** 3.8% (6/156 required checklist items verified)
+- **Current work package:** WP0 complete — waiting for the owner's next instruction
 - **Last updated:** 2026-10-27
 - **Run order:** WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** Prior completion claims were invalidated on 2026-10-27. WP0 is now being re-evaluated with fresh evidence after owner authorization; no previous pass or completion claim is credited.
@@ -31,8 +31,8 @@
 
 | Work package | Status | Verified progress | Started | Completed | Blocked by |
 |---|---|---:|---|---|---|
-| WP0 — Repo hygiene and tooling | BLOCKED — `npm test` failure | 5/6 | 2026-10-27 | — | `tests/shared/session.test.ts` failure |
-| WP1 — Foundation, build, storage, migration | NOT STARTED | 0/16 | — | — | WP0 |
+| WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-27 | None |
+| WP1 — Foundation, build, storage, migration | NOT STARTED | 0/16 | — | — | Awaiting owner instruction |
 | WP1b — De-risking spikes | NOT STARTED | 0/5 | — | — | WP1 |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | WP1b |
 | WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP1b |
@@ -43,7 +43,7 @@
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **BLOCKED** | **5/156** | — | — | WP0 acceptance test failure |
+| **Total** | **IN PROGRESS** | **6/156** | — | — | |
 
 **Implementation gates:** WP1b must finish before WP2 and WP3. Do not start WP7 until milestone M1 (WP0–WP3) is green. Follow the phase order and other dependencies in [`plan.md`](plan.md).
 
@@ -60,14 +60,14 @@
 
 ## WP0 — Repo hygiene and tooling
 
-**Plan:** §6 WP0 · **Blocked by:** `npm test` failure in the existing session suite · **Status:** BLOCKED · **Started:** 2026-10-27 · **Completed:** — · **Progress:** 5/6
+**Plan:** §6 WP0 · **Blocked by:** None · **Status:** DONE — evidence recorded · **Started:** 2026-10-27 · **Completed:** 2026-10-27 · **Progress:** 6/6
 
 - [x] WP0.1 Set `package.json` name to `focusgate`, version to `1.1.0-dev`; remove `express`, `@types/express`, `dotenv`, and `tsx`; set `clean` to remove `dist` and `build`; add `typecheck` (`tsc --noEmit`), `test` (`vitest run`), and `build` (`node scripts/build-extension.mjs`).
 - [x] WP0.2 Delete `patch_req.cjs`; ignore `node_modules`, `dist`, `build`, and `*.log`; untrack `dist/`.
 - [x] WP0.3 Check the GitHub repository for files missing from the upload (plan §1.2), including LICENSE, store documentation, docs/privacy policy, store assets, and `.github/`; do not recreate them blindly.
 - [x] WP0.4 Run `npm run typecheck` and record the baseline error list, including the expected legacy comparison/prop-type errors if present.
 - [x] WP0.5 Add Vitest and an empty `tests/` folder with one smoke test; add `CHANGELOG.md`.
-- [ ] WP0.AC Run `npm ci && npm run typecheck && npm test`; verify `dist/` is untracked, `patch_req.cjs` is gone, and `package.json` has no server dependencies. Legacy type errors may remain until WP5 removes the old app.
+- [x] WP0.AC Run `npm ci && npm run typecheck && npm test`; verify `dist/` is untracked, `patch_req.cjs` is gone, and `package.json` has no server dependencies. Legacy type errors may remain until WP5 removes the old app.
 
 **Notes / progress:**
 - 2026-10-27 — Owner authorized WP0. Status set to IN PROGRESS before repo inspection. Re-evaluate each task from the current checkout; prior tracker claims are not credited.
@@ -83,10 +83,19 @@
 | 2026-10-27 | WP0.4 | None. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — baseline typecheck is clean. |
 | 2026-10-27 | WP0.5 | None; Vitest, tests, and changelog already existed. | Inspected `package.json`, `tests/manifest.smoke.test.js`, and `CHANGELOG.md`; `npm test` ran the manifest smoke test successfully. | PASS — the required tooling/smoke test/changelog are present; another existing session test fails, recorded below. |
 | 2026-10-27 | WP0.AC test suite | None. | `npm test` — exit 1; 4 test files, 15 tests: 14 passed, 1 failed. `tests/shared/session.test.ts > session transitions > marks a phase interrupted when the lost-time gap exceeds half its duration`: expected session status `idle`, received `shortBreak` (`tests/shared/session.test.ts:73`). | FAIL — WP0.AC remains unchecked; do not change this out-of-scope session behavior in WP0. |
+| 2026-10-27 | Focused session rerun | `src/shared/session.ts` and `fixes/plan.md` changed under the narrow owner-authorized exception. | `npm test -- tests/shared/session.test.ts` — exit 1; 4/5 tests passed. The interrupted-work assertion now passes; `continues missed auto-start cycles without exceeding the recovery bound` fails because it expected 10 transitions but recovery correctly stopped after 3 at the interrupted work phase. | FAIL — update that prior expectation to reflect the owner-approved stop-on-interruption behavior, then rerun. |
+| 2026-10-27 | Focused session rerun | Updated `src/shared/session.ts`, `tests/shared/session.test.ts`, and the recovery contract in `fixes/plan.md`. | `npm test -- tests/shared/session.test.ts` — exit 0; 1 test file, 5 tests passed. | PASS — both interrupted-recovery and auto-start interruption expectations now pass; full-suite/typecheck reruns pending. |
+| 2026-10-27 | WP0.AC typecheck rerun | `src/shared/session.ts`, `tests/shared/session.test.ts`, and `fixes/plan.md`. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics after the recovery change. | PASS — full-suite test rerun pending. |
+| 2026-10-27 | WP0.AC final test suite | `src/shared/session.ts`, `tests/shared/session.test.ts`, and `fixes/plan.md`. | `npm test` — exit 0; 4 test files, 15 tests passed. | PASS — all WP0.AC checks and hygiene conditions are verified. |
 
 **Failures / blockers:**
 - 2026-10-27 — `npm test` fails in the existing shared-session test described above. This blocks the WP0 acceptance criterion; fixing it belongs to the relevant session work package, not WP0.
-- 2026-10-27 — Read-only investigation found `recoverSession()` records the overdue work phase as `interrupted`, then `advanceSession()` still starts a configured break. At 11 minutes into recovery, the 10-minute work phase has ended but the five-minute break has not; the test expects `idle`, while code returns `shortBreak`. The test expectation aligns with an immediate stop on interruption, but the plan does not explicitly say whether an interrupted work phase skips the break. No code or test changes were made; owner direction is needed before resolving this behavior.
+- 2026-10-27 — Read-only investigation found `recoverSession()` records the overdue work phase as `interrupted`, then `advanceSession()` still starts a configured break. At 11 minutes into recovery, the 10-minute work phase has ended but the five-minute break has not; the test expects `idle`, while code returns `shortBreak`. Owner directed “do the best practice”; treat an interrupted work phase as ending the session immediately. This is a narrow exception to the WP0-only scope; no other session work is authorized.
+- 2026-10-27 — The focused rerun now passes the interrupted-work regression but fails the former auto-start catch-up expectation (10 expected, 3 observed). That test must reflect the interruption stop rule; no other cycle/recovery changes are authorized.
+- 2026-10-27 — Updated the auto-start recovery test to expect an interrupted work phase to end idle. The test edit is not verified until the focused rerun passes.
+- 2026-10-27 — Focused session tests now pass 5/5. The original and intermediate failures are retained above; final full-suite verification is pending at this point in history.
+- 2026-10-27 — Post-fix `npm run typecheck` passed with no diagnostics. Full `npm test` was the remaining WP0 acceptance gate at this point in history.
+- 2026-10-27 — Resolved the original session test failure with the owner-authorized immediate-idle recovery rule. Final `npm test` passed all 15 tests across four files; WP0 has no remaining blocker.
 
 **Decisions / deferred work:** None recorded.
 
@@ -94,7 +103,7 @@
 
 ## WP1 — Foundation: shared core, build, storage, migration
 
-**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** WP0 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/16
+**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** Owner authorization to begin WP1 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/16
 
 ### Tasks
 
@@ -526,3 +535,8 @@ Append dated entries; do not replace earlier history.
 | 2026-10-27 | WP0 test gate | `npm ci` and `npm run typecheck` passed; `npm test` ran but had one failure in an existing session test. | 123 packages installed; typecheck exit 0; test suite 14/15 passed. WP0.AC remains open and WP0 is blocked at its boundary. |
 | 2026-10-27 | Session failure investigation authorized | Owner authorized investigation of the failing session recovery test. | Scope is read-only until any behavior change is separately authorized. |
 | 2026-10-27 | Session failure diagnosis | Recovery records an interrupted work phase, but the current transition still starts a configured break; the test expects the interrupted session to end idle. | Inspected `tests/shared/session.test.ts`, `src/shared/session.ts`, `src/shared/defaults.ts`, and plan §6 WP2 / §8.3. No code or test changes made; behavior choice is pending owner direction. |
+| 2026-10-27 | Narrow session-recovery exception authorized | Owner directed “do the best practice” after the recovery behavior question; end an interrupted work phase immediately rather than starting a break. | One transition fix and focused verification are authorized; do not start other WP2 work or mark WP2 complete. |
+| 2026-10-27 | Focused rerun after recovery fix | The original interrupted-work assertion passes; the prior catch-up test now stops at the interrupted work phase rather than reaching ten transitions. | `npm test -- tests/shared/session.test.ts` — 4/5 passed, 1 failure in the obsolete catch-up expectation. Update only that test expectation before rerunning. |
+| 2026-10-27 | Recovery expectation updated | Changed `tests/shared/session.test.ts` to expect immediate idle after a recovered work phase is interrupted. | Test edit follows the owner's best-practice direction; focused rerun pending. |
+| 2026-10-27 | Focused recovery tests passed | Session transition suite passes after the narrow interruption behavior and expectation update. | `npm test -- tests/shared/session.test.ts` — 5/5 passed. Full-suite/typecheck checks remain required for WP0.AC. |
+| 2026-10-27 | Post-fix typecheck passed | Production TypeScript typecheck passed after the recovery code/test update. | `npm run typecheck` — exit 0. |

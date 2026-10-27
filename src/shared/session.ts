@@ -153,10 +153,16 @@ export function recoverSession(
   ) {
     session = appendMissedTimeGap(session, now, session.phaseEndsAt);
     const transition = advanceSession(session, session.phaseEndsAt, settings);
-    session = transition.session;
     if (transition.record) records.push(transition.record);
     if (transition.completedTaskId) completedTaskIds.push(transition.completedTaskId);
     transitions += 1;
+
+    if (transition.record?.status === "interrupted") {
+      session = idleSession(now);
+      break;
+    }
+
+    session = transition.session;
   }
 
   if (session.status !== "idle") {

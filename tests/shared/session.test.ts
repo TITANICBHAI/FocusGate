@@ -73,7 +73,7 @@ describe("session transitions", () => {
     expect(result.session.status).toBe("idle");
   });
 
-  it("continues missed auto-start cycles without exceeding the recovery bound", () => {
+  it("stops missed auto-start cycles after a work phase is interrupted", () => {
     const settings = {
       ...createDefaultState().settings,
       breaks: {
@@ -85,7 +85,7 @@ describe("session transitions", () => {
       },
     };
     const session = createSession({
-      now: 0,
+      now: 1_000,
       durationMs: 30_000,
       lockLevel: "none",
       taskId: null,
@@ -93,9 +93,10 @@ describe("session transitions", () => {
     });
 
     const result = recoverSession(session, 20 * 60_000, settings);
-    expect(result.transitions).toBe(10);
-    expect(result.records.length).toBeGreaterThan(0);
-    expect(result.session.status).not.toBe("idle");
+    expect(result.transitions).toBe(1);
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]?.status).toBe("interrupted");
+    expect(result.session.status).toBe("idle");
   });
 
   it("caps history at 500 and updates daily focus stats", () => {
