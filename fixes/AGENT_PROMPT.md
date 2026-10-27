@@ -45,7 +45,7 @@ Follow the rules at the top of `fixes/TRACKER.md`:
 - Preserve failures, blockers, decisions, and deferred work; append outcomes instead of erasing history.
 - Before finishing, reconcile the tracker with current code and observed evidence. Explain why any item remains incomplete.
 
-The tracker contains older status and verification notes. Treat a check as passed only when its exact result is present and verifiable; historical “delegated” notes are not test results.
+The owner reset the tracker after confirming prior completion claims were inaccurate. Treat the tracker as 0/156 complete; do not rely on prior completion or pass claims. Reinspect the current code and record fresh evidence for each item after authorization.
 
 ## Final report
 
