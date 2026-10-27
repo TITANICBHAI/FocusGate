@@ -86,6 +86,7 @@
 
 **Failures / blockers:**
 - 2026-10-27 — `npm test` fails in the existing shared-session test described above. This blocks the WP0 acceptance criterion; fixing it belongs to the relevant session work package, not WP0.
+- 2026-10-27 — Read-only investigation found `recoverSession()` records the overdue work phase as `interrupted`, then `advanceSession()` still starts a configured break. At 11 minutes into recovery, the 10-minute work phase has ended but the five-minute break has not; the test expects `idle`, while code returns `shortBreak`. The test expectation aligns with an immediate stop on interruption, but the plan does not explicitly say whether an interrupted work phase skips the break. No code or test changes were made; owner direction is needed before resolving this behavior.
 
 **Decisions / deferred work:** None recorded.
 
@@ -523,3 +524,5 @@ Append dated entries; do not replace earlier history.
 | 2026-10-27 | WP0 started | Owner authorized WP0. Set WP0 to IN PROGRESS before inspection. | Repo inspection and verification pending. |
 | 2026-10-27 | WP0.1–WP0.5 current-state audit | Verified the package manifest, repo hygiene, support files, baseline typecheck, Vitest smoke test, and changelog against the current checkout. | WP0.1–WP0.5 marked verified based on observed files/commands; no implementation files required edits. |
 | 2026-10-27 | WP0 test gate | `npm ci` and `npm run typecheck` passed; `npm test` ran but had one failure in an existing session test. | 123 packages installed; typecheck exit 0; test suite 14/15 passed. WP0.AC remains open and WP0 is blocked at its boundary. |
+| 2026-10-27 | Session failure investigation authorized | Owner authorized investigation of the failing session recovery test. | Scope is read-only until any behavior change is separately authorized. |
+| 2026-10-27 | Session failure diagnosis | Recovery records an interrupted work phase, but the current transition still starts a configured break; the test expects the interrupted session to end idle. | Inspected `tests/shared/session.test.ts`, `src/shared/session.ts`, `src/shared/defaults.ts`, and plan §6 WP2 / §8.3. No code or test changes made; behavior choice is pending owner direction. |
