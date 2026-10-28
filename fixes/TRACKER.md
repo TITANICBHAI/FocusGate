@@ -5,7 +5,7 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 33% (52/156 required checklist items currently verified)
+- **Progress:** 34% (53/156 required checklist items currently verified)
 - **Current work package:** WP5 — UI foundation and screen fixes
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
@@ -39,13 +39,13 @@
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
 | WP3 — Blocking engine | IN PROGRESS | 10/22 | 2026-10-28 | — | WP3.5 alias UI; WP3.10 active v1 fallback removal; browser AC/S1 |
 | WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
-| WP5 — UI foundation and screen fixes | IN PROGRESS | 9/18 | 2026-10-28 | — | Accessibility/copy pass, legacy v1 cleanup, browser acceptance and gated cutover |
+| WP5 — UI foundation and screen fixes | IN PROGRESS | 11/18 | 2026-10-28 | — | Accessibility/copy pass, legacy v1 cleanup, browser acceptance and gated cutover |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **52/156** | — | — | |
+| **Total** | **IN PROGRESS** | **53/156** | — | — | |
 
 **Implementation gates:** WP1b is still incomplete (0/5); it does not block staged WP2/WP3/WP4 module work or WP5 UI work, but its browser spikes and runtime evidence remain required before WP5 cutover and M1 green. Keep v1 consumers active and do not activate migration or v2 runtime entrypoints before the atomic cutover. Do not start WP7 until M1 is green. Re-credited items have current source/test/build evidence; browser-dependent criteria remain unchecked.
 
@@ -541,13 +541,13 @@
 
 ## WP5 — UI foundation and screen fixes
 
-**Plan:** §6 WP5, Appendix C · **Blocked by:** WP4 browser/runtime gates (owner authorized staged UI work only) · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 8/18
+**Plan:** §6 WP5, Appendix C · **Blocked by:** WP4 browser/runtime gates (owner authorized staged UI work only) · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 11/18
 
 ### Tasks
 
 - [x] WP5.1 Split pages: `popup.html` fixed at 380×580; full-viewport `blocked.html`; onboarding full tab with max-480px column; full-tab dashboard. Remove role query flags and old popup sizing classes. Block/onboarding render final screen on first paint.
 - [x] WP5.2 Add `useStorage`/`StorageGate`: one per-page store via `useSyncExternalStore`, latest-value updaters, skeleton until all keys are ready, no default flicker or half-hydrated effects, `localStorage` only as Vite fallback, and no per-second rerenders except timer text.
-- [ ] WP5.3 Implement Appendix C tokens/components: Button, IconButton, Card, Toggle, Field, accessible Modal, Toast, ConfirmDialog, Tabs/Segmented, Chip, EmptyState, ProgressRing, PasswordField; dark/light themes, reduced motion, minimum 12px text, contrast ≥4.5:1; remove `pb-safe` and relative nav buttons.
+- [x] WP5.3 Implement Appendix C tokens/components: Button, IconButton, Card, Toggle, Field, accessible Modal, Toast, ConfirmDialog, Tabs/Segmented, Chip, EmptyState, ProgressRing, PasswordField; dark/light themes, reduced motion, minimum 12px text, contrast ≥4.5:1; remove `pb-safe` and relative nav buttons.
 - [x] WP5.4 Replace every `alert()` with Toast/ConfirmDialog; disabled actions explain why.
 - [x] WP5.5 Implement information architecture: header status/protection indicators; Focus/Tasks/Rules/Stats/Settings tabs; Focus timer/Block now switch; Rules sections Sites/Exceptions/Keywords/Schedules/Limits; specified Settings sections.
 - [x] WP5.6 Build Focus view: duration presets and string-state field committing on blur/Enter; lock control with descriptions and Appendix E.5 prevention summary; ring/countdown; lock-aware Start/Extend/Stop/Skip; inline hint when no sites are blocked.
@@ -568,6 +568,7 @@
 - [ ] WP5.AC5 All WP5 UI claims assigned from plan §4.7 pass.
 
 **Notes / progress:**
+- 2026-10-28 — Owner authorized continuing WP5 for remaining implementation and all non-browser verification, excluding browser checks. Keep the v1 runtime and atomic cutover gated; reconcile checklist counts against the current checkboxes before reporting.
 - 2026-10-28 — Owner clarified that browser checks alone are environment-blocked. Always run tests, typecheck, build, and other applicable non-browser checks; this supersedes the prior interpretation that no verification should run. Running the available checks now.
 - 2026-10-28 — Restored the existing dependency tree with `npm ci --no-audit`; exit 0, 125 packages added, no package manifest or lockfile changes.
 - 2026-10-28 — `npm test` exited 127 because `vitest` is absent from the current workspace (`sh: line 1: vitest: command not found`). No tests ran. Restore dependencies from the existing lockfile, then rerun the required checks.
@@ -587,6 +588,7 @@
 - 2026-10-28 — Continued the WP5.11 copy pass and aligned the staged Limits labels, caps, presets, and reset explanations with Appendix F. Updated Rules, manifest, metadata, and store-listing copy; the banned-word scan and local checks for these changes are pending.
 - 2026-10-28 — Continued WP5 staged UI work under the owner's instruction not to run verification. Updated dialog descriptions/focus handling, visible explanations for disabled task and password controls, lock tradeoff copy, and Rules helper copy. No WP5 checkbox or acceptance criterion was closed; tests, typecheck, build, and browser checks were not run. Keep v1 active and cutover/legacy removal gated.
 - 2026-10-28 — WP5 remains the current package. Re-credited staged UI implementation items WP5.1, .2, and .5–.10 after current source review plus fresh typecheck, 30-file/163-test suite, build, and staged-route assertions. No browser acceptance was claimed. WP5.3/.12 need contrast/accessibility verification; WP5.4 is not complete because `src/App.tsx` still contains `alert()`/`window.close()`; WP5.11 copy audit and WP5.13 atomic cutover/legacy removal remain open. The active manifest still routes to v1.
+- 2026-10-28 — Closed WP5.3 after verifying the Appendix C component exports and implementations, theme/reduced-motion/focus styles, minimum text size, and no `pb-safe`; the theme-token and primitive tests passed in the 32-file/170-test suite. A token-pair contrast sweep passed with minimums 4.94:1 dark and 4.59:1 light. WP5.12's keyboard walkthrough and WP5.AC3 remain open; staged UI is not browser-verified.
 - 2026-10-28 — Pre-fix staged UI audit: the light-theme warning token measured 4.33:1 on `surface-2`, below the 4.5:1 target; the dark-theme minimum was 4.94:1. CSS font sizes were at least 12px, and focus-visible/reduced-motion rules were present. WP5.3 remains open until contrast is corrected and regression-tested.
 - 2026-10-28 — Legacy UI audit also found sub-12px text classes, stale/misleading copy, blocking `alert()` calls, a non-working `window.close()` action, and commitment-task delete locking outside its active session. Correcting these UI-only gaps without changing active v1 routes or state contracts; browser acceptance and cutover remain open.
 - 2026-10-28 — Historical reset note: WP3/WP4 checkmarks were temporarily cleared after a reset. The current owner reconciliation above restored only evidence-backed work. UI remains staged; WP1b/WP4 browser gates still block v2 activation, migration startup, cutover, and legacy-consumer removal.
@@ -628,6 +630,17 @@
 | 2026-10-28 | Fresh workspace typecheck | No source changes; dependencies restored from the existing lockfile. | `npm ci` — exit 0, 125 packages added; `npm run typecheck` — exit 0, no TypeScript diagnostics. | PASS — current source typechecks. The initial missing-dependency failure and npm audit result (4 vulnerabilities: 2 moderate, 2 high) are recorded in Notes / progress. |
 | 2026-10-28 | Fresh full test suite | No source changes; dependencies restored from the existing lockfile. | `npm test` — exit 0; 30 files / 163 tests passed. | PASS — current deterministic suite is green; browser-dependent acceptance remains unverified. |
 | 2026-10-28 | Fresh extension build | No source changes; generated output remains under ignored `dist/`. | `npm run build` — exit 0; Vite emitted the active `dist/index.html` and separately emitted staged popup, blocked, onboarding, and dashboard pages under `dist/staged-ui/`. | PASS — build succeeds, while the manifest remains on v1 routes; no cutover or browser behavior is established. |
+| 2026-10-28 | WP5 checks — initial attempt | No source changes. | `npm test` — exit 127 (`vitest: command not found`); `npm run typecheck` — exit 127 (`tsc: command not found`); `npm run build` — exit 1 (`ERR_MODULE_NOT_FOUND` for `esbuild`). | BLOCKED — local dependencies are absent; restore from the existing lockfile, then rerun all three checks. |
+| 2026-10-28 | WP5 dependency restore | `node_modules/` only (ignored). | `npm ci --no-audit` — exit 0; 125 packages added from the existing lockfile. | PASS — package manifests and lockfile were not changed; project checks can be rerun. |
+| 2026-10-28 | WP5 full verification after dependency restore | Generated `dist/` output only; `node_modules/` is ignored. | `npm test` — exit 0 (32 files / 170 tests); `npm run typecheck` — exit 0; `npm run build` — exit 0, including active v1 bundle and staged popup/blocked/onboarding/dashboard pages. | PASS — non-browser checks are green; the build does not activate v2 or establish browser behavior. |
+| 2026-10-28 | WP5 staged output, token contrast, and preview startup | Generated `dist/` output only; existing extension workflow restarted. | Node output assertions found four staged HTML pages plus `content-v2.js` while the manifest still targets v1; contrast token matrix passed 21 foreground/background pairs per theme (minimum 4.94:1 dark, 4.59:1 light; primary button 5.84:1/5.48:1); `FocusGate Extension Preview` restarted and Vite reported ready on port 3000. | PASS — staged build routing, defined token combinations, and preview startup are verified; no browser interaction or extension API behavior was tested. |
+| 2026-10-28 | WP5 source-audit command attempt | No source changes. | Static source assertion reached the final `rg` with incorrect path `src/ui/Tabs.tsx`; exit 2 (`No such file or directory`). | FAIL — prior assertions found no native alert/close APIs or sub-12px staged styles, but the grouped command is not a clean pass; rerun with the actual `src/ui/components/Tabs.tsx` path. |
+| 2026-10-28 | WP5 corrected static source audit | `fixes/TRACKER.md` only. | Source assertions passed: no `alert()`/`window.close()` in `src`, no `pb-safe`/legacy popup sizing/sub-12px text in `src/ui`, and required focus-visible, reduced-motion, relative-nav, modal, tabs, and icon-label markers are present. Copy scan found no `completely`, `instantly`, `cannot`, or `guaranteed`; `Always` occurrences are the documented Always-blocked/keyword feature labels. | PASS — these static items are verified; exact replacement-copy mapping and runtime keyboard interactions remain open. |
+| 2026-10-28 | WP5.11 cross-version copy audit | No source changes. | `rg -n -i 'completely|instantly|cannot|guaranteed|fullscreen|time remaining|close tab|start focusing|no limit|whitelist|inaccessible|social media, video, news|always blocked|blocks all configured' src/ui src/App.tsx public/manifest.json metadata.json STORE_LISTING.md` — staged UI uses the revised copy, but active `src/App.tsx` still contains legacy fullscreen handling/wording, `Close Tab`, and standalone “No limit” wording (up to 1000 hours). | OPEN — active v1 remains in place pending the cutover gate; do not remove or route around it here. Cross-version copy review is not signed off. |
+| 2026-10-28 | WP5 repository hygiene | No source changes. | `git diff --check` — exit 0; `git diff -- package.json package-lock.json` — no changes; `git status --short --branch` showed only `fixes/TRACKER.md` modified. | PASS — dependency restore and build artifacts did not alter tracked package files; no whitespace errors. |
+| 2026-10-28 | WP5.3 Appendix C implementation and contrast | No source changes; staged `src/ui` and generated `dist/` only. | `npm test` — exit 0 (32 files / 170 tests, including theme-token and primitive tests); `npm run typecheck` — exit 0; `npm run build` — exit 0; component/source audit confirmed the listed primitives, theme modes, reduced motion, focus styles, 12px floor, relative nav, modal keyboard/focus implementation, and no `pb-safe`; contrast sweep passed 21 text/background token pairs per theme (dark minimum 4.94:1, light 4.59:1). | PASS — implementation task WP5.3 is checked. Keyboard-only walkthrough and browser accessibility score remain explicitly open under WP5.12/WP5.AC3. |
+| 2026-10-28 | WP5 progress reconciliation | No source changes. | Checklist script verified WP5 = 11/18 and overall = 53/156 (34%); `git diff --check` — exit 0; package manifests/lockfile unchanged. `git status` also showed `.replit` modified unexpectedly; inspect before finalizing. | OPEN — progress counts agree, but the workflow/config diff must be reviewed to determine whether it belongs to this task. |
+| 2026-10-28 | WP5 config cleanup attempt | No source changes. | `git diff -- .replit` showed only `python-base-3.13` added to the existing modules; direct `functions.apply_patch` restore was rejected by the Replit configuration guard, and no file changed. | OPEN — restore the prior TOML through `verifyAndReplaceDotReplit` using a validated temporary file, then confirm only the tracker remains modified. |
 
 **Failures / blockers:**
 - WP1b browser spikes and WP4 live-selector/runtime acceptance remain unverified; these block the WP5 atomic cutover and M1 green.
