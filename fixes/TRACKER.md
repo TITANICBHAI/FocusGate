@@ -339,7 +339,10 @@
 - [ ] WP3.AC10 Schedule/standalone end removes their domains from dynamic rules without storage change; rules survive browser restart.
 
 **Notes / progress:**
+- 2026-10-28 — Owner authorized continuing WP3 to complete implementation and deterministic module/unit verification, with real-browser verification deferred. Keep S1 and the WP5 activation gate closed; unit tests do not establish browser behavior. UI integrations assigned to WP5/WP7 remain open and must not be counted complete from staged engine coverage.
 - 2026-10-28 — Owner authorized continued WP3 work and supplied the WP3 checklist at 0/22. Reset WP3 and total verified progress to 0/22 and 0/156 per the governing fresh-verification rule. Earlier evidence remains historical and is not credited; re-inspect and verify items before checking them. Keep S1 runtime enforcement gated.
+- 2026-10-28 — Fresh post-authorization checks: `npm ci` exited 0 (125 packages; npm reported 4 vulnerabilities), `npm run typecheck` exited 0, `npm test` passed 23 files / 123 tests, `npm run build` exited 0, and `git diff --check` was clean. These confirm the staged modules compile/build and deterministic tests pass; no browser verification was run.
+- 2026-10-28 — WP3 remains open at 8/22: WP3.1/.4/.5 still include UI integration in the WP5/WP7 screens, and WP3.10's removal of the active v1 fallback must wait for the WP5 atomic cutover. Keep all browser/runtime acceptance criteria unchecked.
 - 2026-10-28 — Restored local dependencies from the existing lockfile: `npm ci` exited 0; 125 packages added. npm reported 4 dependency vulnerabilities (2 moderate, 2 high). No package manifest or lockfile was changed.
 - 2026-10-28 — Fresh `npm run typecheck` passed after dependency restore; command exited 0 with no TypeScript diagnostics. This verifies compilation only; WP3 behavior items remain unchecked pending fresh behavior tests and gap review.
 - 2026-10-28 — Fresh focused WP3 behavior suite passed: 12 test files / 66 tests. This covers pure plan, domain/exception/keyword/schedule/allowance logic, DNR construction, reconciliation, attention, alarms, block recording, and staged navigation; it does not establish browser runtime behavior or UI acceptance.
@@ -393,6 +396,7 @@
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-10-28 | WP3 fresh staged verification | `fixes/plan.md`, `fixes/TRACKER.md`; `node_modules/` and generated `dist/` are ignored. | `npm ci` — exit 0 (125 packages; 4 audit vulnerabilities); `npm run typecheck` — exit 0; `npm test` — exit 0 (23 files / 123 tests); `npm run build` — exit 0 (2,079 modules); `git diff --check` — exit 0. | PASS — current staged implementation compiles, passes deterministic tests, and builds. No browser/runtime behavior was exercised; WP3 UI/cutover tasks remain open. |
 | 2026-10-28 | WP3.5 planner alias-group behavior | `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 12 tests passed. | PASS — one configured alias entry blocks the related domains through `explainBlock`; UI chips remain unimplemented. |
 | 2026-10-28 | WP3.4 scheduled-domain health reporting | `src/background/reconcile.ts`, `tests/background/reconcile.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/reconcile.test.ts` — exit 0; 1 file / 7 tests passed. | PASS — malformed scheduled site is reported and the valid site remains in the generated rule set; UI validation remains unimplemented. |
 | 2026-10-28 | Final WP3 working-tree review | `fixes/TRACKER.md`, `src/background/attention.ts`, `tests/background/attention.test.ts`, `tests/shared/plan.test.ts`. | `git diff --check && git status --short --branch && git diff --stat` — exit 0; four expected modified files; no whitespace errors. | PASS — only the attention fallback, its tests, the global-list test, and tracker changed; no generated bundle was staged. |
@@ -436,6 +440,8 @@
 | 2026-10-28 | WP3 strict typecheck | `src/shared/plan.ts`, `src/background/reconcile.ts`, `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — staged plan and reconcile modules compile strictly. |
 
 **Failures / blockers:**
+- 2026-10-28 — Non-browser completion boundary: the shared plan, validation/reporting helpers, alias expansion, and staged navigation listener have passing unit coverage, but WP3.1/.4/.5 require UI integrations not present before the WP5/WP7 screens, and WP3.10 cannot remove the active v1 `tabs.onUpdated` fallback before the WP5 atomic cutover. These items are not browser-verification deferrals; keep them unchecked rather than claiming WP3 is complete.
+- 2026-10-28 — Browser/runtime verification was explicitly deferred by the owner. No DNR redirect, extension navigation, alarm lifecycle, or cross-browser acceptance result is claimed.
 - 2026-10-28 — Resolved: after fixing the sampler to stop at exhausted caps and checking blocking from the computed plan, `npm test -- tests/background/attention.test.ts tests/background/alarmHandler.test.ts` exited 0; 2 files / 11 tests passed.
 - 2026-10-28 — Resolved: after deriving alarm-handler expectations from `computeBlockPlan(state, now)`, the combined command above exited 0; 5 files / 26 tests passed.
 - 2026-10-28 — First combined audit/handler suite attempt: the command above exited 1; 24/26 tests passed. Both failures were stale test expectations: the default plan includes the next local-day boundary. Make boundary expectations derive from `computeBlockPlan(state, now)`, then rerun.
@@ -751,6 +757,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-28 | WP3 owner-authorized verification scope | Completed fresh deterministic checks while deferring browser verification. Kept S1/atomic-cutover gate closed and left UI/cutover task items open. | `npm ci`, `npm run typecheck`, `npm test` (23 files / 123 tests), `npm run build`, and `git diff --check` passed. No browser behavior was tested. |
 | 2026-10-28 | WP3.5 planner alias-group coverage | Added an end-to-end pure-plan assertion that one alias-group member blocks the other members. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 12 tests passed. WP3.5 remains incomplete due to deferred UI chip integration. |
 | 2026-10-28 | WP3.4 scheduled-domain validation gap | Reconcile checked schedule shape but did not report invalid `sites[]` values within an otherwise valid schedule; added validation that reports malformed entries without discarding good ones. | `npm test -- tests/background/reconcile.test.ts` — exit 0; 1 file / 7 tests passed. WP3.4 remains unchecked pending its user-facing inline validation portion. |
 | 2026-10-28 | Final WP3 working-tree review | Reviewed the completed diff and tracker counts after the module work. | `git diff --check && git status --short --branch && git diff --stat` — exit 0; four expected modified files; no whitespace errors. |
