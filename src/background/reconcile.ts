@@ -205,6 +205,15 @@ async function auditNewlyBlockedTabs(
   );
   if (newlyBlocked.length === 0) return [];
 
+  return auditTabs(dependencies, state, now, newlyBlocked);
+}
+
+async function auditTabs(
+  dependencies: ReconcileDependencies,
+  state: AppState,
+  now: number,
+  onlyDomains?: string[],
+): Promise<string[]> {
   const errors: string[] = [];
   const tabs = await dependencies.listTabs();
   for (const tab of tabs) {
@@ -217,7 +226,11 @@ async function auditNewlyBlockedTabs(
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") continue;
     const domain = normalizeDomain(url.hostname);
-    if (!domain || !newlyBlocked.some((blocked) => matchesDomain(domain, blocked))) {
+    if (
+      !domain ||
+      (onlyDomains &&
+        !onlyDomains.some((blocked) => matchesDomain(domain, blocked)))
+    ) {
       continue;
     }
     const reason = explainBlock(tab.url, state, now);
@@ -238,6 +251,19 @@ async function auditNewlyBlockedTabs(
     }
   }
   return errors;
+}
+
+/**
+ * One-minute safety audit for already-open tabs. Kept separate from DNR
+ * reconciliation so the periodic tick does not reinstall unchanged rules.
+ */
+export async function auditOpenBlockedTabs(
+  dependencies: ReconcileDependencies,
+  state?: AppState,
+  now = dependencies.now(),
+): Promise<string[]> {
+  const currentState = state ?? (await dependencies.getState());
+  return auditTabs(dependencies, currentState, now);
 }
 
 /**

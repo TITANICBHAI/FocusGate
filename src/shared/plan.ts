@@ -175,12 +175,8 @@ function minBoundary(
 }
 
 export function isBlockingActive(state: AppState, nowMs: number): boolean {
-  if (state.alwaysBlockedSites.length > 0) return true;
-  if (state.session.status === "work") return true;
-  if (standaloneActive(state, nowMs)) return true;
-  return validSchedules(state.schedules).some((schedule) =>
-    isScheduleActiveAt(schedule, new Date(nowMs)),
-  );
+  const plan = computeBlockPlan(state, nowMs);
+  return plan.blocked.size > 0 || plan.allowOnly !== null || plan.keywords.length > 0;
 }
 
 export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {

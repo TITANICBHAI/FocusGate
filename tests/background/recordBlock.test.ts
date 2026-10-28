@@ -128,4 +128,35 @@ describe("background block recorder", () => {
     expect(harness.getState().recentBlocks).toHaveLength(200);
     expect(harness.getState().recentBlocks.at(-1)?.domain).toBe("new.example");
   });
+
+  it("stores keyword matches in a 50-entry ring", async () => {
+    const initialState = createDefaultState();
+    initialState.keywordMatches = Array.from({ length: 50 }, (_, index) => ({
+      keyword: `old-${index}`,
+      domain: "example.com",
+      where: "query",
+      at: index,
+    }));
+    const harness = createHarness(initialState);
+
+    expect(
+      await harness.recordBlock({
+        tabId: 2,
+        domain: "example.com",
+        reason: {
+          kind: "keyword",
+          keyword: "spoiler",
+          where: "query",
+        },
+      }),
+    ).toBe(true);
+    expect(harness.getState().keywordMatches).toHaveLength(50);
+    expect(harness.getState().keywordMatches[0]?.keyword).toBe("old-1");
+    expect(harness.getState().keywordMatches.at(-1)).toEqual({
+      keyword: "spoiler",
+      domain: "example.com",
+      where: "query",
+      at: new Date(2026, 9, 28, 10, 0).getTime(),
+    });
+  });
 });

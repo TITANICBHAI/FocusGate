@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createReconciler } from "../../src/background/reconcile.ts";
+import {
+  auditOpenBlockedTabs,
+  createReconciler,
+} from "../../src/background/reconcile.ts";
 import type {
   ReconcileDependencies,
   ReconcileSnapshot,
@@ -105,6 +108,8 @@ function createHarness(
     getUpdatedTabs: () => updatedTabs,
     getRecordedBlocks: () => recordedBlocks,
     getStateReads: () => stateReads,
+    auditOpenBlockedTabs: (now?: number) =>
+      auditOpenBlockedTabs(dependencies, undefined, now),
     firstUpdateStarted,
     releaseFirstUpdate: () => releaseFirstUpdate?.(),
   };
@@ -152,6 +157,30 @@ describe("staged blocking reconciler", () => {
     expect(harness.getRecordedBlocks()).toMatchObject([
       { tabId: 2, domain: "sub.new.example", reason: { kind: "always" } },
     ]);
+  });
+
+  it("safety-audits already-open blocked tabs without reconciling DNR", async () => {
+    const state = createDefaultState();
+    state.alwaysBlockedSites = ["blocked.example"];
+    const harness = createHarness(state, {
+      tabs: [
+        { id: 4, url: "https://sub.blocked.example/open" },
+        { id: 5, url: "https://free.example/" },
+      ],
+    });
+
+    await harness.auditOpenBlockedTabs();
+
+    expect(harness.getUpdatedTabs()).toEqual([
+      {
+        tabId: 4,
+        url: "chrome-extension://test/blocked.html#https://sub.blocked.example/open",
+      },
+    ]);
+    expect(harness.getRecordedBlocks()).toMatchObject([
+      { tabId: 4, domain: "sub.blocked.example", reason: { kind: "always" } },
+    ]);
+    expect(harness.getUpdateCalls()).toHaveLength(0);
   });
 
   it("coalesces concurrent reasons into one follow-up reconciliation", async () => {

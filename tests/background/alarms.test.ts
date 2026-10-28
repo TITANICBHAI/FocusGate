@@ -19,6 +19,9 @@ function createFakeAlarms(initial: AlarmSnapshot[] = []) {
       alarms.set(name, {
         name,
         scheduledTime: info.when ?? 0,
+        ...(info.periodInMinutes !== undefined
+          ? { periodInMinutes: info.periodInMinutes }
+          : {}),
       });
     },
     clear: async (name) => {
@@ -46,6 +49,9 @@ describe("session alarm scheduling", () => {
       name: SESSION_PHASE_END_ALARM,
       info: { when: 60_000 },
     });
+    expect(fake.creates.some((alarm) => alarm.name === "boundary")).toBe(false);
+    expect(fake.creates.some((alarm) => alarm.name === "weekly_report")).toBe(true);
+    expect(fake.creates.some((alarm) => alarm.name === "midnight")).toBe(true);
   });
 
   it("does not reset existing correct alarms on worker wake", async () => {
@@ -53,14 +59,45 @@ describe("session alarm scheduling", () => {
     state.session.status = "work";
     state.session.phaseEndsAt = 60_000;
     const fake = createFakeAlarms([
-      { name: TICK_ALARM, scheduledTime: 60_000 },
+      { name: TICK_ALARM, scheduledTime: 60_000, periodInMinutes: 1 },
       { name: SESSION_PHASE_END_ALARM, scheduledTime: 60_000 },
+      { name: "boundary", scheduledTime: 30_000 },
+      { name: "weekly_report", scheduledTime: 2_000_000 },
+      { name: "midnight", scheduledTime: 86_400_000 },
     ]);
 
-    await ensureAlarms(fake.api, state.session, state.standalone, 0);
+    await ensureAlarms(fake.api, state.session, state.standalone, 0, {
+      nextBoundaryAt: 30_000,
+      weeklyReportAt: 2_000_000,
+      midnightAt: 86_400_000,
+    });
 
     expect(fake.creates).toHaveLength(0);
     expect(fake.clears).toHaveLength(0);
+  });
+
+  it("schedules boundary, weekly-report, and midnight targets idempotently", async () => {
+    const state = createDefaultState();
+    const fake = createFakeAlarms();
+
+    await ensureAlarms(fake.api, state.session, state.standalone, 0, {
+      nextBoundaryAt: 45_000,
+      weeklyReportAt: 80_000,
+      midnightAt: 90_000,
+    });
+
+    expect(fake.creates).toContainEqual({
+      name: "boundary",
+      info: { when: 45_000 },
+    });
+    expect(fake.creates).toContainEqual({
+      name: "weekly_report",
+      info: { when: 80_000 },
+    });
+    expect(fake.creates).toContainEqual({
+      name: "midnight",
+      info: { when: 90_000 },
+    });
   });
 
   it("moves a changed phase alarm and clears it after the session is idle", async () => {
@@ -73,7 +110,7 @@ describe("session alarm scheduling", () => {
 
     await ensureAlarms(fake.api, state.session, state.standalone, 0);
     expect(fake.clears).toContain(SESSION_PHASE_END_ALARM);
-    expect(fake.creates.at(-1)).toEqual({
+    expect(fake.creates).toContainEqual({
       name: SESSION_PHASE_END_ALARM,
       info: { when: 120_000 },
     });
@@ -101,5 +138,23 @@ describe("session alarm scheduling", () => {
       name: STANDALONE_END_ALARM,
       info: { when: 90_000 },
     });
+  });
+
+  it("clears a stale boundary and computes the next local Monday report", async () => {
+    const { nextWeeklyReportAt } = await import("../../src/background/alarms.ts");
+    const now = new Date(2026, 9, 28, 10, 0).getTime();
+    const next = new Date(nextWeeklyReportAt(now));
+    expect(next.getDay()).toBe(1);
+    expect(next.getHours()).toBe(9);
+    expect(next.getTime()).toBeGreaterThan(now);
+
+    const fake = createFakeAlarms([{ name: "boundary", scheduledTime: 10 }]);
+    const state = createDefaultState();
+    await ensureAlarms(fake.api, state.session, state.standalone, now, {
+      nextBoundaryAt: null,
+      weeklyReportAt: null,
+    });
+    expect(fake.clears).toContain("boundary");
+    expect(fake.alarms.has("weekly_report")).toBe(false);
   });
 });

@@ -20,7 +20,8 @@ export interface BlockDedupeStore {
 export interface BlockRecorderDependencies {
   getState(): Promise<AppState>;
   write(
-    partial: Pick<AppState, "recentBlocks" | "dayStats" | "session">,
+    partial: Pick<AppState, "recentBlocks" | "dayStats" | "session"> &
+      Partial<Pick<AppState, "keywordMatches">>,
   ): Promise<void>;
   dedupe: BlockDedupeStore;
   now(): number;
@@ -107,11 +108,26 @@ export function createBlockRecorder(
             blockedAttempts: state.session.blockedAttempts + 1,
           }
         : state.session;
+    const keywordMatches =
+      attempt.reason.kind === "keyword"
+        ? [
+            ...(Array.isArray(state.keywordMatches)
+              ? state.keywordMatches
+              : []),
+            {
+              keyword: attempt.reason.keyword,
+              domain,
+              where: attempt.reason.where,
+              at: now,
+            },
+          ].slice(-50)
+        : undefined;
 
     await dependencies.write({
       recentBlocks: [...state.recentBlocks, record].slice(-RECENT_BLOCK_LIMIT),
       dayStats,
       session,
+      ...(keywordMatches ? { keywordMatches } : {}),
     });
 
     const nextDedupe: Record<string, number> = {};
