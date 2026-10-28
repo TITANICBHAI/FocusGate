@@ -228,6 +228,7 @@
 **Failures / blockers:**
 - No controllable Chrome/Edge/Firefox extension environment is available in this workspace. The generic Chromium control page does not satisfy any S1–S4 behavior criterion.
 - 2026-10-28 — `git diff --check` exited 2 because the two new date lines in `docs/spikes.md` had trailing spaces. Remove those new spaces and rerun; this is a formatting issue, not a browser behavior result.
+- 2026-10-28 — Resolved: removed the new trailing spaces; reran `git diff --check`, which exited 0 with no output.
 
 **Decisions / deferred work:** None recorded.
 
