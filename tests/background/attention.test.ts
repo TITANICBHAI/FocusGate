@@ -9,7 +9,10 @@ import type {
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import type { AppState } from "../../src/shared/types.ts";
 
-function createHarness(initialState: AppState = createDefaultState()) {
+function createHarness(
+  initialState: AppState = createDefaultState(),
+  options: { countAudible?: boolean } = {},
+) {
   let now = 10_000;
   let state = structuredClone(initialState);
   state.allowances["example.com"] ??= {
@@ -39,6 +42,7 @@ function createHarness(initialState: AppState = createDefaultState()) {
       expect(interval).toBe(60);
       return idleState;
     },
+    countAudible: options.countAudible,
     writeUsage: async (usage) => {
       writes.push(structuredClone(usage));
       state = { ...state, usage: structuredClone(usage) };
@@ -143,8 +147,25 @@ describe("allowance attention sampler", () => {
     expect(harness.state().usage["example.com"]?.usedMs).toBe(60_000);
   });
 
-  it("credits an audible active tab even when its window is unfocused", async () => {
+  it("keeps audible-time accounting off by default while the window is unfocused", async () => {
     const harness = createHarness();
+    harness.setWindow({
+      focused: false,
+      tabs: [
+        { active: true, audible: true, url: "https://example.com/video" },
+      ],
+    });
+    harness.setIdleState("locked");
+    await harness.tracker.sample();
+
+    harness.setNow(70_000);
+    await harness.tracker.sample();
+
+    expect(harness.state().usage["example.com"]).toBeUndefined();
+  });
+
+  it("credits audible active-tab time only when explicitly enabled", async () => {
+    const harness = createHarness(createDefaultState(), { countAudible: true });
     harness.setWindow({
       focused: false,
       tabs: [

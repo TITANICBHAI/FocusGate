@@ -48,6 +48,8 @@ export interface AttentionDependencies {
   setCheckpoint(value: AttentionCheckpoint): Promise<void>;
   getLastFocusedWindow(): Promise<FocusedWindowSnapshot | null>;
   getIdleState(detectionIntervalSeconds: number): Promise<IdleState>;
+  /** Background-audio time is opt-in; undefined keeps the conservative default. */
+  countAudible?: boolean;
   writeUsage(usage: AppState["usage"]): Promise<void>;
   now(): number;
   reconcile(reason: string): Promise<void>;
@@ -171,7 +173,7 @@ export function createAttentionTracker(dependencies: AttentionDependencies): {
         activeTab.url &&
         !explainBlock(activeTab.url, stateWithUsage, now) &&
         ((focusedWindow?.focused === true && idleState === "active") ||
-          activeTab.audible === true),
+          (dependencies.countAudible === true && activeTab.audible === true)),
     );
 
     // Advance the session checkpoint before writing durable usage. If the

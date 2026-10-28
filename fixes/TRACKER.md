@@ -5,7 +5,7 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 4.5% (7/156 required checklist items freshly verified)
+- **Progress:** 5.1% (8/156 required checklist items freshly verified)
 - **Current work package:** WP3 — Blocking engine
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 (module/unit work; conservative fallbacks) → WP3 (staged; no redirect activation before S1) → WP4 → WP1b (complete before WP5 cutover) → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
@@ -35,7 +35,7 @@
 | WP1 — Foundation, build, storage, migration | NOT STARTED | 0/16 | — | — | Fresh verification required |
 | WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | Fresh verification required; runtime AC after WP5 cutover |
-| WP3 — Blocking engine | IN PROGRESS | 7/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
+| WP3 — Blocking engine | IN PROGRESS | 8/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
 | WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
 | WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
@@ -43,7 +43,7 @@
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **7/156** | — | — | |
+| **Total** | **IN PROGRESS** | **8/156** | — | — | |
 
 **Implementation gates:** The owner deferred WP1b, so it does not block WP2/WP3 code or unit tests. Use the documented attention/alarm fallbacks; S1 still gates navigation enforcement, and WP1b must be complete before WP5 cutover/M1 green. WP2–WP4 must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until M1 is green. Prior checklist results remain unchecked until freshly verified after the reset.
 
@@ -308,7 +308,7 @@
 
 ## WP3 — Blocking engine
 
-**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 7/22
+**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 8/22
 
 ### Tasks
 
@@ -320,7 +320,7 @@
 - [x] WP3.6 Implement named schedules with own lists or `useGlobalLists`; cover overnight, `24:00`, end-exclusive and previous-day rules; calculate boundaries for schedules, standalone, allowance windows, and local midnight.
 - [x] WP3.7 Implement `time_budget`, `count`, and `interval` allowances with attention ledger; count focused active-tab/non-idle or audible use; enforce per-entry caps, `duringBlocks`, and always-blocked precedence.
 - [x] WP3.8 Implement normalized boundary-checked exceptions and DNR allow rule from the same entry; exceptions override other rules.
-- [ ] WP3.9 Implement keyword scope/match and host parameter table (`yahoo p`, `yandex text`, `baidu wd`, `youtube search_query`, `amazon k`, generic `q`/`query` only); never generic `p`; retain last 50 matches.
+- [x] WP3.9 Implement keyword scope/match and host parameter table (`yahoo p`, `yandex text`, `baidu wd`, `youtube search_query`, `amazon k`, generic `q`/`query` only); never generic `p`; retain last 50 matches.
 - [ ] WP3.10 Add filtered `webNavigation` fallback listeners for HTTP(S) using `explainBlock`, `recordBlock`, and `tabs.update`; delete `tabs.onUpdated` fallback and repeated audit loop.
 - [x] WP3.11 Deduplicate `recordBlock` for three seconds by tab/domain; cap `recentBlocks` at 200 and update daily/domain/session counters.
 - [x] WP3.12 Route `tick`, `boundary`, `session_phase_end`, `weekly_report`, and `midnight` alarms through `ensureAlarms()`.
@@ -339,6 +339,21 @@
 - [ ] WP3.AC10 Schedule/standalone end removes their domains from dynamic rules without storage change; rules survive browser restart.
 
 **Notes / progress:**
+- 2026-10-28 — Owner authorized continued WP3 work and supplied the WP3 checklist at 0/22. Reset WP3 and total verified progress to 0/22 and 0/156 per the governing fresh-verification rule. Earlier evidence remains historical and is not credited; re-inspect and verify items before checking them. Keep S1 runtime enforcement gated.
+- 2026-10-28 — Restored local dependencies from the existing lockfile: `npm ci` exited 0; 125 packages added. npm reported 4 dependency vulnerabilities (2 moderate, 2 high). No package manifest or lockfile was changed.
+- 2026-10-28 — Fresh `npm run typecheck` passed after dependency restore; command exited 0 with no TypeScript diagnostics. This verifies compilation only; WP3 behavior items remain unchecked pending fresh behavior tests and gap review.
+- 2026-10-28 — Fresh focused WP3 behavior suite passed: 12 test files / 66 tests. This covers pure plan, domain/exception/keyword/schedule/allowance logic, DNR construction, reconciliation, attention, alarms, block recording, and staged navigation; it does not establish browser runtime behavior or UI acceptance.
+- 2026-10-28 — Source review found the sampler counted an unfocused audible tab unconditionally, contrary to the deferred WP1b S2 conservative fallback. Made audible accounting explicitly opt-in (off when unset); focused-window/non-idle accounting remains the default. `npm test -- tests/background/attention.test.ts` exited 0; 1 file / 8 tests passed. Combined verification remains pending.
+- 2026-10-28 — Re-ran the focused WP3 suite after that correction: 12 files / 67 tests passed. Marked WP3.2, .3, .7, .8, .9, .11, and .12 verified. WP3.6 still needs explicit `useGlobalLists` behavior coverage; UI integration and runtime acceptance stay open.
+- 2026-10-28 — Added a schedule test for `useGlobalLists`, proving active schedules use the current global list and stop doing so when the flag is off. `npm test -- tests/shared/plan.test.ts` exited 0; 1 file / 11 tests passed. WP3.6 is freshly verified at the module/unit level.
+- 2026-10-28 — Full repository suite passed after the attention fallback and schedule-list test changes: `npm test` exited 0; 23 files / 121 tests passed.
+- 2026-10-28 — Fresh post-change `npm run typecheck` passed; `tsc --noEmit` exited 0 with no diagnostics.
+- 2026-10-28 — Fresh post-change `npm run build` passed; the extension build transformed 2,079 modules and emitted the production bundle.
+- 2026-10-28 — Restarted `FocusGate Extension Preview`; Vite served the popup on port 3000 and the screenshot showed the app. The browser console reported one unidentified 404; this is not extension runtime/S1 evidence.
+- 2026-10-28 — Restarted `FocusGate Docs Preview` after dependency restoration; Vite became ready on port 5000. Both web previews are running; GitHub Sync remains stopped and was not started.
+- 2026-10-28 — Final scope reconciliation: 8/22 WP3 tasks are freshly checked. WP3.1/.4/.5 still need the blocked-page/check-URL and user-facing validation/alias integration; .10 must preserve the active v1 consumer until WP5 cutover. All WP3 acceptance criteria remain unchecked because browser/runtime acceptance and S1 have not been verified.
+- 2026-10-28 — Found a WP3.4 health-reporting gap: valid schedule objects could contain malformed site strings that were not included in `health.skipped`. Added per-site validation while retaining valid entries. `npm test -- tests/background/reconcile.test.ts` exited 0; 1 file / 7 tests passed. WP3.4 remains unchecked because inline user-facing validation is not implemented in this stage.
+- 2026-10-28 — Added planner-level alias coverage: a single `twitter.com` always-block entry must block `x.com` and `t.co` through the shared decision function. `npm test -- tests/shared/plan.test.ts` exited 0; 1 file / 12 tests passed. WP3.5 remains unchecked because the UI alias chips are deferred.
 - 2026-10-28 — Owner authorized continuation of WP3 and supplied a WP3-specific checklist. Reset all prior completion marks to 0/156; revalidate dependencies and current WP3 code from the checkout. Keep navigation enforcement and DNR activation gated on WP1b.S1.
 - 2026-10-28 — Fresh source review found the pure plan, DNR builder, reconciler, block recorder, and staged navigation listener present. Attention sampling, keyword-match persistence, and boundary/weekly-report/midnight alarm scheduling are still missing. The active worker remains the v1 bridge; do not activate v2.
 - 2026-10-28 — Added a dependency-injected attention sampler and fake-event-source tests for focused/idle/audible attribution, alias/domain matching, cap reconciliation, and listener cleanup. Usage checkpoints advance before durable writes to avoid double-credit after recovery; the sampler remains unregistered and verification is pending.
@@ -378,6 +393,19 @@
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-10-28 | WP3.5 planner alias-group behavior | `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 12 tests passed. | PASS — one configured alias entry blocks the related domains through `explainBlock`; UI chips remain unimplemented. |
+| 2026-10-28 | WP3.4 scheduled-domain health reporting | `src/background/reconcile.ts`, `tests/background/reconcile.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/reconcile.test.ts` — exit 0; 1 file / 7 tests passed. | PASS — malformed scheduled site is reported and the valid site remains in the generated rule set; UI validation remains unimplemented. |
+| 2026-10-28 | Final WP3 working-tree review | `fixes/TRACKER.md`, `src/background/attention.ts`, `tests/background/attention.test.ts`, `tests/shared/plan.test.ts`. | `git diff --check && git status --short --branch && git diff --stat` — exit 0; four expected modified files; no whitespace errors. | PASS — only the attention fallback, its tests, the global-list test, and tracker changed; no generated bundle was staged. |
+| 2026-10-28 | Docs preview after dependency restore | No app-source changes; existing workflow restarted. | `WorkflowsRestart` for `FocusGate Docs Preview`; workflow logs show Vite ready on port 5000. | PASS — docs preview is serving; GitHub Sync remains stopped. |
+| 2026-10-28 | Extension preview smoke | No app-source changes; preview workflow restarted. | `WorkflowsRestart` for `FocusGate Extension Preview`; screenshot of `/` on port 3000. | PASS — popup rendered; browser console logged one resource 404 with no URL details. Does not verify extension APIs, DNR, or navigation enforcement. |
+| 2026-10-28 | Fresh post-change extension build | `dist/` generated by the existing build script; `fixes/TRACKER.md`. | `npm run build` — exit 0; Vite transformed 2,079 modules and emitted extension assets. | PASS — production bundle builds; no runtime behavior or S1 redirect evidence. |
+| 2026-10-28 | Fresh post-change WP3 typecheck | `src/background/attention.ts`, `tests/background/attention.test.ts`, `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — the new opt-in parameter and global-list test compile strictly. |
+| 2026-10-28 | Fresh full repository test suite | Current repository tests; `fixes/TRACKER.md`. | `npm test` — exit 0; 23 files / 121 tests passed. | PASS — all current unit tests pass after the WP3 changes; this does not verify browser runtime enforcement. |
+| 2026-10-28 | WP3 schedule global-list behavior test | `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 11 tests passed. | PASS — validates active owned/global list behavior and immediate use of the current global list. |
+| 2026-10-28 | Fresh WP3 suite after conservative audio default | `src/background/attention.ts`, `tests/background/attention.test.ts`, current WP3 modules/tests, `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts tests/shared/dnr.test.ts tests/shared/domains.test.ts tests/shared/keywords.test.ts tests/shared/time.test.ts tests/shared/allowance.test.ts tests/background/reconcile.test.ts tests/background/recordBlock.test.ts tests/background/blockNavigation.test.ts tests/background/attention.test.ts tests/background/alarms.test.ts tests/background/alarmHandler.test.ts` — exit 0; 12 files / 67 tests passed. | PASS — revalidates module-level WP3 tasks; runtime and UI acceptance remain unverified. |
+| 2026-10-28 | WP3 attention audible-time default | `src/background/attention.ts`, `tests/background/attention.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/attention.test.ts` — exit 0; 1 file / 8 tests passed. | PASS — audible time is off by default and the explicit opt-in path is covered; broader combined verification remains. |
+| 2026-10-28 | Fresh WP3 focused behavior suite | Current WP3 source/tests; `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts tests/shared/dnr.test.ts tests/shared/domains.test.ts tests/shared/keywords.test.ts tests/shared/time.test.ts tests/shared/allowance.test.ts tests/background/reconcile.test.ts tests/background/recordBlock.test.ts tests/background/blockNavigation.test.ts tests/background/attention.test.ts tests/background/alarms.test.ts tests/background/alarmHandler.test.ts` — exit 0; 12 files / 66 tests passed. | PASS — fake-clock/event-source module tests pass; browser gates remain closed. |
+| 2026-10-28 | Fresh WP3 strict typecheck | No source changes; `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — current checkout compiles; no runtime behavior or browser activation is established. |
 | 2026-10-28 | WP3 count/interval attention boundary refinement | `src/background/attention.ts`, `tests/background/attention.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/attention.test.ts` — exit 0; 1 file / 7 tests passed. | PASS — fake-clock tests cover count visits, interval cap/reset timing, and credit only after a reset boundary. |
 | 2026-10-28 | WP3 typecheck after attention boundary refinement | `src/background/attention.ts`, `tests/background/attention.test.ts`. | `npm run typecheck` — exit 0; `tsc --noEmit` emitted no diagnostics. | PASS — current sampler compiles after count/interval timing changes. |
 | 2026-10-28 | WP3 final full unit suite after attention refinement | All current test files; source unchanged. | `npm test` — exit 0; 23 files / 119 tests passed. | PASS — final code state passes the full suite; browser DNR/listener activation remains unverified. |
@@ -723,6 +751,21 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-28 | WP3.5 planner alias-group coverage | Added an end-to-end pure-plan assertion that one alias-group member blocks the other members. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 12 tests passed. WP3.5 remains incomplete due to deferred UI chip integration. |
+| 2026-10-28 | WP3.4 scheduled-domain validation gap | Reconcile checked schedule shape but did not report invalid `sites[]` values within an otherwise valid schedule; added validation that reports malformed entries without discarding good ones. | `npm test -- tests/background/reconcile.test.ts` — exit 0; 1 file / 7 tests passed. WP3.4 remains unchecked pending its user-facing inline validation portion. |
+| 2026-10-28 | Final WP3 working-tree review | Reviewed the completed diff and tracker counts after the module work. | `git diff --check && git status --short --branch && git diff --stat` — exit 0; four expected modified files; no whitespace errors. |
+| 2026-10-28 | Docs preview restart | Restarted the existing docs preview after restoring dependencies. | Logs show Vite ready at port 5000; GitHub Sync was not started. |
+| 2026-10-28 | Extension preview smoke | Restarted the configured extension preview after code/package checks. | Vite ready on port 3000; root UI rendered in screenshot. Browser console showed one unspecified 404; no extension API was exercised. |
+| 2026-10-28 | Fresh post-change extension build | Built with the existing project script; no generated files were hand-edited. | `npm run build` — exit 0; 2,079 modules transformed; extension assets emitted. |
+| 2026-10-28 | Fresh post-change WP3 typecheck | Checked the attention opt-in behavior and schedule global-list test. | `npm run typecheck` — exit 0; no TypeScript diagnostics. |
+| 2026-10-28 | Fresh full repository tests | Ran the entire Vitest suite after WP3 attention and global-list changes. | `npm test` — exit 0; 23 files / 121 tests passed. |
+| 2026-10-28 | WP3 schedule global-list coverage | Added a behavior test for an active schedule toggling between its own list and the live global list. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 11 tests passed. WP3.6 freshly verified at module/unit level. |
+| 2026-10-28 | Fresh WP3 module task verification | Re-ran the full focused WP3 unit suite after the attention fallback correction. | 12 files / 67 tests passed. WP3.2, .3, .7, .8, .9, .11, .12 freshly verified; .6 needs global-list behavior coverage; S1/browser and UI integration remain gated. |
+| 2026-10-28 | WP3 attention fallback correction | Source review showed default audio accounting contradicted the conservative WP1b S2 fallback. Changed the staged sampler to require explicit opt-in and added tests for default-off and opted-in behavior. | `npm test -- tests/background/attention.test.ts` — exit 0; 1 file / 8 tests passed. Combined suite still pending; no browser activation. |
+| 2026-10-28 | Fresh WP3 focused tests | Ran the staged WP3 module suites after restoring dependencies. | The 12-file Vitest command exited 0; 66 tests passed. It did not load the extension in a browser; S1 remains unresolved. |
+| 2026-10-28 | Fresh WP3 typecheck | Ran the current checkout after restoring dependencies from the lockfile. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. |
+| 2026-10-28 | Fresh dependency restore | Reinstalled the existing npm lockfile dependencies; no dependency declarations were changed. | `npm ci` — exit 0; 125 packages added. npm reported 4 vulnerabilities (2 moderate, 2 high). |
+| 2026-10-28 | WP3 continuation start | Owner supplied the WP3 checklist and authorized continuing WP3. Reset counted completion to 0/156 pending fresh verification. | WP3 is IN PROGRESS at 0/22. Historical evidence is retained but not credited; S1 still blocks runtime enforcement. |
 | 2026-10-28 | Tracker reset and WP3 continuation authorized | Owner reiterated that prior completion claims are invalid and authorized continuation of WP3. All prior checklist marks are reset to 0/156; history is retained but not credited. | WP3 remains staged; fresh source inspection and verification required. S1 continues to gate runtime enforcement. |
 | 2026-10-28 | WP3 fresh source assessment | Re-inspected current planning, DNR, reconcile, recording, navigation, and alarm modules. | Existing pure/staged modules remain in place; attention sampling, keyword-match persistence, and planning-boundary/report/midnight alarm scheduling need implementation. The v1 bridge remains active. |
 | 2026-10-27 | Tracker reset | Owner clarified that prior completion claims were inaccurate. Reset all work-package and final-gate progress to NOT STARTED / unchecked; retained the planned work for later completion. | No app code or tests changed as part of this reset. Previous completion claims are not credited; re-check current files and record fresh evidence after authorization. |

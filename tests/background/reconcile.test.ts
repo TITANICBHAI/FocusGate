@@ -236,4 +236,32 @@ describe("staged blocking reconciler", () => {
       reason: "invalid-domain",
     });
   });
+
+  it("reports malformed scheduled domains without dropping valid schedule entries", async () => {
+    const state = createDefaultState();
+    state.schedules = [
+      {
+        id: "work",
+        name: "Work",
+        enabled: true,
+        days: [new Date(2026, 9, 28, 10, 0).getDay()],
+        start: "09:00",
+        end: "17:00",
+        sites: ["valid.example", "bad host"],
+        keywords: [],
+        useGlobalLists: false,
+      },
+    ];
+    const harness = createHarness(state);
+
+    await harness.reconcile("storage");
+
+    expect(harness.getRules()[0]?.condition.requestDomains).toEqual([
+      "valid.example",
+    ]);
+    expect(harness.getHealthWrites().at(-1)?.skipped).toContainEqual({
+      entry: "schedules[work].sites[1]: bad host",
+      reason: "invalid-domain",
+    });
+  });
 });

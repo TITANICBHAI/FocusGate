@@ -25,6 +25,17 @@ describe("block planning", () => {
     expect(explainBlock("https://example.com/docs/page", state, 1_000)).toBeNull();
   });
 
+  it("blocks every member of an alias group from a single site entry", () => {
+    const state = stateWith({ alwaysBlockedSites: ["twitter.com"] });
+
+    expect(explainBlock("https://x.com/home", state, 1_000)).toEqual({
+      kind: "always",
+    });
+    expect(explainBlock("https://t.co/short", state, 1_000)).toEqual({
+      kind: "always",
+    });
+  });
+
   it("turns session blocking off during breaks and activates it during work", () => {
     const base = createDefaultState();
     const state = stateWith({
@@ -80,6 +91,45 @@ describe("block planning", () => {
       until: new Date(2026, 9, 27, 6, 0).getTime(),
     });
     expect(explainBlock("https://global.example", state, tuesdayAtTwo)).toBeNull();
+  });
+
+  it("uses the current global list only when an active schedule opts in", () => {
+    const state = stateWith({
+      blockedSites: ["global.example"],
+      schedules: [
+        {
+          id: "work",
+          name: "Work",
+          enabled: true,
+          days: [1],
+          start: "09:00",
+          end: "17:00",
+          sites: ["owned.example"],
+          keywords: [],
+          useGlobalLists: true,
+        },
+      ],
+    });
+    const mondayAtTen = new Date(2026, 9, 26, 10, 0).getTime();
+
+    expect(explainBlock("https://owned.example", state, mondayAtTen)).toMatchObject({
+      kind: "schedule",
+      name: "Work",
+    });
+    expect(explainBlock("https://global.example", state, mondayAtTen)).toMatchObject({
+      kind: "schedule",
+      name: "Work",
+    });
+
+    state.blockedSites = ["replacement.example"];
+    expect(explainBlock("https://global.example", state, mondayAtTen)).toBeNull();
+    expect(explainBlock("https://replacement.example", state, mondayAtTen)).toMatchObject({
+      kind: "schedule",
+      name: "Work",
+    });
+
+    state.schedules[0]!.useGlobalLists = false;
+    expect(explainBlock("https://replacement.example", state, mondayAtTen)).toBeNull();
   });
 
   it("applies allowance caps and during-block exemptions without overriding always blocks", () => {

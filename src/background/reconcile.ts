@@ -97,7 +97,16 @@ function collectInvalidInputs(state: AppState): SkippedDnrEntry[] {
           entry: `schedules[${identifier}]`,
           reason: "invalid-schedule",
         });
+        return;
       }
+      schedule.sites.forEach((site, siteIndex) => {
+        if (normalizeDomain(site) === null) {
+          skipped.push({
+            entry: `schedules[${displayEntry(schedule.id)}].sites[${siteIndex}]: ${displayEntry(site)}`,
+            reason: "invalid-domain",
+          });
+        }
+      });
     });
   } else {
     skipped.push({ entry: "schedules", reason: "invalid-schedule-list" });
