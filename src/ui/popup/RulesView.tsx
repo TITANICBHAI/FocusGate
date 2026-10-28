@@ -156,7 +156,10 @@ function SitesPanel({ state }: { state: AppState }) {
       >
         <UrlCheck state={state} />
       </Card>
-      <Card title="Add a site">
+      <Card
+        title="Add a site"
+        description="Focus sites are blocked during focus sessions and schedules. Standalone blocks use a separate list. Embedded content on other sites is not affected."
+      >
         <form className="fg-stack" onSubmit={addSite}>
           <Field
             id="site-domain"
@@ -335,7 +338,7 @@ function ExceptionsPanel({ state }: { state: AppState }) {
     <>
       <Card
         title="Allow one page"
-        description="An exception allows a page even when its site is blocked."
+        description="Allow one page even when its site is blocked."
       >
         <form className="fg-stack" onSubmit={addException}>
           <Field
@@ -421,7 +424,13 @@ function KeywordsPanel({ state }: { state: AppState }) {
     <>
       <Card
         title="Add keywords"
-        description="Choose each keyword's action and when it applies. Separate words with commas or new lines."
+        description={
+          mode === "hide"
+            ? "Hide matching feed items on supported pages. Separate several with commas."
+            : mode === "both"
+              ? "Block matching searches and page addresses, and hide matching feed items on supported pages. Separate several with commas."
+              : "Block searches and page addresses that contain these words. Separate several with commas."
+        }
       >
         <form className="fg-stack" onSubmit={addKeywords}>
           <Field id="keyword-list" label="Keywords">
@@ -580,7 +589,7 @@ function SchedulesPanel({ state }: { state: AppState }) {
     <>
       <Card
         title="Schedules"
-        description="Set recurring days and hours, then choose whether to use schedule-specific or global lists."
+        description="Block these sites on the days and hours you choose. Each schedule can have its own list."
         actions={
           <Button
             onClick={() => {
@@ -995,13 +1004,13 @@ function LimitsPanel({ state }: { state: AppState }) {
   const [domainInput, setDomainInput] = useState("");
   const [mode, setMode] = useState<Allowance["mode"]>("time_budget");
   const [amount, setAmount] = useState("60");
-  const [period, setPeriod] = useState("30");
+  const [period, setPeriod] = useState("60");
   const [formError, setFormError] = useState("");
 
   function chooseMode(nextMode: Allowance["mode"]) {
     setMode(nextMode);
     setAmount(nextMode === "time_budget" ? "60" : nextMode === "count" ? "5" : "5");
-    setPeriod("30");
+    setPeriod("60");
     setFormError("");
   }
 
@@ -1014,16 +1023,16 @@ function LimitsPanel({ state }: { state: AppState }) {
     }
     const amountValue = Number(amount);
     const periodValue = Number(period);
-    const maxAmount = mode === "count" ? 10_000 : 1_440;
+    const maxAmount = mode === "count" ? 100 : 1_440;
     if (!Number.isInteger(amountValue) || amountValue < 1 || amountValue > maxAmount) {
       setFormError(`Enter a whole number from 1 to ${maxAmount}.`);
       return;
     }
     if (
       mode === "interval" &&
-      (!Number.isInteger(periodValue) || periodValue < 1 || periodValue > 1_440)
+      (!Number.isInteger(periodValue) || periodValue < 1 || periodValue > 10_080)
     ) {
-      setFormError("Enter an interval from 1 to 1440 minutes.");
+      setFormError("Enter a window length from 1 to 10080 minutes.");
       return;
     }
     let alreadyExists = false;
@@ -1038,19 +1047,19 @@ function LimitsPanel({ state }: { state: AppState }) {
                   ? {
                       mode,
                       limitMin: amountValue,
-                      duringBlocks: false,
+                       duringBlocks: true,
                     }
                   : mode === "count"
                     ? {
                         mode,
                         maxOpens: amountValue,
-                        duringBlocks: false,
+                         duringBlocks: true,
                       }
                     : {
                         mode,
                         allowMin: amountValue,
                         everyMin: periodValue,
-                        duringBlocks: false,
+                       duringBlocks: true,
                       },
             }),
       }));
@@ -1070,7 +1079,7 @@ function LimitsPanel({ state }: { state: AppState }) {
   return (
     <Card
       title="Daily limits"
-      description="Choose daily time or page-open caps, or a recurring time allowance."
+      description="A site is blocked after its budget is used until the day or window resets. Usage counts throughout the day, including outside focus sessions."
       actions={
         <Button
           onClick={() => {
@@ -1139,7 +1148,11 @@ function LimitsPanel({ state }: { state: AppState }) {
         }
       >
         <form id="limit-form" className="fg-stack" onSubmit={addLimit}>
-          <Field id="limit-mode" label="Limit type">
+          <Field
+            id="limit-mode"
+            label="Limit type"
+            helper={allowanceModeDescription(mode)}
+          >
             <select
               id="limit-mode"
               value={mode}
@@ -1182,7 +1195,7 @@ function LimitsPanel({ state }: { state: AppState }) {
               id="limit-amount"
               type="number"
               min={1}
-              max={mode === "count" ? 10_000 : 1_440}
+              max={mode === "count" ? 100 : 1_440}
               value={amount}
               onChange={(event) => {
                 setAmount(event.target.value);
@@ -1193,10 +1206,10 @@ function LimitsPanel({ state }: { state: AppState }) {
           </Field>
           <div className="fg-wrap" role="group" aria-label="Limit presets">
             {(mode === "time_budget"
-              ? [15, 30, 60, 120]
+              ? [5, 10, 15, 30, 60, 120]
               : mode === "count"
-                ? [3, 5, 10, 20]
-                : [2, 5, 10]
+                ? [1, 2, 3, 5, 10]
+                : [5, 10, 15, 30, 60, 120, 180, 240, 360, 720, 1440]
             ).map((preset) => (
               <button
                 className={`fg-duration-chip ${amount === String(preset) ? "is-selected" : ""}`}
@@ -1208,17 +1221,25 @@ function LimitsPanel({ state }: { state: AppState }) {
                   setFormError("");
                 }}
               >
-                {mode === "count" ? `${preset} opens` : `${preset} min`}
+                {mode === "count"
+                  ? `${preset} opens`
+                  : mode === "interval" && preset >= 60
+                    ? `${preset / 60} h`
+                    : `${preset} min`}
               </button>
             ))}
           </div>
           {mode === "interval" && (
-            <Field id="limit-period" label="Interval length in minutes">
+            <Field
+              id="limit-period"
+              label="Window length in minutes"
+              helper="Maximum 10080 minutes (168 hours)."
+            >
               <input
                 id="limit-period"
                 type="number"
                 min={1}
-                max={1_440}
+                max={10_080}
                 value={period}
                 onChange={(event) => {
                   setPeriod(event.target.value);
@@ -1283,7 +1304,7 @@ function AllowanceRow({
           : {
               mode: nextMode,
               allowMin: 5,
-              everyMin: 30,
+              everyMin: 60,
               duringBlocks: allowance.duringBlocks,
             };
     setAmountDraft(String(allowanceValue(next)));
@@ -1295,16 +1316,16 @@ function AllowanceRow({
   function saveValues() {
     const amount = Number(amountDraft);
     const period = Number(periodDraft);
-    const max = allowance.mode === "count" ? 10_000 : 1_440;
+    const max = allowance.mode === "count" ? 100 : 1_440;
     if (!Number.isInteger(amount) || amount < 1 || amount > max) {
       setError(`Enter a whole number from 1 to ${max}.`);
       return;
     }
     if (
       allowance.mode === "interval" &&
-      (!Number.isInteger(period) || period < 1 || period > 1_440)
+      (!Number.isInteger(period) || period < 1 || period > 10_080)
     ) {
-      setError("Enter an interval from 1 to 1440 minutes.");
+      setError("Enter a window length from 1 to 10080 minutes.");
       return;
     }
     setError("");
@@ -1328,7 +1349,11 @@ function AllowanceRow({
           Remove
         </Button>
       </div>
-      <Field id={`allowance-mode-${domain}`} label="Limit type">
+      <Field
+        id={`allowance-mode-${domain}`}
+        label="Limit type"
+        helper={allowanceModeDescription(allowance.mode)}
+      >
         <select
           id={`allowance-mode-${domain}`}
           value={allowance.mode}
@@ -1356,12 +1381,16 @@ function AllowanceRow({
           />
         </Field>
         {allowance.mode === "interval" && (
-          <Field id={`allowance-period-${domain}`} label="Interval length">
+          <Field
+            id={`allowance-period-${domain}`}
+            label="Window length in minutes"
+            helper="Maximum 10080 minutes (168 hours)."
+          >
             <input
               id={`allowance-period-${domain}`}
               type="number"
               min={1}
-              max={1_440}
+              max={10_080}
               value={periodDraft}
               onChange={(event) => setPeriodDraft(event.target.value)}
               onBlur={saveValues}
@@ -1374,8 +1403,8 @@ function AllowanceRow({
       </div>
       <div className="fg-row">
         <Toggle
-          label={`Count usage during blocks for ${domain}`}
-          description="Count usage even when this site is blocked by another rule."
+          label={`Also allow ${domain} during focus sessions and blocks`}
+          description="When on, this site remains available during focus sessions, schedules, or standalone blocks while budget remains. The permanent-block list still takes priority."
           checked={allowance.duringBlocks}
           onCheckedChange={(duringBlocks) => onChange({ ...allowance, duringBlocks })}
         />
@@ -1390,4 +1419,15 @@ function allowanceValue(allowance: Allowance): number {
     : allowance.mode === "count"
       ? allowance.maxOpens
       : allowance.allowMin;
+}
+
+function allowanceModeDescription(mode: Allowance["mode"]): string {
+  switch (mode) {
+    case "time_budget":
+      return "The site is blocked when its daily minutes are used; the cap resets at local midnight.";
+    case "count":
+      return "The site is blocked after its daily page opens are used; the cap resets at local midnight.";
+    case "interval":
+      return "The site is blocked when its window minutes are used; the cap returns when the window resets.";
+  }
 }

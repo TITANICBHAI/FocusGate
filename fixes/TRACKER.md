@@ -5,7 +5,7 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 32% (50/156 required checklist items currently verified)
+- **Progress:** 33% (52/156 required checklist items currently verified)
 - **Current work package:** WP5 — UI foundation and screen fixes
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
@@ -19,6 +19,7 @@
 - At the start of each work package, change its status to `IN PROGRESS` and write a dated start note before doing its work.
 - Update the relevant notes and progress after each meaningful change; do not wait until a work package is finished.
 - As soon as a checklist item or individual verification step completes or fails, update its checkbox/status and record the exact command or reproduction and observed result here before starting the next item or check.
+- Owner's standing validation instruction (2026-10-28): always run `npm test`, `npm run typecheck`, and `npm run build` after a coherent code-change batch, plus other applicable non-browser checks. Browser-driven checks are the only validation blocked by this environment; leave them explicitly unverified and continue the other checks.
 - Tick an item only after it is complete and verified. An attempt, partial result, or unverified change stays unchecked.
 - For each completed item, record changed files, the exact verification performed, and its observed result.
 - Record decisions, failed checks, blockers, fixes and successful reruns, and deferred work. Do not erase failures; append what happened next.
@@ -38,13 +39,13 @@
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
 | WP3 — Blocking engine | IN PROGRESS | 10/22 | 2026-10-28 | — | WP3.5 alias UI; WP3.10 active v1 fallback removal; browser AC/S1 |
 | WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
-| WP5 — UI foundation and screen fixes | IN PROGRESS | 8/18 | 2026-10-28 | — | Accessibility/copy pass, legacy v1 cleanup, browser acceptance and gated cutover |
+| WP5 — UI foundation and screen fixes | IN PROGRESS | 9/18 | 2026-10-28 | — | Accessibility/copy pass, legacy v1 cleanup, browser acceptance and gated cutover |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **50/156** | — | — | |
+| **Total** | **IN PROGRESS** | **52/156** | — | — | |
 
 **Implementation gates:** WP1b is still incomplete (0/5); it does not block staged WP2/WP3/WP4 module work or WP5 UI work, but its browser spikes and runtime evidence remain required before WP5 cutover and M1 green. Keep v1 consumers active and do not activate migration or v2 runtime entrypoints before the atomic cutover. Do not start WP7 until M1 is green. Re-credited items have current source/test/build evidence; browser-dependent criteria remain unchecked.
 
@@ -547,7 +548,7 @@
 - [x] WP5.1 Split pages: `popup.html` fixed at 380×580; full-viewport `blocked.html`; onboarding full tab with max-480px column; full-tab dashboard. Remove role query flags and old popup sizing classes. Block/onboarding render final screen on first paint.
 - [x] WP5.2 Add `useStorage`/`StorageGate`: one per-page store via `useSyncExternalStore`, latest-value updaters, skeleton until all keys are ready, no default flicker or half-hydrated effects, `localStorage` only as Vite fallback, and no per-second rerenders except timer text.
 - [ ] WP5.3 Implement Appendix C tokens/components: Button, IconButton, Card, Toggle, Field, accessible Modal, Toast, ConfirmDialog, Tabs/Segmented, Chip, EmptyState, ProgressRing, PasswordField; dark/light themes, reduced motion, minimum 12px text, contrast ≥4.5:1; remove `pb-safe` and relative nav buttons.
-- [ ] WP5.4 Replace every `alert()` with Toast/ConfirmDialog; disabled actions explain why.
+- [x] WP5.4 Replace every `alert()` with Toast/ConfirmDialog; disabled actions explain why.
 - [x] WP5.5 Implement information architecture: header status/protection indicators; Focus/Tasks/Rules/Stats/Settings tabs; Focus timer/Block now switch; Rules sections Sites/Exceptions/Keywords/Schedules/Limits; specified Settings sections.
 - [x] WP5.6 Build Focus view: duration presets and string-state field committing on blur/Enter; lock control with descriptions and Appendix E.5 prevention summary; ring/countdown; lock-aware Start/Extend/Stop/Skip; inline hint when no sites are blocked.
 - [x] WP5.7 Build Tasks view: lock only during linked task sessions; restart completed tasks; show date/time; remove scratch comment from `toggleTask`.
@@ -561,12 +562,29 @@
 ### Acceptance criteria
 
 - [ ] WP5.AC1 Popup remains exactly 380×580 on every tab with no size jump; block/onboarding show final UI on first paint under 4× CPU throttle.
-- [ ] WP5.AC2 `grep -R "alert(" src` returns nothing; tab closing does not use `window.close()`.
+- [x] WP5.AC2 `grep -R "alert(" src` returns nothing; tab closing does not use `window.close()`.
 - [ ] WP5.AC3 Light/dark contrast passes; keyboard-only flow works; modals trap/restore focus; Lighthouse accessibility is at least 95 per built page.
 - [ ] WP5.AC4 Typing “25” works naturally; `funny shorts, #gaming` creates two keywords; pasted Reddit URL stores `reddit.com`.
 - [ ] WP5.AC5 All WP5 UI claims assigned from plan §4.7 pass.
 
 **Notes / progress:**
+- 2026-10-28 — Owner clarified that browser checks alone are environment-blocked. Always run tests, typecheck, build, and other applicable non-browser checks; this supersedes the prior interpretation that no verification should run. Running the available checks now.
+- 2026-10-28 — Restored the existing dependency tree with `npm ci --no-audit`; exit 0, 125 packages added, no package manifest or lockfile changes.
+- 2026-10-28 — `npm test` exited 127 because `vitest` is absent from the current workspace (`sh: line 1: vitest: command not found`). No tests ran. Restore dependencies from the existing lockfile, then rerun the required checks.
+- 2026-10-28 — Reran `npm test` after the lockfile restore; exit 0, all 32 test files and 170 tests passed.
+- 2026-10-28 — `npm run typecheck` exited 0; `tsc --noEmit` reported no diagnostics.
+- 2026-10-28 — `npm run build` exited 0. The extension build emitted the active bundle plus the four staged UI pages and their assets under ignored `dist/`.
+- 2026-10-28 — `git diff --check` exited 0 with no whitespace errors.
+- 2026-10-28 — Current-source search found no `alert()` or `window.close()` references under `src/`; the block-page close action uses the extension tabs API. WP5.AC2 is verified by source checks; browser-specific criteria remain open. This supersedes earlier historical findings for the prior source state.
+- 2026-10-28 — Static disabled-control audit found the staged dashboard backup buttons still relied on `title` tooltips only. WP5.4 remains open until those controls have an always-visible reason as well.
+- 2026-10-28 — Added visible, screen-reader-linked backup-control guidance in the dashboard. A follow-up source audit found visible reasons for all currently disabled actions; rerun local checks before closing WP5.4.
+- 2026-10-28 — Post-dashboard-change `npm test` exited 0; all 32 test files and 170 tests passed.
+- 2026-10-28 — Post-dashboard-change `npm run typecheck` exited 0; no TypeScript diagnostics.
+- 2026-10-28 — Post-dashboard-change `npm run build` exited 0; active extension bundle and all four staged UI pages emitted.
+- 2026-10-28 — Post-dashboard-change `git diff --check` exited 0 with no whitespace errors.
+- 2026-10-28 — Restarted `FocusGate Extension Preview`; workflow is RUNNING and Vite reported ready on port 3000. Startup log only; no browser interaction check was performed.
+- 2026-10-28 — Closed WP5.4 after source review: no `alert()`/`window.close()` references remain under `src/`, and every current disabled action has visible reason/state text. The full test suite, typecheck, and build pass.
+- 2026-10-28 — Continued the WP5.11 copy pass and aligned the staged Limits labels, caps, presets, and reset explanations with Appendix F. Updated Rules, manifest, metadata, and store-listing copy; the banned-word scan and local checks for these changes are pending.
 - 2026-10-28 — Continued WP5 staged UI work under the owner's instruction not to run verification. Updated dialog descriptions/focus handling, visible explanations for disabled task and password controls, lock tradeoff copy, and Rules helper copy. No WP5 checkbox or acceptance criterion was closed; tests, typecheck, build, and browser checks were not run. Keep v1 active and cutover/legacy removal gated.
 - 2026-10-28 — WP5 remains the current package. Re-credited staged UI implementation items WP5.1, .2, and .5–.10 after current source review plus fresh typecheck, 30-file/163-test suite, build, and staged-route assertions. No browser acceptance was claimed. WP5.3/.12 need contrast/accessibility verification; WP5.4 is not complete because `src/App.tsx` still contains `alert()`/`window.close()`; WP5.11 copy audit and WP5.13 atomic cutover/legacy removal remain open. The active manifest still routes to v1.
 - 2026-10-28 — Pre-fix staged UI audit: the light-theme warning token measured 4.33:1 on `surface-2`, below the 4.5:1 target; the dark-theme minimum was 4.94:1. CSS font sizes were at least 12px, and focus-visible/reduced-motion rules were present. WP5.3 remains open until contrast is corrected and regression-tested.
@@ -587,6 +605,23 @@
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-10-28 | WP5.11 copy and WP5.8 Limits refinements | `src/ui/popup/RulesView.tsx`; `public/manifest.json`; `metadata.json`; `STORE_LISTING.md` | Pending. | UNVERIFIED — source changes are applied; banned-word audit and full local checks are next. |
+| 2026-10-28 | WP5.4 and WP5.AC2 close-out | `src/ui/components/feedback.tsx`; `src/ui/popup/TasksView.tsx`; `src/ui/popup/FocusView.tsx`; `src/ui/popup/SettingsView.tsx`; `src/ui/dashboard/DashboardPage.tsx` | `rg -n 'alert\\s*\\(|window\\.close\\s*\\(' src` — no matches; `rg -n -C 2 'disabled' src/ui` — reviewed visible reasons; `npm test` — 32 files / 170 tests; `npm run typecheck` — exit 0; `npm run build` — exit 0. | PASS — native alert/close calls are absent and disabled actions explain their current state. Browser acceptance remains open. |
+| 2026-10-28 | WP5 final native-alert source check | None. | `rg -n 'alert\\s*\\(|window\\.close\\s*\\(' src` — no matches. | PASS — current source still contains no native alert or `window.close()` references. |
+| 2026-10-28 | WP5 extension preview startup | No source changes; workflow restart only. | Restarted `FocusGate Extension Preview`; `RefreshAllLogs` reported RUNNING and Vite ready on port 3000. | PASS — preview server starts; browser acceptance remains environment-blocked and unclaimed. |
+| 2026-10-28 | WP5 post-dashboard whitespace check | None. | `git diff --check` — exit 0; no output. | PASS — current diff has no whitespace errors. |
+| 2026-10-28 | WP5 post-dashboard build | Ignored `dist/` outputs only. | `npm run build` — exit 0; active extension bundle plus staged onboarding, blocked, popup, and dashboard pages emitted. | PASS — build succeeds; browser-specific acceptance remains open. |
+| 2026-10-28 | WP5 post-dashboard typecheck | None. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — dashboard helper and current project source typecheck. |
+| 2026-10-28 | WP5 post-dashboard test suite | None. | `npm test` — exit 0; 32 files / 170 tests passed. | PASS — full suite remains green after the dashboard helper change. |
+| 2026-10-28 | WP5 disabled-control source audit — follow-up | `src/ui/dashboard/DashboardPage.tsx` | `rg -n -C 2 'disabled' src/ui` — reviewed all matches after adding shared visible helper text and `aria-describedby`. | PASS — all current disabled controls have visible state/reason text or helper copy; WP5.4 awaits final local checks. |
+| 2026-10-28 | WP5 disabled-control source audit | None. | `rg -n -C 2 'disabled' src/ui` — reviewed all matches. | OPEN — dashboard backup buttons have tooltip-only explanations; make the reason visible before closing WP5.4. |
+| 2026-10-28 | WP5.AC2 source checks | None. | `rg -n 'alert\\s*\\(|window\\.close\\s*\\(' src` — no matches; source review confirms close-tab action uses the extension tabs API. | PASS — static acceptance is satisfied; no browser claim is made. |
+| 2026-10-28 | WP5 source whitespace check | None. | `git diff --check` — exit 0; no output. | PASS — no whitespace errors in the current diff. |
+| 2026-10-28 | WP5 post-change build | Ignored `dist/` outputs only. | `npm run build` — exit 0; active extension bundle and staged onboarding, blocked, popup, and dashboard outputs emitted. | PASS — production build succeeds; this does not establish browser behavior or authorize cutover. |
+| 2026-10-28 | WP5 post-change typecheck | None. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — current project typechecks. |
+| 2026-10-28 | WP5 post-change test suite — rerun | None. | `npm test` — exit 0; 32 files / 170 tests passed. | PASS — the full test suite passes after restoring dependencies. |
+| 2026-10-28 | Lockfile dependency restore | `node_modules/` only (ignored); manifests and lockfile unchanged. | `npm ci --no-audit` — exit 0; 125 packages added. | PASS — dependencies restored from the existing lockfile so local checks can run. |
+| 2026-10-28 | WP5 post-change test suite — attempt 1 | None; no test code ran. | `npm test` — exit 127; `vitest: command not found`. | BLOCKED — local dependencies are absent. Lockfile-based restore and rerun pending. |
 | 2026-10-28 | WP5 staged accessibility and copy updates | `src/ui/components/feedback.tsx`; `src/ui/popup/TasksView.tsx`; `src/ui/popup/FocusView.tsx`; `src/ui/popup/SettingsView.tsx`; `src/ui/popup/RulesView.tsx` | Not run per owner instruction. | Changes applied; unverified. No WP5 checkbox or acceptance criterion was closed. |
 | 2026-10-28 | WP5 staged UI re-credit after owner correction | No source changes; generated output remains ignored. | `npm run typecheck` — exit 0; `npm test` — exit 0, 30 files / 163 tests; `npm run build` — exit 0; Node route assertions confirm four staged pages while manifest remains on v1; source review confirms separate popup/blocked/onboarding/dashboard UI, storage gates, Rules/Focus/Tasks screens, and block-page actions. | PASS — WP5.1/.2/.5–.10 are credited as staged implementation. Browser/a11y/copy/cutover criteria remain open; legacy `src/App.tsx` still has alerts. |
 | 2026-10-28 | Staged storage primitive tests | `src/ui/hooks/storageStore.ts`, `src/ui/hooks/useStorage.ts`, `src/ui/components/StorageGate.tsx`, `tests/ui/storageStore.test.ts`. | `npm run typecheck` — exit 0; `npm test -- tests/ui/storageStore.test.ts` — exit 0, 1 file / 4 tests. | PASS — per-page storage store/gate, latest-value updater, external changes, and fallback boundary covered. Page integration and timer-render isolation remain pending; no WP5 task checkbox closed. |

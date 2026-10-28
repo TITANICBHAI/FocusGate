@@ -27,3 +27,11 @@
 
 The store dashboards still require the publisher to upload the ZIPs, provide
 screenshots, verify the publisher account, and submit each listing for review.
+
+## Validation
+
+- For each coherent code-change batch, always run `npm test`, `npm run typecheck`,
+  and `npm run build`, plus other applicable non-browser checks.
+- Browser-driven checks are the only validation blocked by this environment.
+  Keep those criteria explicitly unverified and do not skip the other checks
+  because browser verification is unavailable.

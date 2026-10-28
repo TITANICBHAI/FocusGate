@@ -1,6 +1,6 @@
 {
   "name": "FocusGate: Website Blocker & Focus Timer",
-  "description": "A privacy-first website blocker and focus timer for social media, video, news, keywords, schedules, and deep work.",
+  "description": "Block distracting websites and keywords with a focus timer, schedules and daily limits. Your data stays in your browser.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

@@ -208,6 +208,7 @@ function BackupPanel({ state }: { state: AppState }) {
         <Button
           variant="secondary"
           disabled
+          aria-describedby="backup-controls-help"
           title="Backup export is not available in this staged UI."
         >
           Export backup
@@ -215,11 +216,15 @@ function BackupPanel({ state }: { state: AppState }) {
         <Button
           variant="secondary"
           disabled
+          aria-describedby="backup-controls-help"
           title="Backup restore is not available in this staged UI."
         >
           Restore backup
         </Button>
       </div>
+      <p className="fg-muted" id="backup-controls-help">
+        Export and restore are not available in this staged screen yet.
+      </p>
     </section>
   );
 }
