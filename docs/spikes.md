@@ -3,7 +3,7 @@
 **Initial run date:** 2026-10-19
 **Latest environment recheck:** 2026-10-28
 **Status:** blocked; the browser-dependent claims below are not verified.  
-**Scope:** WP1b only. WP2 and WP3 were not started.
+**Scope:** WP1b browser validation. On 2026-10-28, the owner deferred these tests so WP2/WP3 module and unit work can proceed under the fallbacks below; WP1b remains a gate before WP5 cutover and M1 green.
 
 ## Test environment
 
@@ -57,8 +57,9 @@ The Firefox binary was absent, so none of these were exercised in Firefox: MV3 `
 
 ## Gate and changed assumptions
 
-- The spike log is complete, but the runtime spikes are not green. WP1b is **not complete** and WP2/WP3 remain gated.
+- The runtime spikes are not green. WP1b is **not complete**; WP2/WP3 code and unit work may proceed, while affected runtime acceptance and WP5 cutover remain gated.
 - Plan A is no longer an assumed working redirect; Plan B is provisional pending the S1 browser matrix.
+- Do not activate WP3 navigation enforcement until S1 is verified.
 - Use conservative attention sampling and lifecycle alarm re-arming until their browser tests pass.
 - Firefox packaging success does not imply Firefox runtime support; feature detection and a Firefox test remain mandatory.
 
@@ -68,4 +69,4 @@ The Firefox binary was absent, so none of these were exercised in Firefox: MV3 `
 - No Playwright, Puppeteer, WebSocket, or Chrome DevTools Protocol client package is installed. The X display and `xdotool` command exist, but prior headful Chromium attempts did not yield an inspectable browser window.
 - A generic headless control page did render `PAGE_OUTPUT_OK` using `chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`. D-Bus warnings appeared, but the command exited successfully.
 - This control page does **not** exercise an extension, DNR, alarms, focus/idle sampling, or Firefox APIs. No new S1–S4 behavior result was obtained; the prior blocked outcomes and provisional decisions above remain unchanged.
-- To resume, use a controllable environment with Chrome, Edge, and Firefox extension loading and readable test-page output. Do not infer browser support from packaging or a generic Chromium page render.
+- To complete WP1b, use a controllable environment with Chrome, Edge, and Firefox extension loading and readable test-page output. Do not infer browser support from packaging or a generic Chromium page render.

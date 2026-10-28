@@ -20,7 +20,7 @@ Confirm current APIs and behavior rather than assuming the plan's code snapshot 
 - If the owner has only asked you to read, organize, audit, or prepare, do only that documentation/status work.
 - If scope or authorization is unclear, stop before changing app behavior and ask.
 - After reading the documents, if there is no explicit start instruction, briefly report that the plan and tracker are reviewed and wait for authorization.
-- Once authorized, work on one work package at a time in the plan's order. At each phase boundary, stop and report; do not begin the next phase until the current phase's completion conditions and required checks pass. Respect the dependency gates, including WP1b before WP2/WP3 and M1 before WP7.
+- Once authorized, work on one work package at a time in the active plan/tracker order. At each phase boundary, stop and report; do not begin the next phase until the current phase's completion conditions and required checks pass. Owner-authorized gate deferrals must be recorded in `fixes/plan.md` and `fixes/TRACKER.md`; continue code/unit work where safe, but keep affected runtime activation and acceptance gates closed until evidence exists. Current exception: WP1b is deferred and does not block WP2/WP3 module or unit work; complete it before the WP5 cutover and M1 green.
 - Do not silently widen scope or change the plan's contract. If a current-code conflict or unclear product decision blocks safe progress, record it in the tracker and ask the owner.
 
 ## Required work rules

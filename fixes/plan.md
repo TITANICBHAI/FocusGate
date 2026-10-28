@@ -618,9 +618,9 @@ Effort numbers are rough working days for one agent. **Do not start WP7 until M1
 
 ---
 
-### WP1b — De-risking spikes · 1 d · do these BEFORE WP2 and WP3
+### WP1b — De-risking spikes · 1 d · required before affected runtime acceptance/cutover, not code-only WP2/WP3 work
 
-The plan rests on a few browser behaviours I could not test here. Prove each one in a throw-away branch (a bare-bones extension, no real UI), write what you did to `docs/spikes.md` (browser versions, pass or fail, the design you chose), and only then build on it. Put the chosen option in the commit message. If a spike fails, edit this plan so the next agent does not rely on the failed assumption.
+The owner deferred these browser tests because a controllable Chrome/Edge/Firefox environment is unavailable. WP2/WP3 module and unit-test work may proceed using the documented conservative fallbacks; this does **not** verify or authorize affected runtime behavior. Complete the relevant spikes before WP5 cutover and before M1 is marked green. Use a throw-away branch (a bare-bones extension, no real UI), record browser versions and observed page output in `docs/spikes.md`, and update this plan if a result changes an assumption.
 
 | Spike | What to prove | Pass when | If it fails |
 |---|---|---|---|
@@ -635,7 +635,7 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 
 ### WP2 — Session engine owned by the background · 3 d · fixes B01, B05, B06, B07, B13 (standalone alarm), H02, H13, H14
 
-**Pre-cutover staging rule:** implement and test v2 modules without replacing the active v1 background or popup, calling `ready()` from runtime entrypoints, or enabling v2 message handlers. Stage the timer view outside the current popup. Run browser acceptance criteria after the WP5 cutover.
+**Pre-cutover staging rule:** implement and test v2 modules without replacing the active v1 background or popup, calling `ready()` from runtime entrypoints, or enabling v2 message handlers. Stage the timer view outside the current popup. Until WP1b.S2/S3 are verified, count attention only for a focused window and active tab, leave background-audio credit off, and re-arm alarms idempotently on install, startup, and at handler entry. Run browser acceptance criteria after the WP5 cutover.
 
 **Behaviour**
 
@@ -677,7 +677,7 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 
 ### WP3 — Blocking engine · 4 d · fixes B02–B04, B08–B12, B15, B18, B19, B23 (engine part), B26, B27, B30; H05, H06, H10
 
-**Pre-cutover staging rule:** build and test the v2 planning/reconcile/listener modules without registering them in the active v1 worker or installing v2 DNR rules. Do not call `ready()` from these modules before WP5. Run browser/runtime acceptance criteria after the WP5 atomic cutover.
+**Pre-cutover staging rule:** build and test the v2 planning/reconcile/listener modules without registering them in the active v1 worker or installing v2 DNR rules. Do not call `ready()` from these modules before WP5. S1's redirect design remains provisional: pure planning and rule-building work may proceed, but do not activate navigation enforcement or claim redirect behavior until S1 is verified. Run browser/runtime acceptance criteria after the WP5 atomic cutover.
 
 **Behaviour**
 

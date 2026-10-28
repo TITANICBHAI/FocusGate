@@ -6,9 +6,9 @@
 
 - **Status:** IN PROGRESS
 - **Progress:** 14.1% (22/156 required checklist items verified)
-- **Current work package:** WP1b — blocked pending a controllable browser test environment
+- **Current work package:** WP2 — Session engine
 - **Last updated:** 2026-10-28
-- **Run order:** WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
+- **Run order:** WP0 → WP1 → WP2 (module/unit work; conservative fallbacks) → WP3 (staged; no redirect activation before S1) → WP4 → WP1b (complete before WP5 cutover) → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** Prior completion claims were invalidated on 2026-10-27. WP0 is now being re-evaluated with fresh evidence after owner authorization; no previous pass or completion claim is credited.
 
 **Progress calculation:** The 156 required items are the WP0–WP10 task, unit-test, spike, and acceptance-criteria checkboxes. The C01–C40 claims regression and global Definition of Done are separate final gates and are not double-counted.
@@ -33,9 +33,9 @@
 |---|---|---:|---|---|---|
 | WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-27 | — |
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
-| WP1b — De-risking spikes | BLOCKED — No controllable Chrome/Edge/Firefox extension test environment | 0/5 | 2026-10-28 | — | Browser environment |
-| WP2 — Session engine | NOT STARTED | 0/14 | — | — | WP1b |
-| WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP1b |
+| WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
+| WP2 — Session engine | IN PROGRESS | 0/14 | 2026-10-28 | — | — |
+| WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP2; S1 before runtime enforcement |
 | WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
 | WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
@@ -45,7 +45,7 @@
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
 | **Total** | **IN PROGRESS** | **22/156** | — | — | |
 
-**Implementation gates:** WP1b must finish before WP2 and WP3. WP2–WP4 may stage v2 modules but must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until milestone M1 (WP0–WP3) is green. Follow the phase order and other dependencies in [`plan.md`](plan.md).
+**Implementation gates:** The owner deferred WP1b, so it does not block WP2/WP3 code or unit tests. Use the documented attention/alarm fallbacks; S1 still gates navigation enforcement, and WP1b must be complete before WP5 cutover/M1 green. WP2–WP4 must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until M1 is green.
 
 ## Milestones
 
@@ -210,7 +210,7 @@
 
 ## WP1b — De-risking spikes
 
-**Plan:** §6 WP1b · **Blocked by:** No controllable Chrome/Edge/Firefox extension test environment · **Status:** BLOCKED — No controllable Chrome/Edge/Firefox extension test environment · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/5
+**Plan:** §6 WP1b · **Blocked by:** Browser test environment unavailable; deferred by owner · **Status:** BLOCKED — Deferred by owner · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/5
 
 - [ ] WP1b.S1 Test DNR URL preservation through typed URL, link, `window.open`, and redirect-chain paths; include `&`/`?`/`#`, test with/without web-accessible resources in Chrome, Edge, Firefox; choose among plan designs A/B/C.
 - [ ] WP1b.S2 Sample attention using focused window, active tab, `idle.queryState(60)`, and `tab.audible` at five-second intervals; test switching/minimizing/locking/video/second monitor. Never credit unfocused/minimized time; do credit audible time.
@@ -222,6 +222,7 @@
 - 2026-10-28 — Owner authorized WP1b. Initial environment discovery found `/repl/tools/bin/chromium`; no Edge, Firefox, Playwright, or Puppeteer executable/dependency was found. Inspect existing spike records and Chromium launch options before any browser claim.
 - 2026-10-28 — Existing `docs/spikes.md` records prior harness failures and no browser API conclusions. A plain control run, `timeout 12s chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`, exited 0 and emitted `PAGE_OUTPUT_OK` despite D-Bus warnings. This confirms only generic headless page output, not extension behavior.
 - 2026-10-28 — Updated `docs/spikes.md` with this environment recheck. S1–S4 remain blocked: no extension behavior was tested, and no pass/fail browser API conclusion is claimed. A controllable Chrome/Edge/Firefox test environment is required before these gates can continue.
+- 2026-10-28 — Owner directed that WP1b be done later and not block further work. WP1b remains incomplete at 0/5 and is a gate before WP5 cutover/M1 green, but WP2/WP3 module and unit work may proceed under the plan's conservative fallbacks.
 
 **Evidence:** `docs/spikes.md` records prior harness outcomes and the 2026-10-28 environment recheck. Generic Chromium page output is verified; no spike behavior is verified.
 
@@ -236,7 +237,7 @@
 
 ## WP2 — Session engine owned by the background
 
-**Plan:** §5.3–§5.4, §6 WP2, §8 · **Blocked by:** WP1b · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/14
+**Plan:** §5.3–§5.4, §6 WP2, §8 · **Blocked by:** — · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/14
 
 ### Tasks
 
@@ -258,7 +259,8 @@
 - [ ] WP2.AC9 `autoStartNext` alternates two work/break cycles correctly, including long break on the configured cycle.
 - [ ] WP2.AC10 Stats › Session History shows UI-started sessions; claims C06–C11 pass.
 
-**Notes / progress:** Not started. Follow plan §6 WP2 in order.
+**Notes / progress:**
+- 2026-10-28 — Started WP2 after the owner's instruction to defer WP1b without blocking further work. Keep v1 popup/worker active until WP5; build v2 modules and unit tests only. Use focused/active attention with background-audio credit off, and idempotently re-arm alarms; runtime/browser acceptance remains deferred.
 
 **Evidence:** No verified evidence recorded.
 
@@ -270,7 +272,7 @@
 
 ## WP3 — Blocking engine
 
-**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP1b · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/22
+**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/22
 
 ### Tasks
 
