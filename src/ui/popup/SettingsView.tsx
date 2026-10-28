@@ -279,7 +279,7 @@ export function SettingsView({ state }: { state: AppState }) {
             />
             <Toggle
               label="Play a sound"
-              description="Sound playback is not available in the staged block page."
+              description="Sound playback is not available on the block page yet."
               checked={state.settings.blockPage.sound}
               disabled
             />
@@ -347,7 +347,7 @@ export function SettingsView({ state }: { state: AppState }) {
           <Card title="Your data">
             <p className="fg-muted">
               FocusGate stores your focus settings and activity in this browser.
-              Backup and restore controls are part of the security and data work.
+              Backup and restore are not available yet.
             </p>
             <dl className="fg-stat-list">
               <div><dt>Tasks</dt><dd>{state.tasks.length}</dd></div>

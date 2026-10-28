@@ -182,7 +182,7 @@ function BackupPanel({ state }: { state: AppState }) {
         <div>
           <h1 id="backup-title">Backup and restore</h1>
           <p className="fg-muted">
-            Export and restore controls are being completed with the data protection work.
+            Backup export and restore are not available yet.
           </p>
         </div>
       </div>
@@ -200,7 +200,7 @@ function BackupPanel({ state }: { state: AppState }) {
         <Card title="Your browser data">
           <p className="fg-muted">
             Your settings, tasks, and focus history are stored in browser storage.
-            A downloadable backup is not available in this staged UI yet.
+            A downloadable backup is not available yet.
           </p>
         </Card>
       )}
@@ -209,7 +209,7 @@ function BackupPanel({ state }: { state: AppState }) {
           variant="secondary"
           disabled
           aria-describedby="backup-controls-help"
-          title="Backup export is not available in this staged UI."
+          title="Backup export is not available yet."
         >
           Export backup
         </Button>
@@ -217,13 +217,13 @@ function BackupPanel({ state }: { state: AppState }) {
           variant="secondary"
           disabled
           aria-describedby="backup-controls-help"
-          title="Backup restore is not available in this staged UI."
+          title="Backup restore is not available yet."
         >
           Restore backup
         </Button>
       </div>
       <p className="fg-muted" id="backup-controls-help">
-        Export and restore are not available in this staged screen yet.
+        Backup export and restore are not available yet.
       </p>
     </section>
   );

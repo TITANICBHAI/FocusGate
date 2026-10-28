@@ -60,7 +60,7 @@ const EMPTY_PROTECTION: ProtectionCheck = {
 function permissionLabel(value: PermissionState): string {
   if (value === "available") return "Available";
   if (value === "review") return "Needs review";
-  if (value === "unavailable") return "Not available in this preview";
+  if (value === "unavailable") return "Check unavailable";
   return "Checking";
 }
 

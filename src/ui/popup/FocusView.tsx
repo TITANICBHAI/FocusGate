@@ -218,12 +218,13 @@ export function FocusView({ state }: { state: AppState }) {
         <Button
           variant="secondary"
           disabled
-          title="Standalone block controls are not connected to the staged background runtime."
+          aria-describedby="standalone-block-controls-help"
+          title="Standalone blocking is not available yet."
         >
           {standaloneActive ? "Block controls unavailable" : "Start a block"}
         </Button>
-        <p className="fg-muted">
-          Standalone block controls will be enabled after the background runtime cutover.
+        <p className="fg-muted" id="standalone-block-controls-help">
+          Standalone blocking is not available yet.
         </p>
       </Card>
 
