@@ -1,6 +1,7 @@
 # WP1b browser de-risking spikes
 
-**Run date:** 2026-10-19  
+**Initial run date:** 2026-10-19
+**Latest environment recheck:** 2026-10-28
 **Status:** blocked; the browser-dependent claims below are not verified.  
 **Scope:** WP1b only. WP2 and WP3 were not started.
 
@@ -60,3 +61,11 @@ The Firefox binary was absent, so none of these were exercised in Firefox: MV3 `
 - Plan A is no longer an assumed working redirect; Plan B is provisional pending the S1 browser matrix.
 - Use conservative attention sampling and lifecycle alarm re-arming until their browser tests pass.
 - Firefox packaging success does not imply Firefox runtime support; feature detection and a Firefox test remain mandatory.
+
+## Environment recheck — 2026-10-28
+
+- Chromium is still available at `152.0.7977.64`; no Firefox or Microsoft Edge executable is available.
+- No Playwright, Puppeteer, WebSocket, or Chrome DevTools Protocol client package is installed. The X display and `xdotool` command exist, but prior headful Chromium attempts did not yield an inspectable browser window.
+- A generic headless control page did render `PAGE_OUTPUT_OK` using `chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`. D-Bus warnings appeared, but the command exited successfully.
+- This control page does **not** exercise an extension, DNR, alarms, focus/idle sampling, or Firefox APIs. No new S1–S4 behavior result was obtained; the prior blocked outcomes and provisional decisions above remain unchanged.
+- To resume, use a controllable environment with Chrome, Edge, and Firefox extension loading and readable test-page output. Do not infer browser support from packaging or a generic Chromium page render.

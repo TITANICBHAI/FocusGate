@@ -6,7 +6,7 @@
 
 - **Status:** IN PROGRESS
 - **Progress:** 14.1% (22/156 required checklist items verified)
-- **Current work package:** WP1 complete — paused at the WP1b boundary
+- **Current work package:** WP1b — blocked pending a controllable browser test environment
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** Prior completion claims were invalidated on 2026-10-27. WP0 is now being re-evaluated with fresh evidence after owner authorization; no previous pass or completion claim is credited.
@@ -33,7 +33,7 @@
 |---|---|---:|---|---|---|
 | WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-27 | — |
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
-| WP1b — De-risking spikes | NOT STARTED | 0/5 | — | — | WP1 |
+| WP1b — De-risking spikes | BLOCKED — No controllable Chrome/Edge/Firefox extension test environment | 0/5 | 2026-10-28 | — | Browser environment |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | WP1b |
 | WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP1b |
 | WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
@@ -210,7 +210,7 @@
 
 ## WP1b — De-risking spikes
 
-**Plan:** §6 WP1b · **Blocked by:** WP1 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/5
+**Plan:** §6 WP1b · **Blocked by:** No controllable Chrome/Edge/Firefox extension test environment · **Status:** BLOCKED — No controllable Chrome/Edge/Firefox extension test environment · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/5
 
 - [ ] WP1b.S1 Test DNR URL preservation through typed URL, link, `window.open`, and redirect-chain paths; include `&`/`?`/`#`, test with/without web-accessible resources in Chrome, Edge, Firefox; choose among plan designs A/B/C.
 - [ ] WP1b.S2 Sample attention using focused window, active tab, `idle.queryState(60)`, and `tab.audible` at five-second intervals; test switching/minimizing/locking/video/second monitor. Never credit unfocused/minimized time; do credit audible time.
@@ -218,11 +218,16 @@
 - [ ] WP1b.S4 Verify Firefox MV3 `background.scripts`/module behavior, DNR regex substitution, host-permission opt-in, `idle`, buttonless notifications, and `storage.session`.
 - [ ] WP1b.AC Add `docs/spikes.md` with browser versions, pass/fail outcomes, chosen redirect design, and any plan assumptions changed.
 
-**Notes / progress:** Not started. Record failed assumptions in the plan before depending on them.
+**Notes / progress:**
+- 2026-10-28 — Owner authorized WP1b. Initial environment discovery found `/repl/tools/bin/chromium`; no Edge, Firefox, Playwright, or Puppeteer executable/dependency was found. Inspect existing spike records and Chromium launch options before any browser claim.
+- 2026-10-28 — Existing `docs/spikes.md` records prior harness failures and no browser API conclusions. A plain control run, `timeout 12s chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`, exited 0 and emitted `PAGE_OUTPUT_OK` despite D-Bus warnings. This confirms only generic headless page output, not extension behavior.
+- 2026-10-28 — Updated `docs/spikes.md` with this environment recheck. S1–S4 remain blocked: no extension behavior was tested, and no pass/fail browser API conclusion is claimed. A controllable Chrome/Edge/Firefox test environment is required before these gates can continue.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:** `docs/spikes.md` records prior harness outcomes and the 2026-10-28 environment recheck. Generic Chromium page output is verified; no spike behavior is verified.
 
-**Failures / blockers:** None recorded for this reset.
+**Failures / blockers:**
+- No controllable Chrome/Edge/Firefox extension environment is available in this workspace. The generic Chromium control page does not satisfy any S1–S4 behavior criterion.
+- 2026-10-28 — `git diff --check` exited 2 because the two new date lines in `docs/spikes.md` had trailing spaces. Remove those new spaces and rerun; this is a formatting issue, not a browser behavior result.
 
 **Decisions / deferred work:** None recorded.
 
