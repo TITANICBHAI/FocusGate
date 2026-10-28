@@ -381,38 +381,39 @@ src/
     presets.ts       web block presets
     stats.ts         streak, insights, weekly report, focus score, achievements
   background/
-    index.ts         listener registration ONLY (synchronous, top level)
+    index.ts         v1 bridge through WP4; promote synchronous v2 listener registration at WP5
     reconcile.ts     serialised reconcile(), rule install, tab audit
     session.ts       session engine        attention.ts   allowance tracking
     alarms.ts        ensureAlarms()         notify.ts      notifications + badge
     messages.ts      runtime.onMessage      health.ts      protection checks
   content/
-    index.ts         sites.ts   (filter table = data, see Appendix B)
-  ui/                (Vite root)  popup.html  blocked.html  onboarding.html  dashboard.html
+    index.ts         v1 bridge through WP4; staged v2 content entry promoted at WP5; sites.ts (filter table)
+  ui/                (WP5 Vite root)  popup.html  blocked.html  onboarding.html  dashboard.html
     popup/ blocked/ onboarding/ dashboard/ components/ hooks/useStorage.ts styles/tokens.css
 tests/                           vitest: shared/*.test.ts, fixtures/v1-storage.json
 scripts/build-extension.mjs      Vite (pages) -> esbuild (background, content) -> done
 ```
 
-**Pipeline** (`npm run build`):
+**Pipeline** (`npm run build`), in two stages:
 
-1. `vite build` with `root: 'src/ui'`, `publicDir: '../../public'`, `base: './'`, `build.outDir: '../../dist'`, `emptyOutDir: true`, `rollupOptions.input = { popup, blocked, onboarding, dashboard }` (HTML files directly under `src/ui/` so they land at `dist/popup.html` etc.).
-2. `esbuild` (already a devDependency): `src/background/index.ts` → `dist/background.js` (`format:'esm'`, `bundle`, `target:'chrome110'`); `src/content/index.ts` → `dist/content.js` (`format:'iife'`, content scripts cannot be ES modules). Run **after** Vite so it is not wiped.
-3. `scripts/package-*.cjs` stay as they are (they zip `dist/`). Check that the Firefox script keeps `type: "module"` (it spreads the other `background` keys) and strips Chrome-only manifest keys (see below).
+1. **WP1–WP4 staging:** Vite builds the current root `index.html` with the existing `vite.config.ts`, `public/`, and `base: './'`; esbuild bundles the current bridge entries to `dist/background.js` and `dist/content.js`. These active entries continue to import the v1 worker/content behavior. Keep this build usable while v2 modules are developed and tested separately.
+2. **WP5 atomic cutover:** switch Vite to `root: 'src/ui'`, `publicDir: '../../public'`, `build.outDir: '../../dist'`, `emptyOutDir: true`, and `rollupOptions.input = { popup, blocked, onboarding, dashboard }` (HTML files directly under `src/ui/` so they land at `dist/popup.html` etc.). Promote the v2 background/content entries in the same cutover.
+3. `esbuild` (already a devDependency) produces `dist/background.js` (`format:'esm'`, `bundle`, `target:'chrome110'`) and `dist/content.js` (`format:'iife'`, content scripts cannot be ES modules). Run **after** Vite so it is not wiped.
+4. `scripts/package-*.cjs` stay as they are (they zip `dist/`). Check that the Firefox script keeps `type: "module"` (it spreads the other `background` keys) and strips Chrome-only manifest keys (see below).
 
 **Manifest changes**
 
 | Key | Change |
 |---|---|
-| `action.default_popup` | `popup.html` |
-| `background` | `{ "service_worker": "background.js", "type": "module" }` |
-| `web_accessible_resources` | `[{ "resources": ["blocked.html"], "matches": ["<all_urls>"] }]` — needed for web-initiated redirects to an extension page (**Verify** in Chrome, Edge, Firefox). Keep `blocked.html` tiny and free of sensitive actions. In the Chrome/Edge packaging step only, add `"use_dynamic_url": true` (Chrome-specific; strip for Firefox). |
-| `options_ui` | `{ "page": "dashboard.html", "open_in_tab": true }` |
-| `permissions` | keep `storage tabs webNavigation alarms declarativeNetRequest notifications`; **add `idle`**; add `scripting` / `contextMenus` only if WP7 needs them |
-| `content_scripts[0].matches` | only the hosts in `src/content/sites.ts` (generated; a unit test asserts manifest hosts equal the table) — no more `<all_urls>` |
-| `commands` | keep `toggle-focus` (Alt+Shift+F); add `block-current-site` (Alt+Shift+B) |
-| `minimum_chrome_version` | `"110"` |
-| `version` | bump to `1.1.0` at release (WP10) |
+| `action.default_popup` | Keep `index.html` through WP4; switch to `popup.html` in the WP5 atomic cutover, after that page exists. |
+| `background` | Keep the v1 bridge active through WP4; promote `{ "service_worker": "background.js", "type": "module" }` to the v2 entry in the WP5 cutover. |
+| `web_accessible_resources` | Add `[{ "resources": ["blocked.html"], "matches": ["<all_urls>"] }]` in WP5, after `blocked.html` exists. It is needed for web-initiated redirects to an extension page (**Verify** in Chrome, Edge, Firefox). Keep the page tiny and free of sensitive actions. In the Chrome/Edge packaging step only, add `"use_dynamic_url": true` (Chrome-specific; strip for Firefox). |
+| `options_ui` | Add `{ "page": "dashboard.html", "open_in_tab": true }` in WP5, after that page exists. |
+| `permissions` | Keep `storage tabs webNavigation alarms declarativeNetRequest notifications`; add `idle` in WP1; add `scripting` / `contextMenus` only if WP7 needs them. |
+| `content_scripts[0].matches` | Keep the current supported-host table in `src/content/sites.ts`; a unit test asserts manifest matches equal the table. Finalize the table with WP4; never use `<all_urls>`. |
+| `commands` | Keep `toggle-focus` (Alt+Shift+F); add `block-current-site` (Alt+Shift+B) in WP7. |
+| `minimum_chrome_version` | Keep `"110"`. |
+| `version` | Bump to `1.1.0` at release (WP10). |
 
 ### 5.2 Storage schema v2 and migration
 
@@ -525,8 +526,9 @@ interface Settings {
 
 **Migration v1 → v2** (`shared/migrate.ts`, a pure function `(v1Bag, now) → { set, remove }`):
 
-* Run it in `runtime.onInstalled` **and lazily** inside `ready()` whenever `schemaVersion !== 2` (the worker can wake before `onInstalled` finishes). Guard with one shared promise.
-* First write `backup_v1` = JSON of every old key (delete after 30 days). This is the rollback path.
+* WP1 implements and tests the pure conversion and `ready()` with one shared promise. `ready()` migrates whenever `schemaVersion !== 2`, but the active v1 entrypoints must not call it before WP5.
+* Activate migration only in the WP5 atomic cutover, after popup, worker, and content consumers have all switched to v2: register it in `runtime.onInstalled` and call `ready()` before any v2 state read. Do not ship or activate a partially converted consumer.
+* First write `backup_v1` = JSON of every old key before writing v2 state or removing legacy keys (delete the backup after 30 days). This is the rollback path.
 
 | v1 | v2 |
 |---|---|
@@ -575,7 +577,7 @@ Background watches `storage.onChanged` for `blockedSites, alwaysBlockedSites, ke
 4. DNR rule IDs are fixed: `1` main redirect, `2` allow-only redirect, `100+i` exception allows. Always one `updateDynamicRules({removeRuleIds, addRules})` call.
 5. At most one `reconcile()` runs at a time; calls during a run coalesce into one follow-up.
 6. Every alarm is created via `ensureAlarms()` (`alarms.get(name)` first). Nothing calls `alarms.create` at module top level.
-7. Every worker entry point awaits `ready()` (migration + state load) before reading state.
+7. At the WP5 cutover, every active v2 worker entry point awaits `ready()` before reading state. Before that cutover, the v1 bridge remains active and no v2 entrypoint may call `ready()` or mutate extension state.
 8. Date keys = `localDateKey(date)` (`YYYY-MM-DD`, local time). Never `toLocaleDateString()`.
 9. Stored domains are always normalised (lower-case punycode, no scheme, `www.`, path or port).
 10. Block attempts are logged only through `recordBlock()` with a 3 s dedupe window per `(tabId, domain)`.
@@ -607,12 +609,12 @@ Effort numbers are rough working days for one agent. **Do not start WP7 until M1
 
 **Tasks**
 1. Create `src/shared/*` as listed in §5.1 with **unit tests for every pure module** (see §8.1 for the case list). `tsconfig`: `"strict": true` (apply to new code; legacy files may be excluded until WP5).
-2. Convert `public/background.js` and `public/content.js` to `src/background/*` and `src/content/*` as **empty shells that import from shared** (logic arrives in WP2–WP4). Write `scripts/build-extension.mjs` per §5.1. Update the manifest per §5.1.
+2. Convert `public/background.js` and `public/content.js` to `src/background/*` and `src/content/*` bridge shells. Implement `scripts/build-extension.mjs`; update safe base manifest fields, permissions, and the supported-host table. Keep the current popup and v1 behavior active until the WP5 cutover; do not point the manifest at pages that do not exist yet.
 3. `shared/storage.ts`: typed `getState()` (one `storage.local.get` of all known keys, with defaults), `patch(partial)`, `update(key, fn)` (get → fn → set), `onStateChanged(cb)`.
-4. `shared/migrate.ts` + `ready()` as in §5.2. Write the fixture test first.
-5. Delete the old `public/background.js` and `public/content.js` only when WP3/WP4 replace them (keep the old ones working until then so M1 is incremental).
+4. Implement and test `shared/migrate.ts` + `ready()` as in §5.2. Keep migration activation out of runtime entrypoints until the WP5 atomic cutover.
+5. Keep the old `public/background.js` and `public/content.js` active through WP4. Remove them only in WP5 after every v1 storage consumer has been replaced.
 
-**AC:** `npm run build` produces a `dist/` that loads in Chrome (unpacked) and Firefox (temporary add-on) with the existing UI still working; `npm test` is green; migration test passes on the v1 fixture; `ready()` is idempotent when called concurrently 10×.
+**AC:** `npm run build` produces the staged `dist/` with the current UI and v1 bridge behavior; `npm test` is green; the migration test passes on the v1 fixture; `ready()` is idempotent across 10 concurrent calls. Chrome/Edge/Firefox install and upgrade validation runs in WP9 after the WP5 cutover.
 
 ---
 
@@ -633,6 +635,8 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 
 ### WP2 — Session engine owned by the background · 3 d · fixes B01, B05, B06, B07, B13 (standalone alarm), H02, H13, H14
 
+**Pre-cutover staging rule:** implement and test v2 modules without replacing the active v1 background or popup, calling `ready()` from runtime entrypoints, or enabling v2 message handlers. Stage the timer view outside the current popup. Run browser acceptance criteria after the WP5 cutover.
+
 **Behaviour**
 
 * `session/start` builds `SessionState`, writes it, creates alarm `session_phase_end` at `phaseEndsAt`, sets the badge, calls `reconcile()`. History is written **when a work phase ends**, never at start (so there are no orphan "active" records).
@@ -651,11 +655,13 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 
 **Tasks**
 1. `shared/plan.ts` `isBlockingActive` + session helpers; `background/session.ts`; `background/alarms.ts` (`ensureAlarms`); `background/notify.ts` (badge + notifications); `background/messages.ts` handlers for the `session/*` messages.
-2. Replace the UI's timer logic (`TimerView`) with: read `session` from storage, render `max(0, endsAt − now)` with a 1 s `setInterval` that **only sets local React state**, send messages for start/stop/extend. No `setIsActive/setTimeLeft/...` calls remain.
+2. Prepare the v2 timer view (`TimerView`) in the staged UI: read `session`, render `max(0, endsAt − now)` with a 1 s `setInterval` that **only sets local React state**, and send messages for start/stop/extend. Promote it into the active popup and remove v1 timer writes only in the WP5 cutover.
 3. Write `sessionHistory` and `dayStats` at phase end (`SessionRecord`, `DayStats`); cap history at 500.
 4. Replace the keyboard command handler.
 
 **AC**
+
+Run these browser/runtime acceptance criteria after the WP5 atomic cutover; before then, WP2 verifies the engine and staged UI with unit tests and v2 fixtures while the v1 runtime remains active.
 1. Start a 2-min session, **close the popup**, wait: at 2:00 a notification appears, the badge changes to break, sites unblock during the break, and after the break the state is idle. `sessionHistory` has one `completed` record with `elapsedMs ≈ 120 000`.
 2. Stop the service worker from `chrome://extensions` mid-session → remaining time is still correct on next wake and the session ends on time.
 3. Close the browser mid-session, reopen after the end → the session is finalised (completed/interrupted per the gap rule); nothing is stuck; the badge is clear.
@@ -670,6 +676,8 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 ---
 
 ### WP3 — Blocking engine · 4 d · fixes B02–B04, B08–B12, B15, B18, B19, B23 (engine part), B26, B27, B30; H05, H06, H10
+
+**Pre-cutover staging rule:** build and test the v2 planning/reconcile/listener modules without registering them in the active v1 worker or installing v2 DNR rules. Do not call `ready()` from these modules before WP5. Run browser/runtime acceptance criteria after the WP5 atomic cutover.
 
 **Behaviour**
 
@@ -702,17 +710,19 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 
 ### WP4 — Content script · 1.5 d · fixes B14, B23; H04
 
+**Pre-cutover staging rule:** implement the v2 content script as a staged entry; keep the current manifest and v1 content script active until WP5. Do not replace `dist/content.js` or delete the old public scripts during WP4. Run browser acceptance criteria after the WP5 atomic cutover.
+
 **Tasks**
-1. `src/content/sites.ts`: data table of supported sites and filters (Appendix B). `src/content/index.ts`: loads `session`, `standalone`, `schedules`, `settings.contentFilters`, `keywords` (hide words) from storage; computes `isFilteringActive(state, now, host)` with the **same** function as the worker (so breaks, schedules and standalone behave identically); subscribes to `storage.onChanged`; sets a `setTimeout` for the next schedule boundary and re-evaluates on `visibilitychange`.
+1. `src/content/sites.ts`: data table of supported sites and filters (Appendix B). Implement the v2 content entry as a staged module; it loads `session`, `standalone`, `schedules`, `settings.contentFilters`, and `keywords` from storage; computes `isFilteringActive(state, now, host)` with the **same** function as the worker; subscribes to `storage.onChanged`; sets a `setTimeout` for the next schedule boundary and re-evaluates on `visibilitychange`. Keep `src/content/index.ts` on the v1 bridge until WP5 promotes the staged entry.
 2. **CSS-first**: inject one `<style id="focusgate-filters">` containing the CSS for every enabled filter (instant, reversible, no observer needed). **Keyword hiding** adds `data-fg-hidden="1"` to matching containers, with `[data-fg-hidden]{display:none!important}` in the style block; restoring = removing the attribute.
 3. `MutationObserver` on `document.documentElement` (never `document.body`), 200 ms debounce, attached only when filtering is active **and** keywords exist; disconnect otherwise; no early assignment before a successful `observe`.
 4. Host matching = exact host or `.suffix` (never `includes`).
-5. `manifest.content_scripts[0].matches` generated from the table; unit test keeps them equal.
+5. Keep `manifest.content_scripts[0].matches` aligned with the table; unit test keeps them equal. Activate the v2 content entry and final host set only in WP5.
 6. YouTube SPA: re-run on the `yt-navigate-finish` event.
 7. Replace the hard-coded Shorts/Reels/TikTok hiding with the toggles from `settings.contentFilters` (UI in WP7-A8). **Defaults for existing users: ON for the three that were previously unconditional** so behaviour does not silently change.
-8. Delete the old `public/content.js` and the old `public/background.js` here (WP3 + WP4 complete).
+8. Keep the old `public/content.js` and `public/background.js` active until WP5. Delete them only in the atomic cutover task below.
 
-**AC:** each toggle works and is reversible without a reload; no console errors on a cold `document_start` load (repeat 20×); filters are off during breaks and outside blocking contexts, on during schedules; removing a keyword un-hides items; no content script is injected on unsupported sites; a processing pass costs < 5 ms per mutation batch on a YouTube home feed (Performance panel). C23 passes (§8.4).
+**AC:** after WP5 cutover, each toggle works and is reversible without a reload; no console errors on a cold `document_start` load (repeat 20×); filters are off during breaks and outside blocking contexts, on during schedules; removing a keyword un-hides items; no content script is injected on unsupported sites; a processing pass costs < 5 ms per mutation batch on a YouTube home feed (Performance panel). C23 passes (§8.4).
 
 ---
 
@@ -737,6 +747,7 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 11. **Copy pass.** Replace the claims in §4.7 using the table below, then re-read every string for banned words (*completely, instantly, cannot, always, guaranteed*).
 12. **A11y pass (U13):** labels on all controls, `:focus-visible` ring, focus trap in modals, no colour-only status, tab order = visual order, keyboard-only walkthrough of every screen.
 13. Delete `src/App.tsx` and `src/hooks/useChromeStorage.ts` when every view has moved. `npm run typecheck` must be clean with `strict`.
+14. **Atomic v1 → v2 cutover and migration activation.** Only after the v2 UI, worker, and content modules are ready: switch the active popup/pages and background/content build entries; update manifest routes and permissions; remove the old v1 consumers; then register `runtime.onInstalled` migration and require `ready()` before every v2 state read. `backup_v1` must be written before any legacy key is removed. Run the migration fixture and all WP2–WP4 browser/runtime acceptance criteria against the cutover build before calling WP5 complete.
 
 **Replacement copy (use these, or equally honest wording)**
 
@@ -761,6 +772,7 @@ The plan rests on a few browser behaviours I could not test here. Prove each one
 3. Light and dark themes both pass a contrast check; every control is reachable and operable with the keyboard only; modals trap and restore focus; Lighthouse accessibility ≥ 95 on each built page.
 4. Typing "25" in the duration field works naturally; typing `funny shorts, #gaming` creates two keywords; pasting `https://www.Reddit.com/r/all` into Sites stores `reddit.com`.
 5. All ❌/⚠️ UI rows assigned to WP5 in §4.7 now pass in §8.4 (C05, C12, C14, C15, C22, C34, C36–C40 …).
+6. The atomic cutover activates every v2 consumer together; the v1 fixture migrates with `backup_v1` written before legacy-key removal; the WP2–WP4 runtime acceptance criteria pass on the cutover build.
 
 ---
 
@@ -940,7 +952,7 @@ VPN/network blocking, hosts file, firewall rules, registry lockdown, process kil
 | `time.ts` | normal window; overnight (`22:00–06:00`); `24:00` end; start = end (empty); end exclusive; previous-day rule (Mon 22:00–06:00 active Tue 02:00 only if Mon ticked); `nextScheduleBoundary` across week end; local-date key around midnight; DST changeover days (use fixed dates) |
 | `domains.ts` | valid/invalid inputs (spaces, commas, `localhost`, ports, uppercase, IDN → punycode, pasted full URLs, `www.`); alias groups; `matchesDomain` for subdomains and look-alikes (`example.com.au`, `notexample.com`); exceptions (Appendix A.4 table incl. `&` / `?` / `#` boundaries and look-alike hosts) |
 | `keywords.ts` | comma/newline split; hashtags; whole-word vs substring ("essex"/"sex"); param extraction per host; `p` ignored on non-Yahoo hosts |
-| `plan.ts` | precedence and reasons; break phase ⇒ session blocks off; standalone future start; schedule boundaries; allowance exemption vs cap; always-blocked beats allowance; exceptions override everything; allow-only (null / empty / list) |
+| `plan.ts` | precedence and reasons; break phase ⇒ session blocks off; standalone future start; schedule boundaries; allowance exemption vs cap; always-blocked beats allowance; exceptions override everything; global allow-only disabled / empty / non-empty cases (task-scoped overrides are tested in WP7 B4) |
 | `allowance.ts` | three modes; midnight rollover; interval window expiry; attention delta cap (90 s); visit-gap logic for `count` |
 | `dnr.ts` | one redirect rule + stable IDs; ASCII guard; `regexSubstitution` string; exception regex escaping; allow-only rule; rule count limits |
 | `migrate.ts` | v1 fixture → v2 snapshot (§5.2): stuck session, overnight schedule, numeric allowance, legacy password, seconds → ms history |
@@ -955,7 +967,7 @@ Run each row on all three browsers; note failures per browser.
 | Area | Scenario | Expected |
 |---|---|---|
 | Install | Fresh install | Onboarding opens in a tab; protection check lists incognito/host/notification status |
-| Install | Upgrade from v1 with data | Everything migrated (§5.2); no popup errors |
+| Install | Upgrade from v1 with data | WP5 cutover migrates everything (§5.2); backup is present before legacy keys are removed; no popup errors |
 | Session | Start/stop/extend with popup closed | See WP2 AC |
 | Session | Shortcut Alt+Shift+F idle / running / locked | Starts / stops / shows "locked" |
 | Blocking | Typed URL, link click, new tab, back/forward, SPA route, redirect chain | Always ends on the block page, original URL preserved |
@@ -1256,7 +1268,7 @@ Steps in `computeBlockPlan(state, nowMs)`:
 3. **Allowance interaction for a domain from step 2:** if it has an allowance with `duringBlocks` and `!isExhausted` → *exempt* (not blocked); if it has an allowance and `isExhausted` → blocked with reason `allowance` (the cap applies whatever `duringBlocks` says); otherwise (no allowance, or `duringBlocks` off) blocked with the context reason.
 4. **Exhausted allowances anywhere:** any allowance domain not yet in the map and `isExhausted` → reason `allowance` (the "daily cap" works outside sessions too).
 5. `keywords` / `hideWords` = the global **keyword rules** (Appendix G) whose `mode` includes block / hide and whose `when` is `always`, or `blocks` while a standalone block or a session work phase is active; plus the keywords of each active schedule (and the global ones if `useGlobalLists`), which count as `both`.
-6. `allowOnly` = the task's list if it is non-empty, `null` → the global `settings.allowOnly` list when enabled, `[]` → off; only while `status === 'work'`.
+6. Base `allowOnly` = the global `settings.allowOnly` list when enabled and non-empty, only while `status === 'work'`; otherwise `null`. Task-scoped `null` / `[]` / list overrides are added and tested in WP7 B4, not in the WP1/WP3 base engine.
 7. `nextBoundaryAt` = min of `nextScheduleBoundary`, `standalone.startsAt` / `until` (future ones), `session.phaseEndsAt`, each exhausted/used allowance's `nextResetAt`, and the next local midnight.
 
 **Exceptions** are applied when matching a URL (A.4) and **override everything**. Creating an exception is a restriction-lessening action, so it is password-gated and refused during standalone/commitment (that is what C20 expects).

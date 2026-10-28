@@ -136,7 +136,7 @@ describe("block planning", () => {
     expect(isBlockingActive(state, 1_000)).toBe(true);
   });
 
-  it("does not use generic p, and honors the active work allow-only list", () => {
+  it("does not use generic p, and honors the active global allow-only list", () => {
     const state = stateWith({
       settings: {
         ...createDefaultState().settings,
@@ -152,5 +152,12 @@ describe("block planning", () => {
       kind: "allowOnly",
     });
     expect(explainBlock("https://allowed.example", state, 1_000)).toBeNull();
+    expect(computeBlockPlan(state, 1_000).allowOnly).toEqual(["allowed.example"]);
+
+    state.settings.allowOnly = { enabled: false, domains: ["allowed.example"] };
+    expect(computeBlockPlan(state, 1_000).allowOnly).toBeNull();
+
+    state.settings.allowOnly = { enabled: true, domains: [] };
+    expect(computeBlockPlan(state, 1_000).allowOnly).toBeNull();
   });
 });

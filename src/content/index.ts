@@ -1,4 +1,5 @@
-// WP1 bridge: keep the existing content behavior until its v2 replacement lands in WP4.
+// Keep the existing content behavior active through WP4; promote the v2 entry
+// only at the WP5 atomic cutover.
 import "../../public/content.js";
 
 // Keep the content entrypoint tied to the shared state contract without
