@@ -746,8 +746,7 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 10. **Onboarding (B29).** Steps: Welcome + goal → pick presets/sites → password (optional, with honest trade-off copy) → **Protection check** (incognito, Firefox host access, notifications) → Done. The final button is **"Open FocusGate"** and closes the tab / opens the popup guidance; it never lands on Settings.
 11. **Copy pass.** Replace the claims in §4.7 using the table below, then re-read every string for banned words (*completely, instantly, cannot, always, guaranteed*).
 12. **A11y pass (U13):** labels on all controls, `:focus-visible` ring, focus trap in modals, no colour-only status, tab order = visual order, keyboard-only walkthrough of every screen.
-13. Delete `src/App.tsx` and `src/hooks/useChromeStorage.ts` when every view has moved. `npm run typecheck` must be clean with `strict`.
-14. **Atomic v1 → v2 cutover and migration activation.** Only after the v2 UI, worker, and content modules are ready: switch the active popup/pages and background/content build entries; update manifest routes and permissions; remove the old v1 consumers; then register `runtime.onInstalled` migration and require `ready()` before every v2 state read. `backup_v1` must be written before any legacy key is removed. Run the migration fixture and all WP2–WP4 browser/runtime acceptance criteria against the cutover build before calling WP5 complete.
+13. Delete `src/App.tsx` and `src/hooks/useChromeStorage.ts` when every view has moved. `npm run typecheck` must be clean with `strict`. Then perform the atomic v1 → v2 cutover: only after the v2 UI, worker, and content modules are ready, switch the active popup/pages and background/content build entries, update manifest routes and permissions, remove the old v1 consumers, register `runtime.onInstalled` migration, and require `ready()` before every v2 state read. `backup_v1` must be written before any legacy key is removed. Run the migration fixture and all WP2–WP4 browser/runtime acceptance criteria against the cutover build before calling WP5 complete.
 
 **Replacement copy (use these, or equally honest wording)**
 
@@ -771,8 +770,7 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 2. `grep -R "alert(" src` returns nothing. No `window.close()` for tab closing.
 3. Light and dark themes both pass a contrast check; every control is reachable and operable with the keyboard only; modals trap and restore focus; Lighthouse accessibility ≥ 95 on each built page.
 4. Typing "25" in the duration field works naturally; typing `funny shorts, #gaming` creates two keywords; pasting `https://www.Reddit.com/r/all` into Sites stores `reddit.com`.
-5. All ❌/⚠️ UI rows assigned to WP5 in §4.7 now pass in §8.4 (C05, C12, C14, C15, C22, C34, C36–C40 …).
-6. The atomic cutover activates every v2 consumer together; the v1 fixture migrates with `backup_v1` written before legacy-key removal; the WP2–WP4 runtime acceptance criteria pass on the cutover build.
+5. All ❌/⚠️ UI rows assigned to WP5 in §4.7 now pass in §8.4 (C05, C12, C14, C15, C22, C34, C36–C40 …); the atomic cutover activates every v2 consumer together, the v1 fixture migrates with `backup_v1` written before legacy-key removal, and the WP2–WP4 runtime acceptance criteria pass on the cutover build.
 
 ---
 
