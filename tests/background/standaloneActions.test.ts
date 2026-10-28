@@ -35,7 +35,7 @@ describe("standalone action service", () => {
     const context = setup();
 
     const result = await context.service.start({
-      minutes: 60,
+      until: 1_000_000 + 60 * 60_000,
       sites: ["https://www.example.com/path", "reddit.com"],
     });
 
@@ -59,26 +59,26 @@ describe("standalone action service", () => {
     const context = setup();
 
     await expect(
-      context.service.start({ minutes: 4, sites: ["example.com"] }),
-    ).resolves.toMatchObject({ ok: false, code: "INVALID_DURATION" });
+      context.service.start({ until: 1_000_000 + 4 * 60_000, sites: ["example.com"] }),
+    ).resolves.toMatchObject({ ok: false, code: "INVALID_EXPIRY" });
     await expect(
-      context.service.start({ minutes: 43_201, sites: ["example.com"] }),
-    ).resolves.toMatchObject({ ok: false, code: "INVALID_DURATION" });
+      context.service.start({ until: 1_000_000 + 43_201 * 60_000, sites: ["example.com"] }),
+    ).resolves.toMatchObject({ ok: false, code: "INVALID_EXPIRY" });
     await expect(
-      context.service.start({ minutes: 5, sites: [] }),
+      context.service.start({ until: 1_000_000 + 5 * 60_000, sites: [] }),
     ).resolves.toMatchObject({ ok: false, code: "INVALID_SITES" });
     await expect(
-      context.service.start({ minutes: 5, sites: ["not a domain"] }),
+      context.service.start({ until: 1_000_000 + 5 * 60_000, sites: ["not a domain"] }),
     ).resolves.toMatchObject({ ok: false, code: "INVALID_SITES" });
     expect(context.store.writeState).not.toHaveBeenCalled();
   });
 
   it("rejects a second active start and never exposes an early-stop operation", async () => {
     const context = setup();
-    await context.service.start({ minutes: 30, sites: ["example.com"] });
+    await context.service.start({ until: 1_000_000 + 30 * 60_000, sites: ["example.com"] });
 
     await expect(
-      context.service.start({ minutes: 30, sites: ["other.example"] }),
+      context.service.start({ until: 1_000_000 + 30 * 60_000, sites: ["other.example"] }),
     ).resolves.toMatchObject({ ok: false, code: "ALREADY_ACTIVE" });
     expect("stop" in context.service).toBe(false);
     expect("end" in context.service).toBe(false);
@@ -87,7 +87,7 @@ describe("standalone action service", () => {
 
   it("extends only an active block and caps its end at thirty days from now", async () => {
     const context = setup();
-    await context.service.start({ minutes: 5, sites: ["example.com"] });
+    await context.service.start({ until: 1_000_000 + 5 * 60_000, sites: ["example.com"] });
     const initialUntil = context.getState().standalone.until;
 
     const extended = await context.service.extend(5);
@@ -111,7 +111,7 @@ describe("standalone action service", () => {
 
   it("only appends new sites during an active block", async () => {
     const context = setup();
-    await context.service.start({ minutes: 60, sites: ["example.com"] });
+    await context.service.start({ until: 1_000_000 + 60 * 60_000, sites: ["example.com"] });
 
     await expect(
       context.service.addSites(["https://www.reddit.com/r/focus"]),
@@ -136,7 +136,7 @@ describe("standalone action service", () => {
     context.afterChange.mockRejectedValueOnce(new Error("sync error"));
 
     const result = await context.service.start({
-      minutes: 5,
+      until: 1_000_000 + 5 * 60_000,
       sites: ["example.com"],
     });
     expect(result).toMatchObject({
@@ -157,7 +157,7 @@ describe("standalone action service", () => {
     await expect(
       handle({
         type: "standalone/start",
-        minutes: 60,
+        until: 1_000_000 + 60 * 60_000,
         sites: ["example.com"],
       }),
     ).resolves.toEqual({ ok: true });
@@ -171,7 +171,14 @@ describe("standalone action service", () => {
       handle({ type: "standalone/stop" }),
     ).resolves.toMatchObject({ ok: false, code: "UNKNOWN_MESSAGE" });
     await expect(
-      handle({ type: "standalone/start", minutes: 30, sites: "example.com" }),
+      handle({ type: "standalone/start", until: 1_000_000 + 30 * 60_000, sites: "example.com" }),
+    ).resolves.toMatchObject({ ok: false, code: "INVALID_MESSAGE" });
+    await expect(
+      handle({
+        type: "standalone/start",
+        minutes: 30,
+        sites: ["example.com"],
+      }),
     ).resolves.toMatchObject({ ok: false, code: "INVALID_MESSAGE" });
     expect(Object.keys(service)).toEqual(["start", "extend", "addSites"]);
   });

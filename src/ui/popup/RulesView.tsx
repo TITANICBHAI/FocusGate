@@ -21,6 +21,7 @@ import { ConfirmDialog, Modal, useToast } from "../components/feedback.tsx";
 import { Tabs } from "../components/Tabs.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
+import { weakeningLockReason } from "../lib/guardState.ts";
 
 type RuleSection = "sites" | "exceptions" | "keywords" | "schedules" | "limits";
 type SiteMode = "focus" | "always";
@@ -37,6 +38,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function RulesView({ state }: { state: AppState }) {
   const [section, setSection] = useState<RuleSection>("sites");
+  const lockedReason = weakeningLockReason(state);
   return (
     <section className="fg-page" aria-labelledby="rules-title">
       <div className="fg-page__heading">
@@ -61,17 +63,39 @@ export function RulesView({ state }: { state: AppState }) {
         aria-labelledby={`rules-${section}-tab`}
         className="fg-stack"
       >
-        {section === "sites" && <SitesPanel state={state} />}
-        {section === "exceptions" && <ExceptionsPanel state={state} />}
-        {section === "keywords" && <KeywordsPanel state={state} />}
-        {section === "schedules" && <SchedulesPanel state={state} />}
-        {section === "limits" && <LimitsPanel state={state} />}
+        {lockedReason && (
+          <p className="fg-note" role="status">
+            {lockedReason} Weakening changes are blocked while this lock runs.
+            Additions that strengthen protection remain available.
+          </p>
+        )}
+        {section === "sites" && (
+          <SitesPanel state={state} lockedReason={lockedReason} />
+        )}
+        {section === "exceptions" && (
+          <ExceptionsPanel state={state} lockedReason={lockedReason} />
+        )}
+        {section === "keywords" && (
+          <KeywordsPanel state={state} lockedReason={lockedReason} />
+        )}
+        {section === "schedules" && (
+          <SchedulesPanel state={state} lockedReason={lockedReason} />
+        )}
+        {section === "limits" && (
+          <LimitsPanel state={state} lockedReason={lockedReason} />
+        )}
       </div>
     </section>
   );
 }
 
-function SitesPanel({ state }: { state: AppState }) {
+function SitesPanel({
+  state,
+  lockedReason,
+}: {
+  state: AppState;
+  lockedReason: string | null;
+}) {
   const showToast = useToast();
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<SiteMode>("focus");
@@ -224,6 +248,8 @@ function SitesPanel({ state }: { state: AppState }) {
                       key={siteMode}
                       variant="quiet"
                       aria-label={`Remove ${domain} from ${siteMode === "focus" ? "Focus" : "Always"} rules`}
+                      disabled={Boolean(lockedReason)}
+                      title={lockedReason ?? undefined}
                       onClick={() => void removeSite(domain, siteMode)}
                     >
                       Remove
@@ -306,7 +332,13 @@ function UrlCheck({ state }: { state: AppState }) {
   );
 }
 
-function ExceptionsPanel({ state }: { state: AppState }) {
+function ExceptionsPanel({
+  state,
+  lockedReason,
+}: {
+  state: AppState;
+  lockedReason: string | null;
+}) {
   const showToast = useToast();
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
@@ -355,7 +387,9 @@ function ExceptionsPanel({ state }: { state: AppState }) {
               onChange={(event) => setInput(event.target.value)}
             />
           </Field>
-          <Button type="submit">Add exception</Button>
+          <Button type="submit" disabled={Boolean(lockedReason)} title={lockedReason ?? undefined}>
+            Add exception
+          </Button>
         </form>
       </Card>
       <Card title="Exceptions">
@@ -399,7 +433,13 @@ function ExceptionsPanel({ state }: { state: AppState }) {
   );
 }
 
-function KeywordsPanel({ state }: { state: AppState }) {
+function KeywordsPanel({
+  state,
+  lockedReason,
+}: {
+  state: AppState;
+  lockedReason: string | null;
+}) {
   const showToast = useToast();
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<KeywordMode>("block");
@@ -491,6 +531,8 @@ function KeywordsPanel({ state }: { state: AppState }) {
                 <Button
                   variant="quiet"
                   aria-label={`Remove keyword ${rule.text}`}
+                  disabled={Boolean(lockedReason)}
+                  title={lockedReason ?? undefined}
                   onClick={() => {
                     void uiStorageStore
                       .set("keywords", (latest) =>
@@ -523,7 +565,13 @@ function KeywordsPanel({ state }: { state: AppState }) {
   );
 }
 
-function SchedulesPanel({ state }: { state: AppState }) {
+function SchedulesPanel({
+  state,
+  lockedReason,
+}: {
+  state: AppState;
+  lockedReason: string | null;
+}) {
   const showToast = useToast();
   const [addOpen, setAddOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -647,6 +695,10 @@ function SchedulesPanel({ state }: { state: AppState }) {
                   <Toggle
                     label={`Enable ${schedule.name}`}
                     checked={schedule.enabled}
+                    description={
+                      schedule.enabled && lockedReason ? lockedReason : undefined
+                    }
+                    disabled={schedule.enabled && Boolean(lockedReason)}
                     onCheckedChange={(enabled) =>
                       void updateSchedule(schedule.id, { enabled })
                     }
@@ -658,6 +710,7 @@ function SchedulesPanel({ state }: { state: AppState }) {
                 </div>
                 <ScheduleListEditor
                   schedule={schedule}
+                  lockedReason={lockedReason}
                   onUpdate={(changes) => void updateSchedule(schedule.id, changes)}
                 />
                 <div className="fg-grid-two">
@@ -704,6 +757,8 @@ function SchedulesPanel({ state }: { state: AppState }) {
                 <div className="fg-list-item__actions">
                   <Button
                     variant="danger"
+                    disabled={Boolean(lockedReason)}
+                    title={lockedReason ?? undefined}
                     onClick={() => setDeleteId(schedule.id)}
                   >
                     Delete schedule
@@ -884,9 +939,11 @@ function ScheduleTimeField({
 
 function ScheduleListEditor({
   schedule,
+  lockedReason,
   onUpdate,
 }: {
   schedule: Schedule;
+  lockedReason: string | null;
   onUpdate(changes: Partial<Schedule>): void;
 }) {
   const [siteDraft, setSiteDraft] = useState("");
@@ -935,6 +992,7 @@ function ScheduleListEditor({
         label="Use global site and keyword lists"
         description="Include your Focus and keyword rules while this schedule is active."
         checked={schedule.useGlobalLists}
+        disabled={schedule.useGlobalLists && Boolean(lockedReason)}
         onCheckedChange={(useGlobalLists) => onUpdate({ useGlobalLists })}
       />
       <form className="fg-inline-form" onSubmit={addSite}>
@@ -958,6 +1016,8 @@ function ScheduleListEditor({
                 <button
                   type="button"
                   aria-label={`Remove ${site} from ${schedule.name}`}
+                  disabled={Boolean(lockedReason)}
+                  title={lockedReason ?? undefined}
                   onClick={() =>
                     onUpdate({ sites: schedule.sites.filter((item) => item !== site) })
                   }
@@ -990,6 +1050,8 @@ function ScheduleListEditor({
                 <button
                   type="button"
                   aria-label={`Remove keyword ${keyword} from ${schedule.name}`}
+                  disabled={Boolean(lockedReason)}
+                  title={lockedReason ?? undefined}
                   onClick={() =>
                     onUpdate({
                       keywords: schedule.keywords.filter((item) => item !== keyword),
@@ -1008,7 +1070,13 @@ function ScheduleListEditor({
   );
 }
 
-function LimitsPanel({ state }: { state: AppState }) {
+function LimitsPanel({
+  state,
+  lockedReason,
+}: {
+  state: AppState;
+  lockedReason: string | null;
+}) {
   const showToast = useToast();
   const entries = Object.entries(state.allowances);
   const [addOpen, setAddOpen] = useState(false);
@@ -1115,6 +1183,7 @@ function LimitsPanel({ state }: { state: AppState }) {
               key={domain}
               domain={domain}
               allowance={allowance}
+              lockedReason={lockedReason}
               usedMs={state.usage[domain]?.usedMs ?? 0}
               opens={state.usage[domain]?.opens ?? 0}
               onRemove={async () => {
@@ -1270,6 +1339,7 @@ function LimitsPanel({ state }: { state: AppState }) {
 function AllowanceRow({
   domain,
   allowance,
+  lockedReason,
   usedMs,
   opens,
   onRemove,
@@ -1277,6 +1347,7 @@ function AllowanceRow({
 }: {
   domain: string;
   allowance: Allowance;
+  lockedReason: string | null;
   usedMs: number;
   opens: number;
   onRemove(): void;
@@ -1356,7 +1427,13 @@ function AllowanceRow({
           <strong>{domain}</strong>
           <span className="fg-muted">{usageLabel}</span>
         </div>
-        <Button variant="quiet" onClick={onRemove} aria-label={`Remove limit for ${domain}`}>
+        <Button
+          variant="quiet"
+          onClick={onRemove}
+          aria-label={`Remove limit for ${domain}`}
+          disabled={Boolean(lockedReason)}
+          title={lockedReason ?? undefined}
+        >
           Remove
         </Button>
       </div>

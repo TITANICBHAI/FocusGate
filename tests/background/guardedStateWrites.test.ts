@@ -90,6 +90,66 @@ describe("background guarded state writes", () => {
     expect(context.store.writeState).toHaveBeenCalledTimes(1);
   });
 
+  it("password-gates allowance removal and exception additions", async () => {
+    const initial = createDefaultState();
+    initial.password = password;
+    initial.allowances = {
+      "example.com": {
+        mode: "time_budget",
+        limitMin: 20,
+        duringBlocks: false,
+      },
+    };
+    const context = setup(initial);
+
+    await expect(
+      context.service.write({ key: "allowances", value: {} }),
+    ).resolves.toMatchObject({ ok: false, code: "PASSWORD_REQUIRED" });
+    await expect(
+      context.service.write({
+        key: "exceptions",
+        value: ["example.com"],
+      }),
+    ).resolves.toMatchObject({ ok: false, code: "PASSWORD_REQUIRED" });
+    expect(context.store.writeState).not.toHaveBeenCalled();
+  });
+
+  it("password-gates keyword settings that weaken active blocking", async () => {
+    const initial = createDefaultState();
+    initial.password = password;
+    const context = setup(initial);
+    const weakenedSettings = {
+      ...initial.settings,
+      keywords: {
+        ...initial.settings.keywords,
+        scope: {
+          ...initial.settings.keywords.scope,
+          searchQuery: false,
+        },
+      },
+    };
+
+    await expect(
+      context.service.write({
+        key: "settings",
+        value: weakenedSettings,
+      }),
+    ).resolves.toMatchObject({ ok: false, code: "PASSWORD_REQUIRED" });
+    expect(context.store.writeState).not.toHaveBeenCalled();
+  });
+
+  it("keeps exception removal free because it strengthens protection", async () => {
+    const initial = createDefaultState();
+    initial.exceptions = ["example.com"];
+    initial.password = password;
+    const context = setup(initial);
+
+    await expect(
+      context.service.write({ key: "exceptions", value: [] }),
+    ).resolves.toEqual({ ok: true });
+    expect(context.getState().exceptions).toEqual([]);
+  });
+
   it("prevents deleting a linked task during a strict or commitment session", async () => {
     const initial = createDefaultState();
     initial.tasks = [
@@ -144,7 +204,7 @@ describe("background guarded state writes", () => {
         value: [],
         currentPassword: "correct password",
       }),
-    ).resolves.toMatchObject({ ok: false, code: "STATE_CHANGED" });
+    ).resolves.toMatchObject({ ok: false, code: "LOCKED" });
     expect(context.store.writeState).not.toHaveBeenCalled();
   });
 

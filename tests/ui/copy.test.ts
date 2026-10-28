@@ -27,17 +27,14 @@ describe("staged UI copy", () => {
     );
   });
 
-  it("keeps unavailable actions honest and links their visible explanation", () => {
-    expect(focusView).toContain("Standalone blocking is not available yet.");
-    expect(focusView).toContain(
-      'aria-describedby="standalone-block-controls-help"',
-    );
-    expect(focusView).toContain('id="standalone-block-controls-help"');
-    expect(dashboard).toContain(
-      'aria-describedby="backup-controls-help"',
-    );
-    expect(dashboard).toContain('id="backup-controls-help"');
-    expect(dashboard).toContain("Backup export and restore are not available yet.");
+  it("describes standalone, backup, and reset behavior accurately", () => {
+    expect(focusView).toContain("Set up standalone block");
+    expect(focusView).toContain("There is no early-stop action");
+    expect(focusView).toContain("at most 500 sites");
+    expect(dashboard).toContain("Backup");
+    expect(dashboard).toContain("Export a backup first if you may need this data later.");
+    expect(dashboard).toContain("Passwords and live runtime state are never imported.");
+    expect(dashboard).toContain("Reset is refused while a strict, commitment, or standalone block is active.");
     expect(settingsView).toContain(
       "Sound playback is not available on the block page yet.",
     );

@@ -5,7 +5,7 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 34% (53/156 required checklist items currently verified)
+- **Progress:** 42% (65/156 required checklist items currently verified)
 - **Current work package:** WP6 — staged security, standalone, protection, and backup work
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
@@ -669,30 +669,30 @@
 
 ## WP6 — Security, standalone, protection status, backup
 
-**Plan:** §6 WP6, Appendices D–E · **Blocked by:** WP5 cutover for runtime acceptance; staged work owner-authorized · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 3/17
+**Plan:** §6 WP6, Appendices D–E · **Blocked by:** WP5 cutover for runtime acceptance; staged work owner-authorized · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 15/17
 
 ### Tasks
 
 - [x] WP6.1 Implement PBKDF2-SHA256 with 600,000 iterations and 16-byte salt; verify/upgrade legacy hashes; generate 20–28 character ambiguity-free passwords with `crypto.getRandomValues`.
 - [x] WP6.2 Require custom passwords of 8–64 characters with strength hint and “Generate (recommended)” option.
 - [x] WP6.3 Implement PasswordField: visible by default, setup copy/paste allowed, unlock paste blocked but autofill allowed, disabled below 8 characters.
-- [ ] WP6.4 Implement one `guard(action, state)` returning Appendix E outcomes; UI explains/disables and background messages enforce it; test every action/state combination.
+- [x] WP6.4 Implement one `guard(action, state)` returning Appendix E outcomes; UI explains/disables and background messages enforce it; test every action/state combination.
 - [ ] WP6.5 Implement Appendix D standalone Block now: own list, absolute 5-minute–30-day expiry, append-only while active, extend/add only, live countdown, confirmation, no “No limit”; remove old card/keys/functions and every stop path.
-- [ ] WP6.6 Add Protection status for incognito, host permission, notifications, heartbeat, reconcile/error, DNR count, recent gaps, settings link, and the limitations from plan §3.
-- [ ] WP6.7 Implement backup that excludes password/runtime secrets, validates versions/unknown keys, caps at 2 MB, previews counts, and merges safely; empty-state restore allowed without password; no Replace button; reset requires password and typed confirmation and is refused during lock.
-- [ ] WP6.8 Add dark/light/system theme and 0.9–1.2 font scale settings.
+- [x] WP6.6 Add Protection status for incognito, host permission, notifications, heartbeat, reconcile/error, DNR count, recent gaps, settings link, and the limitations from plan §3.
+- [x] WP6.7 Implement backup that excludes password/runtime secrets, validates versions/unknown keys, caps at 2 MB, previews counts, and merges safely; empty-state restore allowed without password; no Replace button; reset requires password and typed confirmation and is refused during lock.
+- [x] WP6.8 Add dark/light/system theme and 0.9–1.2 font scale settings.
 
 ### Acceptance criteria
 
-- [ ] WP6.AC1 Background (not only UI) rejects incorrect password.
-- [ ] WP6.AC2 Removing an allowance, exception, or site asks for password when one is set.
-- [ ] WP6.AC3 Legacy hashes unlock and upgrade on successful verify, covered by fixture.
+- [x] WP6.AC1 Background (not only UI) rejects incorrect password.
+- [x] WP6.AC2 Removing a blocked site or allowance, or adding an exception, asks for password when one is set; removing an exception is free because it strengthens protection.
+- [x] WP6.AC3 Legacy hashes unlock and upgrade on successful verify, covered by fixture.
 - [ ] WP6.AC4 No UI, shortcut, or message can end standalone early; it can be extended/added to with popup closed; refused weakening actions explain themselves.
-- [ ] WP6.AC5 Export → reset → import restores data into empty state.
-- [ ] WP6.AC6 Import into working state only adds/strengthens, reports skipped data and works during a lock.
-- [ ] WP6.AC7 Reset is refused during a lock.
-- [ ] WP6.AC8 Protection card reports missing incognito access and host permission, including Firefox behavior.
-- [ ] WP6.AC9 Appendix E.4 `guard()` matrix is fully covered by table-driven unit test.
+- [x] WP6.AC5 Export → reset → import restores data into empty state.
+- [x] WP6.AC6 Import into working state only adds/strengthens, reports skipped data and works during a lock.
+- [x] WP6.AC7 Reset is refused during a lock.
+- [x] WP6.AC8 Protection card reports missing incognito access and host permission, including Firefox behavior.
+- [x] WP6.AC9 Appendix E.4 `guard()` matrix is fully covered by table-driven unit test.
 
 **Notes / progress:**
 - 2026-10-28 — Owner authorized continuing WP6 through its completion boundary. Re-inspected the clean checkout: WP6.1–WP6.3 remain verified, WP6.4 has exhaustive guard-matrix unit coverage but lacks complete guarded UI/background integration, and WP6.5–WP6.8 remain open. Continue staged WP6 implementation only; keep v1 consumers, runtime migration, and browser-dependent acceptance gated on WP5 cutover.
@@ -714,6 +714,11 @@
 - 2026-10-28 — WP6.4 audit found the guard’s fallback allowed unclassified future actions, the current test did not cover every action/state/password combination, and staged Rules/Tasks mutations write storage directly without a background guard message. Implementing exhaustive action classification and a staged guarded-write path; worker registration remains deferred until cutover.
 - 2026-10-28 — Replaced implicit set membership with an exhaustive typed action-class map that fails closed for an unknown action class. Replaced partial guard tests with an independent Appendix E.4 table over 37 actions × 5 states × both password states; targeted verification pending.
 - 2026-10-28 — Guard matrix test passed: `npm test -- tests/shared/gating.test.ts` exited 0 with 1 file / 4 tests. UI/storage and background enforcement remain in progress.
+- 2026-10-29 — Completed staged WP6.4 guarded writes: mutation classification covers weakening site/keyword/schedule/allowance/exception changes; the staged UI routes writes through the background guard, fails closed when extension messaging is unavailable, prompts for passwords, and explains/disables common weakening controls during locks. Background message registration remains gated on WP5.
+- 2026-10-29 — Completed staged standalone behavior with an absolute end time (5 minutes–30 days), a separate capped site list, live countdown, confirmation, append/extend only, and no staged stop action. The legacy v1 card, “No limit” option, and stop path remain untouched and must be removed only at the approved WP5 cutover; WP6.5 and AC4 stay open for that reason.
+- 2026-10-29 — Verified staged Protection status, backup/restore/reset, and appearance settings; corrected the WP6.AC2 wording to match Appendix E.4 (removing an exception strengthens protection, while adding one weakens it). A first full test run exposed stale copy-test expectations; updated them to the implemented staged behavior.
+- 2026-10-29 — Full verification passed: `npm test` 44 files / 240 tests, `npm run typecheck`, `npm run build`, and `git diff --check`. Added an explicit export → reset → import restoration test; locked merge behavior is also covered. No active v1 entrypoint, worker registration, manifest, or legacy storage-hook changes were made.
+- 2026-10-29 — Restarted `FocusGate Extension Preview`; Vite is ready on port 3000. Screenshot confirms the active v1 Focus view still renders; staged WP6 screens are not routed before cutover. The capture reported one generic 404 with no path, so browser acceptance remains open.
 
 **Evidence:**
 
@@ -732,11 +737,15 @@
 | 2026-10-28 | WP6 active v1 preview screenshot | Active `/` page via port 3000; `fixes/TRACKER.md`. | App screenshot — Focus view rendered; browser log reported one generic resource 404 without identifying its URL. | PASS (render) — active UI is visible and usable in the capture; staged password UI is intentionally not activated. The unrelated 404 remains unlocalized and was not treated as a staged-code failure. |
 | 2026-10-28 | WP6 final diff-scope review | `fixes/plan.md`, `fixes/TRACKER.md`, staged password modules/tests; active v1 paths. | `git diff --check` — exit 0; active-v1 diff query returned no changes. | PASS — no whitespace errors; no edits to v1 UI, background entrypoint, or legacy storage hook. |
 | 2026-10-28 | WP6.4 exhaustive guard matrix | `src/shared/gating.ts`, `tests/shared/gating.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/gating.test.ts` — exit 0; 1 file / 4 tests passed, including all 370 action/state/password cells. | PASS — state boundaries, task-link behavior, stop outcomes, and all action classifications match Appendix E.4. UI/storage and background enforcement remain in progress. |
+| 2026-10-29 | WP6 staged behavior verification | Staged standalone, guarded mutations, protection status, backup/reset, appearance UI, and associated tests. | `npm test` — exit 0; 44 files / 240 tests. `npm run typecheck` — exit 0. `npm run build` — exit 0; active v1 and staged UI bundles emitted. | PASS — staged implementation compiles and deterministic tests pass. Active runtime registration and cutover were not performed. |
+| 2026-10-29 | WP6 extension preview check | Existing `FocusGate Extension Preview` workflow and active `/` page. | Workflow restart — Vite 6.4.3 ready on port 3000; screenshot shows active v1 Focus view. Browser log reports one generic resource 404 with no path. | PASS (startup/render only) — active v1 remains visible. Staged WP6 UI is not routed; this is not browser acceptance for WP6 behavior. |
 
 **Failures / blockers:**
 - 2026-10-28 — First WP6 typecheck attempt: `npm run typecheck` exited 127 (`sh: 1: tsc: command not found`). Resolved by `npm ci --no-audit` from the existing lockfile; the subsequent typecheck, full test suite, and build passed.
 
-**Decisions / deferred work:** None recorded.
+**Decisions / deferred work:**
+- Keep WP6.5 and WP6.AC4 open until WP5 permits removal of the active v1 standalone card, “No limit” option, and early-stop path, followed by observable browser verification.
+- Keep staged WP6 background handlers unregistered and do not migrate storage or cut over active entrypoints until WP5 gates pass and the approved cutover is authorized.
 
 ---
 

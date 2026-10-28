@@ -1,8 +1,9 @@
-import { normalizeDomain } from "../shared/domains.ts";
 import {
+  isValidStandaloneExpiry,
   MAX_STANDALONE_MINUTES,
   MAX_STANDALONE_SITES,
   MIN_STANDALONE_MINUTES,
+  normalizeStandaloneSites,
 } from "../shared/standalone.ts";
 import type { AppState, StandaloneBlock } from "../shared/types.ts";
 
@@ -20,7 +21,7 @@ export interface StandaloneActionResult {
 }
 
 export interface StandaloneActionService {
-  start(input: { minutes: number; sites: string[] }): Promise<StandaloneActionResult>;
+  start(input: { until: number; sites: string[] }): Promise<StandaloneActionResult>;
   extend(minutes: number): Promise<StandaloneActionResult>;
   addSites(sites: string[]): Promise<StandaloneActionResult>;
 }
@@ -33,19 +34,6 @@ export interface StandaloneActionDependencies {
 
 function isActive(block: StandaloneBlock, now: number): boolean {
   return block.active && block.startsAt <= now && now < block.until;
-}
-
-function normalizeSites(input: string[]): string[] | null {
-  if (input.length === 0 || input.length > MAX_STANDALONE_SITES) return null;
-  const normalized = new Set<string>();
-  for (const value of input) {
-    const domain = normalizeDomain(value);
-    if (!domain) return null;
-    normalized.add(domain);
-  }
-  return normalized.size > 0 && normalized.size <= MAX_STANDALONE_SITES
-    ? [...normalized]
-    : null;
 }
 
 function validMinutes(minutes: number): boolean {
@@ -96,14 +84,14 @@ export function createStandaloneActionService(
     start: (input) =>
       exclusive(async () => {
         const now = dependencies.now();
-        if (!validMinutes(input.minutes)) {
+        if (!isValidStandaloneExpiry(input.until, now)) {
           return {
             ok: false,
-            code: "INVALID_DURATION",
-            message: "Choose a duration from 5 minutes to 30 days.",
+            code: "INVALID_EXPIRY",
+            message: "Choose an end time from 5 minutes to 30 days from now.",
           };
         }
-        const sites = normalizeSites(input.sites);
+        const sites = normalizeStandaloneSites(input.sites);
         if (!sites) {
           return {
             ok: false,
@@ -122,7 +110,7 @@ export function createStandaloneActionService(
         const standalone: StandaloneBlock = {
           active: true,
           startsAt: now,
-          until: now + input.minutes * 60_000,
+          until: input.until,
           sites,
           startedAt: now,
           extendedMs: 0,
@@ -168,7 +156,7 @@ export function createStandaloneActionService(
 
     addSites: (input) =>
       exclusive(async () => {
-        const sites = normalizeSites(input);
+        const sites = normalizeStandaloneSites(input);
         if (!sites) {
           return {
             ok: false,

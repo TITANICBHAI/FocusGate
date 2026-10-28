@@ -6,6 +6,7 @@ import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { PasswordSettings } from "./PasswordSettings.tsx";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
+import { weakeningLockReason } from "../lib/guardState.ts";
 import {
   canRequestHostAccess,
   checkProtection,
@@ -95,6 +96,7 @@ export function SettingsView({ state }: { state: AppState }) {
     browserApi?.userAgent ?? "",
     browserApi?.id,
   );
+  const lockReason = weakeningLockReason(state);
 
   async function refreshProtection() {
     setCheckingProtection(true);
@@ -311,27 +313,6 @@ export function SettingsView({ state }: { state: AppState }) {
                 </div>
               )}
             </Card>
-            <Card title="Appearance">
-              <Field id="theme-setting" label="Theme">
-                <select
-                  id="theme-setting"
-                  value={state.settings.theme}
-                  onChange={(event) =>
-                    void updateSettings(
-                      (current) => ({
-                        ...current,
-                        theme: event.target.value as Settings["theme"],
-                      }),
-                      "Theme saved.",
-                    )
-                  }
-                >
-                  <option value="system">Use system setting</option>
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
-                </select>
-              </Field>
-            </Card>
           </>
         )}
 
@@ -409,7 +390,9 @@ export function SettingsView({ state }: { state: AppState }) {
               <Toggle
                 key={key}
                 label={labelFromKey(key)}
+                description={enabled && lockReason ? lockReason : undefined}
                 checked={enabled}
+                disabled={enabled && Boolean(lockReason)}
                 onCheckedChange={(value) =>
                   void updateSettings(
                     (current) => ({
@@ -463,7 +446,7 @@ export function SettingsView({ state }: { state: AppState }) {
             </div>
             {protection.notifications === "review" && (
               <p className="fg-field__error">
-                Browser notification permission is off. FocusGate cannot show alerts
+                Browser notification permission is off. FocusGate won't show alerts
                 until it is enabled.
               </p>
             )}

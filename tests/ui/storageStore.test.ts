@@ -10,6 +10,7 @@ import type {
   StorageKey,
   StorageRuntime,
 } from "../../src/ui/hooks/storageStore.ts";
+import { registerGuardPasswordPrompt } from "../../src/ui/lib/guardPrompts.ts";
 
 function createBackend(seed: Partial<AppState> = {}) {
   const values = new Map<string, unknown>(Object.entries(seed));
@@ -214,5 +215,75 @@ describe("staged UI storage store", () => {
 
     expect(backend.writeGuarded).toHaveBeenCalledWith("blockedSites", []);
     expect(backend.write).not.toHaveBeenCalled();
+  });
+
+  it("retries a protected UI write through the background password prompt", async () => {
+    const sendMessage = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        code: "PASSWORD_REQUIRED",
+        message: "Enter your current password.",
+      })
+      .mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal("chrome", { runtime: { sendMessage } });
+    const extensionArea = {
+      get: vi.fn(async () => ({ blockedSites: ["example.com"] })),
+      set: vi.fn(async () => undefined),
+    };
+    const runtime: StorageRuntime = {
+      getExtensionArea: () => extensionArea,
+      getLocalStorage: () => undefined,
+      subscribeExtensionChanges: () => () => undefined,
+      subscribeLocalChanges: () => () => undefined,
+    };
+    const unregisterPrompt = registerGuardPasswordPrompt(
+      vi.fn(async () => "correct password"),
+    );
+
+    try {
+      const store = new StorageStore(createBrowserStorageBackend(runtime));
+      await store.set("blockedSites", []);
+
+      expect(sendMessage).toHaveBeenNthCalledWith(1, {
+        type: "state/write",
+        key: "blockedSites",
+        value: [],
+      });
+      expect(sendMessage).toHaveBeenNthCalledWith(2, {
+        type: "state/write",
+        key: "blockedSites",
+        value: [],
+        currentPassword: "correct password",
+      });
+      expect(extensionArea.set).not.toHaveBeenCalled();
+    } finally {
+      unregisterPrompt();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("fails closed instead of writing directly when extension messaging is unavailable", async () => {
+    vi.stubGlobal("chrome", { runtime: {} });
+    const extensionArea = {
+      get: vi.fn(async () => ({ blockedSites: ["example.com"] })),
+      set: vi.fn(async () => undefined),
+    };
+    const runtime: StorageRuntime = {
+      getExtensionArea: () => extensionArea,
+      getLocalStorage: () => undefined,
+      subscribeExtensionChanges: () => () => undefined,
+      subscribeLocalChanges: () => () => undefined,
+    };
+
+    try {
+      const store = new StorageStore(createBrowserStorageBackend(runtime));
+      await expect(
+        store.set("blockedSites", []),
+      ).rejects.toMatchObject({ code: "GUARD_UNAVAILABLE" });
+      expect(extensionArea.set).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

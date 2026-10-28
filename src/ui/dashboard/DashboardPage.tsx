@@ -422,7 +422,7 @@ function BackupPanel({ state }: { state: AppState }) {
       <Modal
         open={resetOpen}
         title="Reset all FocusGate data?"
-        description="This cannot be undone unless you first export a backup. Reset is refused while a strict, commitment, or standalone block is active."
+        description="You won't be able to undo this unless you first export a backup. Reset is refused while a strict, commitment, or standalone block is active."
         onClose={() => {
           setResetOpen(false);
           setResetText("");

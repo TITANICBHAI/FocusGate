@@ -81,6 +81,40 @@ describe("background backup and reset actions", () => {
     expect(context.afterChange).toHaveBeenCalledOnce();
   });
 
+  it("supports exporting, resetting, and restoring the exported data", async () => {
+    const source = createDefaultState();
+    source.blockedSites = ["example.com"];
+    source.tasks = [
+      {
+        id: "task-1",
+        title: "Focus block",
+        durationMin: 25,
+        priority: "medium",
+        tags: [],
+        recurring: "none",
+        lockLevel: "none",
+        completed: false,
+        createdAt: 1,
+      },
+    ];
+    const backup = createBackupJson(source);
+    const context = setup(source);
+
+    await expect(
+      context.service.resetData({ confirm: RESET_CONFIRMATION_PHRASE }),
+    ).resolves.toMatchObject({ ok: true, mode: "reset" });
+    expect(context.getState()).toEqual(createDefaultState());
+
+    await expect(context.service.importBackup(backup)).resolves.toMatchObject({
+      ok: true,
+      mode: "restore",
+    });
+    expect(context.getState()).toMatchObject({
+      blockedSites: ["example.com"],
+      tasks: [{ id: "task-1", title: "Focus block" }],
+    });
+  });
+
   it("merges safely during a strict lock without password or history changes", async () => {
     const current = createDefaultState();
     current.blockedSites = ["example.com"];

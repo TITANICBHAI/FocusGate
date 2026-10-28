@@ -89,8 +89,12 @@ describe("UI theme accessibility", () => {
     );
     expect(fontSizes.length).toBeGreaterThan(0);
     for (const value of fontSizes) {
-      const smallestPixelValue = [...value.matchAll(/(\d+(?:\.\d+)?)px/g)]
-        .map(([, number]) => Number(number))
+      const smallestPixelValue = [
+        ...value.matchAll(/(\d+(?:\.\d+)?)(px|rem)\b/g),
+      ]
+        .map(([, number, unit]) =>
+          Number(number) * (unit === "rem" ? 16 : 1),
+        )
         .sort((a, b) => a - b)[0];
       expect(smallestPixelValue, `font-size: ${value}`).toBeGreaterThanOrEqual(12);
     }

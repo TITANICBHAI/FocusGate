@@ -208,6 +208,32 @@ function settingsActions(
     if (wasEnabled && !isEnabled) actions.push("turn_filter_off");
     if (!wasEnabled && isEnabled) actions.push("turn_filter_on");
   }
+  const keywordScopes = [
+    "searchQuery",
+    "url",
+    "title",
+  ] as const;
+  if (
+    keywordScopes.some(
+      (key) =>
+        previous.keywords.scope[key] && !next.keywords.scope[key],
+    ) ||
+    (previous.keywords.match === "substring" &&
+      next.keywords.match === "wholeWord")
+  ) {
+    actions.push("weaken_keyword");
+  }
+  if (previous.allowOnly.enabled && !next.allowOnly.enabled) {
+    actions.push("turn_filter_off");
+  } else if (
+    previous.allowOnly.enabled &&
+    next.allowOnly.enabled &&
+    next.allowOnly.domains.some(
+      (domain) => !previous.allowOnly.domains.includes(domain),
+    )
+  ) {
+    actions.push("add_exception");
+  }
 }
 
 /**

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { BUILT_IN_PRESETS, getPresetDomains } from "../../shared/presets.ts";
-import { hashPassword } from "../../shared/password.ts";
 import { normalizeDomain } from "../../shared/domains.ts";
 import {
   checkProtection as checkBrowserProtection,
@@ -12,6 +11,7 @@ import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
 import { ThemeRoot } from "../theme.tsx";
+import { sendPasswordMessage } from "../lib/passwordActions.ts";
 
 type Goal = "social" | "gaming" | "web" | "deep";
 type PermissionState = "checking" | "available" | "review" | "unavailable";
@@ -179,24 +179,25 @@ function OnboardingFlow() {
 
     setSaving(true);
     try {
-      const passwordRecord = password ? await hashPassword(password) : null;
       const selectedDomains = [
         ...new Set([...getPresetDomains(selectedPresets), ...custom.valid]),
       ];
-      await Promise.all([
-        uiStorageStore.set("blockedSites", (latest) => [
-          ...new Set([...latest, ...selectedDomains]),
-        ]),
-        uiStorageStore.set("settings", (latest) => ({
-          ...latest,
-          dailyGoalMin,
-        })),
-        ...(passwordRecord
-          ? [
-              uiStorageStore.set("password", (latest) => latest ?? passwordRecord),
-            ]
-          : []),
+      await uiStorageStore.set("blockedSites", (latest) => [
+        ...new Set([...latest, ...selectedDomains]),
       ]);
+      await uiStorageStore.set("settings", (latest) => ({
+        ...latest,
+        dailyGoalMin,
+      }));
+      if (password) {
+        const result = await sendPasswordMessage({
+          type: "password/set",
+          newPassword: password,
+        });
+        if (!result.ok) {
+          throw new Error(result.message || "The password could not be saved.");
+        }
+      }
       setStep(4);
     } catch {
       setError("FocusGate could not save setup. Your selected sites can be saved again by retrying.");

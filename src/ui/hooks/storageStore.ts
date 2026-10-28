@@ -166,13 +166,16 @@ export function createBrowserStorageBackend(
           "This setting must be changed through its dedicated control.",
         );
       }
-      if (
-        typeof chrome === "undefined" ||
-        !chrome.runtime?.sendMessage ||
-        !runtime.getExtensionArea()
-      ) {
+      const extensionArea = runtime.getExtensionArea();
+      if (!extensionArea) {
         await writeDirect(key, value);
         return;
+      }
+      if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
+        throw new GuardedStorageWriteError(
+          "GUARD_UNAVAILABLE",
+          "FocusGate could not verify this change. Reopen the extension and try again.",
+        );
       }
 
       const guardedKey = key as GuardedStateKey;

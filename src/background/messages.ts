@@ -104,7 +104,7 @@ export function createSessionMessageHandler(
 }
 
 export type StandaloneMessage =
-  | { type: "standalone/start"; minutes: number; sites: string[] }
+  | { type: "standalone/start"; until: number; sites: string[] }
   | { type: "standalone/extend"; minutes: number }
   | { type: "standalone/addSites"; sites: string[] };
 
@@ -137,7 +137,7 @@ export function createStandaloneMessageHandler(
       switch (message.type) {
         case "standalone/start":
           return await service.start({
-            minutes: message.minutes,
+            until: message.until,
             sites: message.sites,
           });
         case "standalone/extend":
@@ -160,7 +160,7 @@ function isStandaloneMessage(message: unknown): message is StandaloneMessage {
   const candidate = message as Record<string, unknown>;
   if (candidate.type === "standalone/start") {
     return (
-      Number.isInteger(candidate.minutes) &&
+      Number.isSafeInteger(candidate.until) &&
       Array.isArray(candidate.sites) &&
       candidate.sites.every((site) => typeof site === "string")
     );

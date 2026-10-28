@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { normalizeDomain } from "../../shared/domains.ts";
 import type { AppState, LockLevel, SessionState } from "../../shared/types.ts";
 import {
+  countMatchingStandaloneTabs,
+  fromLocalDateTimeInput,
+  isValidStandaloneExpiry,
   MAX_STANDALONE_MINUTES,
   MIN_STANDALONE_MINUTES,
+  STANDALONE_ACKNOWLEDGEMENT_MS,
+  toLocalDateTimeInput,
 } from "../../shared/standalone.ts";
 import {
   Button,
@@ -11,12 +17,19 @@ import {
   Field,
   ProgressRing,
   Segmented,
+  Toggle,
 } from "../components/primitives.tsx";
 import { Modal, useToast } from "../components/feedback.tsx";
 import { sendSessionMessage } from "../lib/sessionActions.ts";
 import { sendStandaloneMessage } from "../lib/standaloneActions.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;
+const STANDALONE_EXPIRY_PRESETS = [
+  { label: "+30 min", minutes: 30 },
+  { label: "+1 hour", minutes: 60 },
+  { label: "+4 hours", minutes: 240 },
+  { label: "+24 hours", minutes: 1_440 },
+] as const;
 const LOCK_OPTIONS = [
   { value: "none", label: "None" },
   { value: "strict", label: "Strict" },
@@ -33,6 +46,23 @@ function formatTime(seconds: number): string {
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(
     safe % 60,
   ).padStart(2, "0")}`;
+}
+
+function standaloneSiteEntries(value: string): string[] {
+  return value
+    .split(/[,\n]/)
+    .map((site) => site.trim())
+    .filter(Boolean);
+}
+
+function formatStandaloneDuration(milliseconds: number): string {
+  const totalMinutes = Math.max(0, Math.ceil(milliseconds / 60_000));
+  const days = Math.floor(totalMinutes / 1_440);
+  const hours = Math.floor((totalMinutes % 1_440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  return `${minutes} min`;
 }
 
 function SessionClock({
@@ -115,11 +145,17 @@ function StandaloneCountdown({ until }: { until: number }) {
 export function FocusView({ state }: { state: AppState }) {
   const showToast = useToast();
   const [standaloneStartOpen, setStandaloneStartOpen] = useState(false);
-  const [standaloneMinutes, setStandaloneMinutes] = useState("60");
+  const [standaloneUntilText, setStandaloneUntilText] = useState(() =>
+    toLocalDateTimeInput(Date.now() + 60 * 60_000),
+  );
+  const [standaloneLongAcknowledged, setStandaloneLongAcknowledged] =
+    useState(false);
   const [standaloneSitesText, setStandaloneSitesText] = useState("");
   const [standaloneSiteInput, setStandaloneSiteInput] = useState("");
   const [standaloneExtendMinutes, setStandaloneExtendMinutes] = useState("15");
   const [standaloneError, setStandaloneError] = useState("");
+  const [openTabCount, setOpenTabCount] = useState<number | null>(null);
+  const [openTabsUnavailable, setOpenTabsUnavailable] = useState(false);
   const [durationText, setDurationText] = useState(
     String(state.settings.defaultDurationMin || 25),
   );
@@ -142,29 +178,95 @@ export function FocusView({ state }: { state: AppState }) {
     state.alwaysBlockedSites.length > 0 ||
     state.schedules.some((schedule) => schedule.enabled && schedule.sites.length > 0);
   const hasPassword = state.password !== null;
+  const standaloneUntil = fromLocalDateTimeInput(standaloneUntilText);
+  const standaloneEntries = useMemo(
+    () => standaloneSiteEntries(standaloneSitesText),
+    [standaloneSitesText],
+  );
+  const normalizedStandaloneEntries = useMemo(
+    () => standaloneEntries.map(normalizeDomain),
+    [standaloneEntries],
+  );
+  const standalonePreviewSites = useMemo(
+    () => [
+      ...new Set(
+        normalizedStandaloneEntries.filter(
+          (site): site is string => site !== null,
+        ),
+      ),
+    ],
+    [normalizedStandaloneEntries],
+  );
+  const standaloneUntilDelta =
+    standaloneUntil === null ? 0 : standaloneUntil - Date.now();
+  const standaloneNeedsAcknowledgement =
+    standaloneUntilDelta > STANDALONE_ACKNOWLEDGEMENT_MS;
+
+  useEffect(() => {
+    if (!standaloneStartOpen) return;
+    if (standalonePreviewSites.length === 0) {
+      setOpenTabCount(0);
+      setOpenTabsUnavailable(false);
+      return;
+    }
+    if (typeof chrome === "undefined" || !chrome.tabs?.query) {
+      setOpenTabCount(null);
+      setOpenTabsUnavailable(true);
+      return;
+    }
+
+    let cancelled = false;
+    setOpenTabCount(null);
+    setOpenTabsUnavailable(false);
+    void chrome.tabs
+      .query({})
+      .then((tabs) => {
+        if (!cancelled) {
+          setOpenTabCount(countMatchingStandaloneTabs(tabs, standalonePreviewSites));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOpenTabCount(null);
+          setOpenTabsUnavailable(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [standaloneStartOpen, standalonePreviewSites]);
 
   async function startStandalone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const minutes = Number(standaloneMinutes);
-    const sites = standaloneSitesText
-      .split(/[,\n]/)
-      .map((site) => site.trim())
-      .filter(Boolean);
-    if (
-      !Number.isInteger(minutes) ||
-      minutes < MIN_STANDALONE_MINUTES ||
-      minutes > MAX_STANDALONE_MINUTES
-    ) {
-      setStandaloneError("Choose a duration from 5 minutes to 30 days.");
+    const now = Date.now();
+    const until = fromLocalDateTimeInput(standaloneUntilText);
+    if (until === null || !isValidStandaloneExpiry(until, now)) {
+      setStandaloneError("Choose an end time from 5 minutes to 30 days from now.");
       return;
     }
-    if (sites.length === 0) {
+    if (standaloneEntries.length === 0) {
       setStandaloneError("Add at least one website to block.");
+      return;
+    }
+    if (normalizedStandaloneEntries.some((site) => site === null)) {
+      setStandaloneError("Check each site and enter a valid website or URL.");
+      return;
+    }
+    const sites = standalonePreviewSites;
+    if (sites.length > 500) {
+      setStandaloneError("A standalone block can contain at most 500 sites.");
+      return;
+    }
+    if (
+      until - now > STANDALONE_ACKNOWLEDGEMENT_MS &&
+      !standaloneLongAcknowledged
+    ) {
+      setStandaloneError("Confirm that you understand this block has no early stop.");
       return;
     }
     const reply = await sendStandaloneMessage({
       type: "standalone/start",
-      minutes,
+      until,
       sites,
     });
     if (!reply.ok) {
@@ -174,6 +276,7 @@ export function FocusView({ state }: { state: AppState }) {
     setStandaloneError("");
     setStandaloneStartOpen(false);
     setStandaloneSitesText("");
+    setStandaloneLongAcknowledged(false);
     showToast("Standalone block started.", "success");
     if (reply.warning) showToast(reply.warning, "error");
   }
@@ -313,7 +416,7 @@ export function FocusView({ state }: { state: AppState }) {
         title={standaloneActive ? "Standalone block active" : "Block now"}
         description={
           standaloneActive
-            ? `Cannot end early. Scheduled to end ${new Date(
+            ? `No early-stop action is available. This block ends automatically at ${new Date(
                 state.standalone.until,
               ).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}.`
             : "Block selected sites without starting a focus session. The block ends automatically."
@@ -321,7 +424,6 @@ export function FocusView({ state }: { state: AppState }) {
       >
         {standaloneActive ? (
           <div className="fg-stack">
-            <p className="fg-focus__time" aria-live="off">
             <StandaloneCountdown until={state.standalone.until} />
             <p className="fg-muted">
               {state.standalone.sites.length} site
@@ -410,6 +512,13 @@ export function FocusView({ state }: { state: AppState }) {
             variant="secondary"
             onClick={() => {
               setStandaloneError("");
+              setStandaloneUntilText(
+                toLocalDateTimeInput(Date.now() + 60 * 60_000),
+              );
+              setStandaloneLongAcknowledged(false);
+              setStandaloneSitesText("");
+              setOpenTabCount(null);
+              setOpenTabsUnavailable(false);
               setStandaloneStartOpen(true);
             }}
           >
@@ -551,8 +660,8 @@ export function FocusView({ state }: { state: AppState }) {
 
       <Modal
         open={standaloneStartOpen}
-        title="Confirm standalone block"
-        description="This block cannot be ended early. It will stop at the expiry you choose. You can add sites or extend it while active."
+        title="Set up standalone block"
+        description="Choose the sites and end time. There is no early-stop action; you can add sites or extend the block while it is active."
         onClose={() => {
           setStandaloneStartOpen(false);
           setStandaloneError("");
@@ -580,20 +689,44 @@ export function FocusView({ state }: { state: AppState }) {
           onSubmit={startStandalone}
         >
           <Field
-            id="standalone-minutes"
-            label="Duration in minutes"
-            helper={`Choose ${MIN_STANDALONE_MINUTES} minutes to 30 days. There is no unlimited option.`}
+            id="standalone-until"
+            label="End date and time"
+            helper={`Choose an end time from ${MIN_STANDALONE_MINUTES} minutes to 30 days from now.`}
             error={standaloneError || undefined}
           >
+            <div className="fg-wrap" role="group" aria-label="End time presets">
+              {STANDALONE_EXPIRY_PRESETS.map((preset) => (
+                <Button
+                  key={preset.minutes}
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setStandaloneUntilText(
+                      toLocalDateTimeInput(
+                        Date.now() + preset.minutes * 60_000,
+                      ),
+                    );
+                    setStandaloneLongAcknowledged(false);
+                    setStandaloneError("");
+                  }}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
             <input
-              id="standalone-minutes"
-              type="number"
-              min={MIN_STANDALONE_MINUTES}
-              max={MAX_STANDALONE_MINUTES}
-              step={1}
-              value={standaloneMinutes}
+              id="standalone-until"
+              type="datetime-local"
+              min={toLocalDateTimeInput(
+                Date.now() + MIN_STANDALONE_MINUTES * 60_000,
+              )}
+              max={toLocalDateTimeInput(
+                Date.now() + MAX_STANDALONE_MINUTES * 60_000,
+              )}
+              value={standaloneUntilText}
               onChange={(event) => {
-                setStandaloneMinutes(event.target.value);
+                setStandaloneUntilText(event.target.value);
+                setStandaloneLongAcknowledged(false);
                 setStandaloneError("");
               }}
             />
@@ -601,7 +734,7 @@ export function FocusView({ state }: { state: AppState }) {
           <Field
             id="standalone-sites"
             label="Sites to block"
-            helper="Enter one domain or URL per line. This list is separate from your rules."
+            helper="Enter up to 500 domains or URLs, one per line. This list is separate from your rules."
           >
             <textarea
               id="standalone-sites"
@@ -614,6 +747,56 @@ export function FocusView({ state }: { state: AppState }) {
               placeholder={"example.com\nreddit.com"}
             />
           </Field>
+          <Card title="Block summary">
+            <dl className="fg-list">
+              <div className="fg-list-item">
+                <dt>Sites</dt>
+                <dd>{standalonePreviewSites.length}</dd>
+              </div>
+              <div className="fg-list-item">
+                <dt>Ends</dt>
+                <dd>
+                  {standaloneUntil === null
+                    ? "Choose an end time"
+                    : new Date(standaloneUntil).toLocaleString([], {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                </dd>
+              </div>
+              <div className="fg-list-item">
+                <dt>Duration</dt>
+                <dd>
+                  {standaloneUntil === null
+                    ? "—"
+                    : formatStandaloneDuration(standaloneUntilDelta)}
+                </dd>
+              </div>
+              <div className="fg-list-item">
+                <dt>Matching open tabs</dt>
+                <dd>
+                  {openTabCount !== null
+                    ? openTabCount
+                    : openTabsUnavailable
+                      ? "Could not check"
+                      : "Checking…"}
+                </dd>
+              </div>
+            </dl>
+            <p className="fg-note">
+              Open matching tabs may be affected when blocking starts.
+            </p>
+          </Card>
+          {standaloneNeedsAcknowledgement && (
+            <Toggle
+              label="I understand this block lasts over 24 hours and has no early-stop action."
+              checked={standaloneLongAcknowledged}
+              onCheckedChange={(checked) => {
+                setStandaloneLongAcknowledged(checked);
+                setStandaloneError("");
+              }}
+            />
+          )}
         </form>
       </Modal>
 

@@ -242,4 +242,61 @@ describe("user-state mutation guard classification", () => {
       }, now),
     ).toEqual(["turn_filter_off"]);
   });
+
+  it("classifies keyword-scope and allow-only reductions as weakening", () => {
+    const previous = createDefaultState();
+    expect(
+      classifyStateMutation(previous, {
+        ...previous,
+        settings: {
+          ...previous.settings,
+          keywords: {
+            ...previous.settings.keywords,
+            scope: {
+              ...previous.settings.keywords.scope,
+              searchQuery: false,
+            },
+          },
+        },
+      }, now),
+    ).toEqual(["weaken_keyword"]);
+    expect(
+      classifyStateMutation(previous, {
+        ...previous,
+        settings: {
+          ...previous.settings,
+          keywords: { ...previous.settings.keywords, match: "wholeWord" },
+        },
+      }, now),
+    ).toEqual(["weaken_keyword"]);
+
+    const allowOnly = {
+      ...previous,
+      settings: {
+        ...previous.settings,
+        allowOnly: { enabled: true, domains: ["example.com"] },
+      },
+    };
+    expect(
+      classifyStateMutation(allowOnly, {
+        ...allowOnly,
+        settings: {
+          ...allowOnly.settings,
+          allowOnly: { ...allowOnly.settings.allowOnly, enabled: false },
+        },
+      }, now),
+    ).toEqual(["turn_filter_off"]);
+    expect(
+      classifyStateMutation(allowOnly, {
+        ...allowOnly,
+        settings: {
+          ...allowOnly.settings,
+          allowOnly: {
+            ...allowOnly.settings.allowOnly,
+            domains: ["example.com", "reddit.com"],
+          },
+        },
+      }, now),
+    ).toEqual(["add_exception"]);
+  });
 });
