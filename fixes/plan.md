@@ -436,6 +436,7 @@ interface SessionState {                  // written ONLY by background
   blockedAttempts: number;                // during this work phase
   lastHeartbeatAt: number;
   gaps: { from: number; to: number }[];
+  clockSkewDetected?: boolean;            // set when recovery observes a backward clock jump
 }
 
 interface Schedule {
@@ -476,6 +477,7 @@ interface SessionRecord {
   id: string; startedAt: number; endedAt: number; plannedMs: number; elapsedMs: number;
   status: 'completed' | 'abandoned' | 'interrupted';
   lockLevel: LockLevel; taskId?: string; blockedAttempts: number; gaps: { from: number; to: number }[];
+  clockSkewDetected?: boolean;
 }
 
 interface DayStats {
@@ -637,12 +639,19 @@ The owner deferred these browser tests because a controllable Chrome/Edge/Firefo
 
 **Pre-cutover staging rule:** implement and test v2 modules without replacing the active v1 background or popup, calling `ready()` from runtime entrypoints, or enabling v2 message handlers. Stage the timer view outside the current popup. Until WP1b.S2/S3 are verified, count attention only for a focused window and active tab, leave background-audio credit off, and re-arm alarms idempotently on install, startup, and at handler entry. Run browser acceptance criteria after the WP5 cutover.
 
+**Implementation decisions (owner-authorized 2026-10-28):**
+
+* Keep the v1 popup and worker active; v2 session services, message handlers, alarm handlers, and timer UI remain staged and are not registered or mounted before the WP5 cutover. Inject storage, clock, alarm, notification, badge, and reconciliation dependencies so unit tests can exercise behavior without activating v2 consumers or calling `ready()`.
+* Resolve the Strict-mode wording conflict in favor of Appendix E.2 and WP2.AC5: with a password, stopping requires background verification; without one, stopping requires the exact `I GIVE UP` phrase and a 15-second wait enforced by the background.
+* Preserve a backward-clock recovery signal in the optional `clockSkewDetected` field on the session and its resulting record. A backward jump beyond 60 seconds extends the phase end by the measured delta; the flag is reset at the next phase.
+* Keep core state transitions authoritative even if notification or badge APIs fail. Serialize session operations, re-read before each transition, and write the session/history/stats/task changes for a phase end in one storage update; alarm/reconcile work is retried through startup/handler recovery.
+
 **Behaviour**
 
 * `session/start` builds `SessionState`, writes it, creates alarm `session_phase_end` at `phaseEndsAt`, sets the badge, calls `reconcile()`. History is written **when a work phase ends**, never at start (so there are no orphan "active" records).
 * **Phase end** (`advancePhase`): a completed work phase → (if `settings.breaks.enabled`) short or long break, else idle; an interrupted recovered work phase is recorded and ends idle without starting a break or next work phase. Break → (`autoStartNext` ? next work phase : idle). A long break comes every `cyclesBeforeLong` completed work phases. Default `breaks = { enabled:true, shortMin:5, longMin:15, cyclesBeforeLong:4, autoStartNext:false }` reproduces today's "work → 5-min break → done". `autoStartNext:true` is the PC "Pomodoro" mode.
 * Blocking is active **only** in the `work` phase (plus standalone/schedules/always-blocked, which are independent of the session).
-* `session/stop`: finalise the work phase as `abandoned` (`elapsedMs = now − phaseStartedAt`), clear alarms, set idle. In a break → idle with no record. Lock rules per §5.3 and Appendix E, enforced by the background.
+* `session/stop`: finalise the work phase as `abandoned` (`elapsedMs = now − phaseStartedAt`), clear alarms, set idle. In a break → idle with no record. Lock rules per §5.3 and Appendix E, enforced by the background. A Normal-session confirmation is collected by the UI; it is not a substitute for background enforcement of Strict or Commitment.
 * `session/extend` (+10/15/20/30/45/60 min, Android `ExtendModal`): `phaseEndsAt += ms; plannedMs += ms; extendedMs += ms`, reschedule the alarm.
 * **Recovery** `recoverSession(now)` runs from `runtime.onStartup`, `onInstalled` and the first line of every alarm handler: while `now ≥ phaseEndsAt` call `advancePhase('recovered')` (max 10 iterations). If `now − lastHeartbeatAt > 3 min` during a running phase, push a gap; if gaps cover more than 50 % of the phase → record `interrupted` (not counted as focus time) and return to idle without starting a break, else record `completed` and follow the normal phase transition. If `now < lastHeartbeatAt − 60 s` (clock moved back) → `phaseEndsAt += lastHeartbeatAt − now` and flag the record.
 * **Heartbeat/tick**: one 1-minute alarm `tick` updates the badge, writes `session.lastHeartbeatAt` and `health.lastHeartbeatAt`, runs allowance attention accounting and recovery.

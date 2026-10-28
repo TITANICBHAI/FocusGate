@@ -22,6 +22,7 @@ export interface SessionState {
   lastHeartbeatAt: number;
   gaps: SessionGap[];
   stopChallengeStartedAt?: number | null;
+  clockSkewDetected?: boolean;
 }
 
 export interface Schedule {
@@ -97,6 +98,7 @@ export interface SessionRecord {
   taskId?: string;
   blockedAttempts: number;
   gaps: SessionGap[];
+  clockSkewDetected?: boolean;
 }
 
 export interface DayStats {

@@ -242,7 +242,7 @@
 ### Tasks
 
 - [ ] WP2.1 Implement `isBlockingActive` and session helpers; `background/session.ts`, `alarms.ts` (`ensureAlarms`), `notify.ts` (badge/notifications), and `messages.ts` handlers for `session/*`.
-- [ ] WP2.2 Replace UI timer logic: read session and render `max(0, endsAt - now)` with a one-second local-state interval; message start/stop/extend; remove timer storage writes and fullscreen logic.
+- [ ] WP2.2 Prepare the staged v2 timer view: read session and render `max(0, endsAt - now)` with a one-second local-state interval; message start/stop/extend. Keep the active v1 popup unchanged until WP5.
 - [ ] WP2.3 Write `sessionHistory` and `dayStats` at phase end using `SessionRecord`/`DayStats`; cap history at 500; never write history at session start.
 - [ ] WP2.4 Replace keyboard command handling: idle starts the default duration with lock `none` and notification; running/unlocked stops; locked reports locked and does nothing.
 
@@ -261,10 +261,23 @@
 
 **Notes / progress:**
 - 2026-10-28 — Started WP2 after the owner's instruction to defer WP1b without blocking further work. Keep v1 popup/worker active until WP5; build v2 modules and unit tests only. Use focused/active attention with background-audio credit off, and idempotently re-arm alarms; runtime/browser acceptance remains deferred.
+- 2026-10-28 — Owner explicitly authorized WP2 and asked the agent to choose best-practice defaults without clarification questions, documenting decisions. Keep all v2 listeners and UI staged until WP5; use background-enforced password verification or the no-password phrase plus 15-second wait for Strict stops, and persist a clock-skew flag when recovery extends a phase after a backward clock jump. State transitions will be serialized and phase-end state written atomically; external notification/badge failures must not roll back session state.
+- 2026-10-28 — First implementation slice added shared clock-skew recovery state, dormant v2 alarm/notification/session/command modules, and behavior tests. No WP2 checklist item is marked complete yet; source and tests remain unverified. The live v1 entrypoint and popup have not been changed.
+- 2026-10-28 — Restored the existing lockfile dependencies with `npm ci` — exit 0; 123 packages added. npm reported 4 vulnerabilities (2 moderate, 2 high); no audit fix was applied. Re-run the targeted typecheck and tests before proceeding.
+- 2026-10-28 — Adjusted the clock-skew test to exceed the specified 60-second threshold and changed recovery notification dispatch to include break-end state transitions even when they produce no session record. The earlier failure remains recorded; the focused rerun is pending.
+- 2026-10-28 — Added a staged React timer view and v2-only storage hook, included them in strict typechecking, and kept both unmounted from the active v1 popup. This staged UI supports timestamp-rendered time, start/extend/skip/stop messages, Strict password/phrase handling, and inline confirmation; it is not yet verified.
+- 2026-10-28 — Added isolated Tailwind component styles for the staged timer and synced its duration field after settings hydration. The active `App` still does not import or render the staged view; verification is pending.
+- 2026-10-28 — Added the missing `@types/react` development dependency through the workspace package manager so the staged TSX can remain in strict typechecking; the next typecheck is pending.
+- 2026-10-28 — `npm run typecheck` now exits 0 with the staged TSX included after adding `@types/react`. The prior missing-typings failure is resolved; message-handler coverage and the final full verification remain pending.
+- 2026-10-28 — Added focused tests for valid/invalid v2 messages and the staged shortcut callback. Listener registration remains intentionally absent from the active background entrypoint; run the full unit suite and confirm build outputs before marking implementation tasks complete.
 
 **Evidence:** No verified evidence recorded.
 
-**Failures / blockers:** None recorded for this reset.
+**Failures / blockers:**
+- 2026-10-28 — Initial WP2 verification could not start because dependencies are absent: `npm run typecheck` exited 127 (`tsc: command not found`); `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` exited 1 because Vitest could not load `vite.config.ts` without `@tailwindcss/vite`, `@vitejs/plugin-react`, and `vite`. Restore the existing lockfile dependencies with `npm ci`, then rerun the checks. No package manifests were intentionally changed.
+- 2026-10-28 — After `npm ci`, `npm run typecheck` passed. `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` failed 2 of 22 tests: the clock-skew fixture was exactly at the 60-second threshold (the plan says more than 60 seconds), and the recovery notification test exposed that break-end transitions with no `SessionRecord` did not notify. Correct the fixture threshold and notify on session-state transitions, then rerun.
+- 2026-10-28 — Resolved the test failures: `npm run typecheck` exited 0; `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` exited 0 with 3 files / 22 tests passing.
+- 2026-10-28 — Expanding strict typecheck to the staged TSX view exposed the repository's missing React type declarations: `npm run typecheck` exited 2 with 70 diagnostics in the two staged TSX files, all beginning with unresolved React/JSX typings and implicit JSX elements. Add the matching React type package, then rerun; do not suppress the diagnostics.
 
 **Decisions / deferred work:** None recorded.
 

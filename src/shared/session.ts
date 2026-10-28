@@ -48,6 +48,7 @@ export function createSession(input: StartSessionInput): SessionState {
     lastHeartbeatAt: input.now,
     gaps: [],
     stopChallengeStartedAt: null,
+  clockSkewDetected: false,
   };
 }
 
@@ -109,6 +110,7 @@ export function advanceSession(
         lastHeartbeatAt: now,
         gaps: [],
         stopChallengeStartedAt: null,
+        clockSkewDetected: false,
       },
       record,
       ...(completedTaskId ? { completedTaskId } : {}),
@@ -129,6 +131,7 @@ export function advanceSession(
         lastHeartbeatAt: now,
         gaps: [],
         stopChallengeStartedAt: null,
+        clockSkewDetected: false,
       },
     };
   }
@@ -140,11 +143,26 @@ export function recoverSession(
   source: SessionState,
   now: number,
   settings: Settings,
+  options: { updateHeartbeat?: boolean } = {},
 ): RecoveryResult {
   let session = structuredClone(source);
   const records: SessionRecord[] = [];
   const completedTaskIds: string[] = [];
   let transitions = 0;
+
+  if (
+    session.status !== "idle" &&
+    !session.clockSkewDetected &&
+    now < session.lastHeartbeatAt - 60_000
+  ) {
+    const rollbackMs = session.lastHeartbeatAt - now;
+    session = {
+      ...session,
+      phaseEndsAt: session.phaseEndsAt + rollbackMs,
+      lastHeartbeatAt: now,
+      clockSkewDetected: true,
+    };
+  }
 
   while (
     session.status !== "idle" &&
@@ -167,7 +185,7 @@ export function recoverSession(
 
   if (session.status !== "idle") {
     session = appendMissedTimeGap(session, now, now);
-    session.lastHeartbeatAt = now;
+    if (options.updateHeartbeat) session.lastHeartbeatAt = now;
   }
 
   return { session, records, completedTaskIds, transitions };
@@ -231,6 +249,7 @@ function createWorkRecord(
     gaps: session.gaps.filter(
       (gap) => gap.to > session.phaseStartedAt && gap.from < safeEnd,
     ),
+    ...(session.clockSkewDetected ? { clockSkewDetected: true } : {}),
   };
 
   if (
@@ -295,6 +314,7 @@ function idleSession(now: number): SessionState {
     lastHeartbeatAt: now,
     gaps: [],
     stopChallengeStartedAt: null,
+    clockSkewDetected: false,
   };
 }
 

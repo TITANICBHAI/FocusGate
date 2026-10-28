@@ -73,6 +73,34 @@ describe("session transitions", () => {
     expect(result.session.status).toBe("idle");
   });
 
+  it("extends a phase after a backward clock jump and flags its eventual record", () => {
+    const settings = createDefaultState().settings;
+    const source = {
+      ...createSession({
+        now: 0,
+        durationMs: 10 * 60_000,
+        lockLevel: "none",
+        taskId: null,
+        sessionId: "session-clock-skew",
+      }),
+      lastHeartbeatAt: 9 * 60_000,
+    };
+
+    const recovered = recoverSession(source, 7 * 60_000 + 59_000, settings, {
+      updateHeartbeat: true,
+    });
+    expect(recovered.session.phaseEndsAt).toBe(11 * 60_000 + 1_000);
+    expect(recovered.session.clockSkewDetected).toBe(true);
+    expect(recovered.session.lastHeartbeatAt).toBe(7 * 60_000 + 59_000);
+
+    const completed = advanceSession(
+      recovered.session,
+      recovered.session.phaseEndsAt,
+      { ...settings, breaks: { ...settings.breaks, enabled: false } },
+    );
+    expect(completed.record?.clockSkewDetected).toBe(true);
+  });
+
   it("stops missed auto-start cycles after a work phase is interrupted", () => {
     const settings = {
       ...createDefaultState().settings,

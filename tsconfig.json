@@ -27,6 +27,8 @@
   "include": [
     "src/shared/**/*.ts",
     "src/background/**/*.ts",
-    "src/content/**/*.ts"
+    "src/content/**/*.ts",
+    "src/staged/**/*.ts",
+    "src/staged/**/*.tsx"
   ]
 }
