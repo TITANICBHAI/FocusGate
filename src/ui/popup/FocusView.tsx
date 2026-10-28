@@ -17,12 +17,10 @@ const LOCK_OPTIONS = [
   { value: "strict", label: "Strict" },
   { value: "commitment", label: "Commit" },
 ] as const;
-const LOCK_COPY: Record<LockLevel, string> = {
+const LOCK_COPY: Record<Exclude<LockLevel, "strict">, string> = {
   none: "You can stop any time with a confirmation.",
-  strict:
-    "Stopping early needs your password, or a phrase and a 15-second wait.",
   commitment:
-    "You can extend this session, but it has no early-stop action.",
+    "There is no early-stop action. You can still disable or remove the extension.",
 };
 
 function formatTime(seconds: number): string {
@@ -283,19 +281,16 @@ export function FocusView({ state }: { state: AppState }) {
               onChange={setLockLevel}
             />
             <p className="fg-muted fg-lock-summary" aria-live="polite">
-              {lockLevel === "commitment"
-                ? `${LOCK_COPY[lockLevel]} It ends at ${new Date(
-                    Date.now() + (Number(durationText) || 25) * 60_000,
-                  ).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
-                : LOCK_COPY[lockLevel]}
+              {lockLevel === "strict"
+                ? hasPassword
+                  ? "Stopping early needs your password. You can still disable or remove the extension."
+                  : "Stopping early needs the phrase “I GIVE UP” and a 15-second wait. You can still disable or remove the extension."
+                : lockLevel === "commitment"
+                  ? `${LOCK_COPY[lockLevel]} The session ends at ${new Date(
+                      Date.now() + (Number(durationText) || 25) * 60_000,
+                    ).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+                  : LOCK_COPY[lockLevel]}
             </p>
-            {lockLevel !== "none" && (
-              <p className="fg-muted">
-                {lockLevel === "strict"
-                  ? "Start locked session"
-                  : "This session has no early-stop action."}
-              </p>
-            )}
             <Button type="submit" className="fg-button--wide">
               {lockLevel === "none" ? "Start focus" : "Start locked session"}
             </Button>

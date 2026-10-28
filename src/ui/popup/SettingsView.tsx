@@ -80,9 +80,17 @@ export function SettingsView({ state }: { state: AppState }) {
               A password can confirm ending a Strict session early. It does not
               prevent this extension from being disabled or removed.
             </p>
-            <Button variant="secondary" disabled title="Password controls are not ready yet.">
+            <Button
+              variant="secondary"
+              disabled
+              aria-describedby="password-controls-help"
+              title="Password controls are not ready yet."
+            >
               Change password
             </Button>
+            <p className="fg-muted" id="password-controls-help">
+              Password controls are not available yet.
+            </p>
             <p className="fg-muted">
               {state.password
                 ? "A password is set. Changing or removing it is not available yet."

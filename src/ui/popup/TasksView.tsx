@@ -165,6 +165,13 @@ export function TasksView({ state }: { state: AppState }) {
         <ul className="fg-list">
           {orderedTasks.map((task) => {
             const linkedAndRunning = runningTaskId === task.id;
+            const disabledReason =
+              state.session.status === "idle"
+                ? undefined
+                : linkedAndRunning
+                  ? "This task is linked to the running session. Its controls are available when the session ends."
+                  : "Finish the current session before starting or changing tasks.";
+            const disabledReasonId = `task-disabled-${task.id}`;
             const scheduleLabel = [
               task.scheduledDate,
               task.scheduledTime,
@@ -184,9 +191,9 @@ export function TasksView({ state }: { state: AppState }) {
                     )}
                     {linkedAndRunning && <Chip tone="warning">In session</Chip>}
                   </div>
-                  {linkedAndRunning && (
-                    <span className="fg-muted">
-                      This task is linked to the current session.
+                  {disabledReason && (
+                    <span className="fg-muted" id={disabledReasonId}>
+                      {disabledReason}
                     </span>
                   )}
                 </div>
@@ -196,9 +203,12 @@ export function TasksView({ state }: { state: AppState }) {
                       variant="secondary"
                       onClick={() => void startTask(task)}
                       disabled={state.session.status !== "idle"}
+                      aria-describedby={
+                        state.session.status !== "idle" ? disabledReasonId : undefined
+                      }
                       title={
                         state.session.status !== "idle"
-                          ? "End the current session before starting a task."
+                          ? "Finish the current session before starting a task."
                           : undefined
                       }
                     >
@@ -211,6 +221,9 @@ export function TasksView({ state }: { state: AppState }) {
                       aria-label={`${task.completed ? "Mark" : "Complete"} ${task.title}`}
                       onClick={() => void toggleCompleted(task)}
                       disabled={state.session.status !== "idle"}
+                      aria-describedby={
+                        state.session.status !== "idle" ? disabledReasonId : undefined
+                      }
                       title={
                         state.session.status !== "idle"
                           ? "Finish the current session before changing task status."
@@ -225,6 +238,9 @@ export function TasksView({ state }: { state: AppState }) {
                     aria-label={`Remove ${task.title}`}
                     onClick={() => setDeleteTarget(task)}
                     disabled={linkedAndRunning}
+                    aria-describedby={
+                      linkedAndRunning ? disabledReasonId : undefined
+                    }
                     title={
                       linkedAndRunning
                         ? "This task is linked to the running session."

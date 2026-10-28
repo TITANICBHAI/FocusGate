@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button } from "./primitives.tsx";
 
 type ToastTone = "success" | "error" | "info";
@@ -104,12 +104,17 @@ export function Modal({
   title: string;
   description?: string;
   onClose(): void;
-  children: ReactNode;
+  children?: ReactNode;
   actions?: ReactNode;
 }) {
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -122,7 +127,7 @@ export function Modal({
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== "Tab") return;
@@ -151,7 +156,7 @@ export function Modal({
       document.removeEventListener("keydown", onKeyDown);
       if (previous instanceof HTMLElement) previous.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
@@ -184,7 +189,9 @@ export function Modal({
             <span aria-hidden="true">×</span>
           </button>
         </header>
-        <div className="fg-modal__body">{children}</div>
+        {children !== undefined && (
+          <div className="fg-modal__body">{children}</div>
+        )}
         {actions && <footer className="fg-modal__actions">{actions}</footer>}
       </section>
     </div>
@@ -211,15 +218,11 @@ export function ConfirmDialog({
   onCancel(): void;
 }) {
   const onClose = useCallback(() => onCancel(), [onCancel]);
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter" && event.target === event.currentTarget) {
-      onConfirm();
-    }
-  };
   return (
     <Modal
       open={open}
       title={title}
+      description={message}
       onClose={onClose}
       actions={
         <>
@@ -231,8 +234,6 @@ export function ConfirmDialog({
           </Button>
         </>
       }
-    >
-      <div onKeyDown={onKeyDown}>{message}</div>
-    </Modal>
+    />
   );
 }

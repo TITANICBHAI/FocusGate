@@ -421,7 +421,7 @@ function KeywordsPanel({ state }: { state: AppState }) {
     <>
       <Card
         title="Add keywords"
-        description="Separate several words with commas or new lines."
+        description="Choose each keyword's action and when it applies. Separate words with commas or new lines."
       >
         <form className="fg-stack" onSubmit={addKeywords}>
           <Field id="keyword-list" label="Keywords">
@@ -580,7 +580,7 @@ function SchedulesPanel({ state }: { state: AppState }) {
     <>
       <Card
         title="Schedules"
-        description="Block your chosen lists on the days and hours you set."
+        description="Set recurring days and hours, then choose whether to use schedule-specific or global lists."
         actions={
           <Button
             onClick={() => {
@@ -1374,7 +1374,7 @@ function AllowanceRow({
       </div>
       <div className="fg-row">
         <Toggle
-          label={`Apply limit during blocks for ${domain}`}
+          label={`Count usage during blocks for ${domain}`}
           description="Count usage even when this site is blocked by another rule."
           checked={allowance.duringBlocks}
           onCheckedChange={(duringBlocks) => onChange({ ...allowance, duringBlocks })}
