@@ -77,14 +77,16 @@ export function SettingsView({ state }: { state: AppState }) {
         {section === "security" && (
           <Card title="Password">
             <p className="fg-muted">
-              A password protects selected actions. Password creation and
-              verification are being completed with the security work package.
+              A password can confirm ending a Strict session early. It cannot
+              prevent this extension from being disabled or removed.
             </p>
             <Button variant="secondary" disabled title="Password controls are not ready yet.">
-              Password controls
+              Change password
             </Button>
             <p className="fg-muted">
-              {state.password ? "A password record is present." : "No password is set."}
+              {state.password
+                ? "A password is set. Changing or removing it is not available yet."
+                : "No password is set."}
             </p>
           </Card>
         )}
@@ -269,16 +271,9 @@ export function SettingsView({ state }: { state: AppState }) {
             />
             <Toggle
               label="Play a sound"
+              description="Sound playback is not available in the staged block page."
               checked={state.settings.blockPage.sound}
-              onCheckedChange={(sound) =>
-                void updateSettings(
-                  (current) => ({
-                    ...current,
-                    blockPage: { ...current.blockPage, sound },
-                  }),
-                  "Block page setting saved.",
-                )
-              }
+              disabled
             />
           </Card>
         )}

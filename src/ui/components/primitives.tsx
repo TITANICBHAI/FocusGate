@@ -1,8 +1,15 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useId, useState } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useId,
+  useState,
+} from "react";
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
+  ReactElement,
   ReactNode,
 } from "react";
 
@@ -85,23 +92,69 @@ export function Field({
 }) {
   const helperId = `${id}-helper`;
   const errorId = `${id}-error`;
+  const descriptionIds = [
+    helper ? helperId : "",
+    error ? errorId : "",
+  ].filter(Boolean);
+  const describedChildren = connectFieldControls(
+    children,
+    descriptionIds,
+    error ? errorId : undefined,
+  );
   return (
     <div className={`fg-field ${className}`.trim()}>
       <label className="fg-field__label" htmlFor={id}>
         {label}
       </label>
-      {children}
-      {error ? (
-        <p className="fg-field__error" id={errorId}>
-          {error}
-        </p>
-      ) : helper ? (
+      {describedChildren}
+      {helper && (
         <p className="fg-field__helper" id={helperId}>
           {helper}
         </p>
-      ) : null}
+      )}
+      {error && (
+        <p className="fg-field__error" id={errorId}>
+          {error}
+        </p>
+      )}
     </div>
   );
+}
+
+function connectFieldControls(
+  children: ReactNode,
+  descriptionIds: string[],
+  errorId?: string,
+): ReactNode {
+  return Children.map(children, (child) => {
+    if (!isValidElement(child)) return child;
+    const props = child.props as {
+      children?: ReactNode;
+      "aria-describedby"?: string;
+      "aria-errormessage"?: string;
+      "aria-invalid"?: boolean;
+    };
+    if (
+      typeof child.type === "string" &&
+      ["input", "select", "textarea"].includes(child.type)
+    ) {
+      const describedBy = [
+        ...new Set([
+          ...(props["aria-describedby"]?.split(/\s+/).filter(Boolean) ?? []),
+          ...descriptionIds,
+        ]),
+      ].join(" ");
+      return cloneElement(child as ReactElement<Record<string, unknown>>, {
+        "aria-describedby": describedBy || undefined,
+        "aria-errormessage": errorId ?? props["aria-errormessage"],
+        "aria-invalid": errorId ? true : props["aria-invalid"],
+      });
+    }
+    if (!props.children) return child;
+    return cloneElement(child as ReactElement<{ children?: ReactNode }>, {
+      children: connectFieldControls(props.children, descriptionIds, errorId),
+    });
+  });
 }
 
 export function Toggle({
@@ -117,17 +170,23 @@ export function Toggle({
   onCheckedChange(checked: boolean): void;
   disabled?: boolean;
 }) {
+  const descriptionId = useId();
   return (
     <div className={`fg-toggle-row ${disabled ? "is-disabled" : ""}`}>
       <div className="fg-toggle-row__copy">
         <span className="fg-toggle-row__label">{label}</span>
-        {description && <span className="fg-muted">{description}</span>}
+        {description && (
+          <span className="fg-muted" id={descriptionId}>
+            {description}
+          </span>
+        )}
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         aria-label={label}
+        aria-describedby={description ? descriptionId : undefined}
         disabled={disabled}
         className={`fg-switch ${checked ? "is-on" : ""}`}
         onClick={() => onCheckedChange(!checked)}
@@ -265,7 +324,6 @@ export function PasswordField({
   placeholder?: string;
 }) {
   const [visible, setVisible] = useState(true);
-  const describedBy = useId();
   return (
     <Field id={id} label={label} helper="Used to verify this action.">
       <div className="fg-password-input">
@@ -276,7 +334,6 @@ export function PasswordField({
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          aria-describedby={describedBy}
         />
         <IconButton
           label={visible ? "Hide password" : "Show password"}

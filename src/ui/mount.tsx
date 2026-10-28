@@ -2,12 +2,16 @@ import { createRoot } from "react-dom/client";
 import type { ReactNode } from "react";
 import { ready } from "../shared/storage.ts";
 
-export function mountUiPage(page: ReactNode) {
+export function mountUiPage(
+  page: ReactNode,
+  { prepareMigratedStorage = true }: { prepareMigratedStorage?: boolean } = {},
+) {
   const container = document.getElementById("root");
   if (!container) throw new Error("FocusGate page is missing its root element.");
   const root = createRoot(container);
 
   if (
+    !prepareMigratedStorage ||
     typeof chrome === "undefined" ||
     !chrome.runtime?.id ||
     import.meta.env.DEV

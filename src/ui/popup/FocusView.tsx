@@ -100,6 +100,10 @@ export function FocusView({ state }: { state: AppState }) {
   const isBreak =
     state.session.status === "shortBreak" ||
     state.session.status === "longBreak";
+  const standaloneActive =
+    state.standalone.active &&
+    state.standalone.startsAt <= Date.now() &&
+    Date.now() < state.standalone.until;
   const hasConfiguredSites =
     state.blockedSites.length > 0 ||
     state.alwaysBlockedSites.length > 0 ||
@@ -203,6 +207,28 @@ export function FocusView({ state }: { state: AppState }) {
         idleDurationMin={Number(durationText) || state.settings.defaultDurationMin}
       />
 
+      <Card
+        title={standaloneActive ? "Standalone block active" : "Block now"}
+        description={
+          standaloneActive
+            ? `This block is scheduled to end at ${new Date(
+                state.standalone.until,
+              ).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+            : "Start a timed block without beginning a focus session."
+        }
+      >
+        <Button
+          variant="secondary"
+          disabled
+          title="Standalone block controls are not connected to the staged background runtime."
+        >
+          {standaloneActive ? "Block controls unavailable" : "Start a block"}
+        </Button>
+        <p className="fg-muted">
+          Standalone block controls will be enabled after the background runtime cutover.
+        </p>
+      </Card>
+
       {!isRunning ? (
         <form className="fg-stack" onSubmit={startFocus}>
           <Card title="Duration">
@@ -238,9 +264,13 @@ export function FocusView({ state }: { state: AppState }) {
                   setDurationText(event.target.value);
                   if (durationError) setDurationError("");
                 }}
-                onBlur={() => {
-                  if (durationText.trim()) validDuration();
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    validDuration();
+                  }
                 }}
+                onBlur={() => validDuration()}
               />
             </Field>
           </Card>

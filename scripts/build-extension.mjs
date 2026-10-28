@@ -17,6 +17,11 @@ await viteBuild({
   },
 });
 
+// Build WP5 UI pages separately; the active manifest still points to index.html.
+await viteBuild({
+  configFile: resolve(root, "vite.staged-ui.config.ts"),
+});
+
 await esbuild({
   absWorkingDir: root,
   entryPoints: ["src/background/index.ts"],

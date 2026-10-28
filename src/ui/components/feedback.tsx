@@ -76,6 +76,22 @@ export function useToast(): ToastAction {
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+function getFocusable(panel: HTMLElement | null): HTMLElement[] {
+  return Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
+    (element) => {
+      if (element.tabIndex < 0 || element.closest("[hidden], [inert], [aria-hidden='true']")) {
+        return false;
+      }
+      const style = window.getComputedStyle(element);
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        element.getClientRects().length > 0
+      );
+    },
+  );
+}
+
 export function Modal({
   open,
   title,
@@ -99,9 +115,9 @@ export function Modal({
     if (!open) return;
     const previous = document.activeElement;
     const panel = panelRef.current;
-    const focusables = () =>
-      Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
-    (focusables()[0] ?? panel)?.focus();
+    const focusables = () => getFocusable(panel);
+    const initial = focusables().find((element) => element.hasAttribute("autofocus"));
+    (initial ?? focusables()[0] ?? panel)?.focus();
 
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -118,10 +134,14 @@ export function Modal({
       }
       const first = items[0];
       const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      const active = document.activeElement;
+      if (active === panel || !panel?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first)?.focus();
+      } else if (event.shiftKey && active === first) {
         event.preventDefault();
         last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && active === last) {
         event.preventDefault();
         first?.focus();
       }

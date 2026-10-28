@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type {
   Allowance,
@@ -135,6 +135,19 @@ function SitesPanel({ state }: { state: AppState }) {
     );
   }
 
+  function schedulesForSite(domain: string): Schedule[] {
+    return state.schedules.filter(
+      (schedule) =>
+        schedule.enabled &&
+        (schedule.sites.some(
+          (site) => matchesDomain(domain, site) || matchesDomain(site, domain),
+        ) ||
+          (schedule.useGlobalLists &&
+            (state.blockedSites.includes(domain) ||
+              state.alwaysBlockedSites.includes(domain)))),
+    );
+  }
+
   return (
     <>
       <Card
@@ -193,6 +206,11 @@ function SitesPanel({ state }: { state: AppState }) {
                         {siteMode === "always" ? "Always" : "Focus"}
                       </Chip>
                     ))}
+                    {schedulesForSite(domain).map((schedule) => (
+                      <Chip key={schedule.id} tone="neutral">
+                        Schedule: {schedule.name}
+                      </Chip>
+                    ))}
                     {isBlockedNow(domain) && <Chip tone="accent">Blocked now</Chip>}
                   </div>
                 </div>
@@ -233,7 +251,19 @@ function UrlCheck({ state }: { state: AppState }) {
           return;
         }
         const reason = computeBlockPlan(state, Date.now());
-        const parsed = new URL(value);
+        let parsed: URL;
+        try {
+          parsed = new URL(value);
+        } catch {
+          setError("Enter a complete http or https URL.");
+          setResult(null);
+          return;
+        }
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          setError("Enter a complete http or https URL.");
+          setResult(null);
+          return;
+        }
         const domain = normalizeDomain(parsed.hostname);
         if (!domain) {
           setError("Enter a valid website address.");
@@ -476,20 +506,26 @@ function KeywordsPanel({ state }: { state: AppState }) {
 function SchedulesPanel({ state }: { state: AppState }) {
   const showToast = useToast();
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("17:00");
   const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [formError, setFormError] = useState("");
 
   async function addSchedule(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanName = name.trim();
-    if (!cleanName || days.length === 0) {
-      showToast("Add a name and choose at least one day.", "error");
+    if (!cleanName) {
+      setFormError("Enter a name for this schedule.");
+      return;
+    }
+    if (days.length === 0) {
+      setFormError("Choose at least one day.");
       return;
     }
     if (!isClockTime(start) || !isClockTime(end, true)) {
-      showToast("Use a valid start time and an end time up to 24:00.", "error");
+      setFormError("Use a valid start time and an end time up to 24:00.");
       return;
     }
     const schedule: Schedule = {
@@ -507,6 +543,7 @@ function SchedulesPanel({ state }: { state: AppState }) {
       await uiStorageStore.set("schedules", (latest) => [...latest, schedule]);
       setName("");
       setAddOpen(false);
+      setFormError("");
       showToast("Schedule added.", "success");
     } catch {
       showToast("The schedule could not be saved.", "error");
@@ -525,18 +562,50 @@ function SchedulesPanel({ state }: { state: AppState }) {
     }
   }
 
+  async function deleteSchedule() {
+    if (!deleteId) return;
+    try {
+      await uiStorageStore.set("schedules", (latest) =>
+        latest.filter((schedule) => schedule.id !== deleteId),
+      );
+      showToast("Schedule deleted.", "success");
+    } catch {
+      showToast("The schedule could not be deleted.", "error");
+    } finally {
+      setDeleteId(null);
+    }
+  }
+
   return (
     <>
       <Card
         title="Schedules"
         description="Block your chosen lists on the days and hours you set."
-        actions={<Button onClick={() => setAddOpen(true)}>Add schedule</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setFormError("");
+              setAddOpen(true);
+            }}
+          >
+            Add schedule
+          </Button>
+        }
       >
         {state.schedules.length === 0 ? (
           <EmptyState
             title="No schedules"
             description="Add a schedule to set recurring block hours."
-            action={<Button onClick={() => setAddOpen(true)}>Add schedule</Button>}
+            action={
+              <Button
+                onClick={() => {
+                  setFormError("");
+                  setAddOpen(true);
+                }}
+              >
+                Add schedule
+              </Button>
+            }
           />
         ) : (
           <ul className="fg-list">
@@ -544,7 +613,13 @@ function SchedulesPanel({ state }: { state: AppState }) {
               <li className="fg-list-item fg-list-item--column" key={schedule.id}>
                 <div className="fg-row">
                   <div className="fg-list-item__copy">
-                    <strong>{schedule.name}</strong>
+                    <ScheduleNameField
+                      id={`schedule-name-${schedule.id}`}
+                      value={schedule.name}
+                      onCommit={(nextName) =>
+                        void updateSchedule(schedule.id, { name: nextName })
+                      }
+                    />
                     <span className="fg-muted">
                       {schedule.days.map((day) => WEEKDAYS[day]).join(", ")} · {schedule.start}–{schedule.end}
                     </span>
@@ -561,35 +636,34 @@ function SchedulesPanel({ state }: { state: AppState }) {
                   <Chip>{schedule.sites.length ? `${schedule.sites.length} custom sites` : "Use global lists"}</Chip>
                   {schedule.useGlobalLists && <Chip tone="accent">Also block global lists</Chip>}
                 </div>
+                <ScheduleListEditor
+                  schedule={schedule}
+                  onUpdate={(changes) => void updateSchedule(schedule.id, changes)}
+                />
                 <div className="fg-grid-two">
-                  <Field id={`schedule-start-${schedule.id}`} label="Start">
-                    <input
-                      id={`schedule-start-${schedule.id}`}
-                      type="time"
-                      value={schedule.start}
-                      onChange={(event) =>
-                        void updateSchedule(schedule.id, { start: event.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field id={`schedule-end-${schedule.id}`} label="End">
-                    <input
-                      id={`schedule-end-${schedule.id}`}
-                      type="text"
-                      inputMode="numeric"
-                      value={schedule.end}
-                      onChange={(event) =>
-                        void updateSchedule(schedule.id, { end: event.target.value })
-                      }
-                      onBlur={(event) => {
-                        if (isClockTime(event.target.value, true)) return;
-                        void updateSchedule(schedule.id, { end: "17:00" });
-                        showToast("Enter a valid end time or 24:00.", "info");
-                      }}
-                    />
-                  </Field>
+                  <ScheduleTimeField
+                    id={`schedule-start-${schedule.id}`}
+                    label="Start"
+                    value={schedule.start}
+                    onCommit={(value) =>
+                      void updateSchedule(schedule.id, { start: value })
+                    }
+                  />
+                  <ScheduleTimeField
+                    id={`schedule-end-${schedule.id}`}
+                    label="End"
+                    value={schedule.end}
+                    allowEndOfDay
+                    onCommit={(value) =>
+                      void updateSchedule(schedule.id, { end: value })
+                    }
+                  />
                 </div>
-                <div className="fg-wrap" aria-label={`Days for ${schedule.name}`}>
+                <div
+                  className="fg-wrap"
+                  role="group"
+                  aria-label={`Days for ${schedule.name}`}
+                >
                   {WEEKDAYS.map((day, index) => (
                     <button
                       className={`fg-day-chip ${schedule.days.includes(index) ? "is-selected" : ""}`}
@@ -600,16 +674,20 @@ function SchedulesPanel({ state }: { state: AppState }) {
                         const next = schedule.days.includes(index)
                           ? schedule.days.filter((value) => value !== index)
                           : [...schedule.days, index].sort();
-                        if (next.length === 0) {
-                          showToast("A schedule needs at least one day.", "info");
-                          return;
-                        }
                         void updateSchedule(schedule.id, { days: next });
                       }}
                     >
                       {day}
                     </button>
                   ))}
+                </div>
+                <div className="fg-list-item__actions">
+                  <Button
+                    variant="danger"
+                    onClick={() => setDeleteId(schedule.id)}
+                  >
+                    Delete schedule
+                  </Button>
                 </div>
               </li>
             ))}
@@ -659,28 +737,39 @@ function SchedulesPanel({ state }: { state: AppState }) {
               />
             </Field>
           </div>
-          <div className="fg-wrap" aria-label="Schedule days">
+          <div className="fg-wrap" role="group" aria-label="Schedule days">
             {WEEKDAYS.map((day, index) => (
               <button
                 className={`fg-day-chip ${days.includes(index) ? "is-selected" : ""}`}
                 key={day}
                 type="button"
                 aria-pressed={days.includes(index)}
-                onClick={() =>
+                onClick={() => {
                   setDays((current) =>
                     current.includes(index)
                       ? current.filter((value) => value !== index)
                       : [...current, index].sort(),
-                  )
-                }
+                  );
+                  setFormError("");
+                }}
               >
                 {day}
               </button>
             ))}
           </div>
           <p className="fg-muted">End time 24:00 means midnight at the end of the selected day.</p>
+          {formError && <p className="fg-field__error" role="alert">{formError}</p>}
         </form>
       </Modal>
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Delete this schedule?"
+        message="This removes its recurring schedule and list associations."
+        confirmLabel="Delete schedule"
+        danger
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => void deleteSchedule()}
+      />
     </>
   );
 }
@@ -691,41 +780,307 @@ function isClockTime(value: string, allowEndOfDay = false): boolean {
   return Boolean(match);
 }
 
+function ScheduleNameField({
+  id,
+  value,
+  onCommit,
+}: {
+  id: string;
+  value: string;
+  onCommit(value: string): void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState("");
+  useEffect(() => setDraft(value), [value]);
+  return (
+    <Field id={id} label="Schedule name" error={error}>
+      <input
+        id={id}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => {
+          const clean = draft.trim();
+          if (!clean) {
+            setError("A schedule name is required.");
+            setDraft(value);
+            return;
+          }
+          setError("");
+          if (clean !== value) onCommit(clean);
+        }}
+      />
+    </Field>
+  );
+}
+
+function ScheduleTimeField({
+  id,
+  label,
+  value,
+  allowEndOfDay = false,
+  onCommit,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  allowEndOfDay?: boolean;
+  onCommit(value: string): void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    setDraft(value);
+    setError("");
+  }, [value]);
+  return (
+    <Field
+      id={id}
+      label={label}
+      helper={allowEndOfDay ? "Use 24:00 for midnight." : undefined}
+      error={error}
+    >
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => {
+          if (!isClockTime(draft, allowEndOfDay)) {
+            setError(
+              allowEndOfDay
+                ? "Enter a valid time or 24:00."
+                : "Enter a valid time from 00:00 to 23:59.",
+            );
+            return;
+          }
+          setError("");
+          if (draft !== value) onCommit(draft);
+        }}
+      />
+    </Field>
+  );
+}
+
+function ScheduleListEditor({
+  schedule,
+  onUpdate,
+}: {
+  schedule: Schedule;
+  onUpdate(changes: Partial<Schedule>): void;
+}) {
+  const [siteDraft, setSiteDraft] = useState("");
+  const [keywordDraft, setKeywordDraft] = useState("");
+  const [error, setError] = useState("");
+
+  function addSite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const domain = normalizeDomain(siteDraft);
+    if (!domain) {
+      setError("Enter a valid website address or domain.");
+      return;
+    }
+    if (schedule.sites.includes(domain)) {
+      setError("That site is already in this schedule.");
+      return;
+    }
+    onUpdate({ sites: [...schedule.sites, domain] });
+    setSiteDraft("");
+    setError("");
+  }
+
+  function addKeyword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const keyword = keywordDraft.trim();
+    if (!keyword) {
+      setError("Enter a keyword.");
+      return;
+    }
+    if (
+      schedule.keywords.some(
+        (current) => current.toLocaleLowerCase() === keyword.toLocaleLowerCase(),
+      )
+    ) {
+      setError("That keyword is already in this schedule.");
+      return;
+    }
+    onUpdate({ keywords: [...schedule.keywords, keyword] });
+    setKeywordDraft("");
+    setError("");
+  }
+
+  return (
+    <div className="fg-stack fg-schedule-lists">
+      <Toggle
+        label="Use global site and keyword lists"
+        description="Include your Focus and keyword rules while this schedule is active."
+        checked={schedule.useGlobalLists}
+        onCheckedChange={(useGlobalLists) => onUpdate({ useGlobalLists })}
+      />
+      <form className="fg-inline-form" onSubmit={addSite}>
+        <input
+          aria-label={`Add site to ${schedule.name}`}
+          value={siteDraft}
+          placeholder="Add a schedule-specific site"
+          onChange={(event) => {
+            setSiteDraft(event.target.value);
+            if (error) setError("");
+          }}
+        />
+        <Button type="submit" variant="secondary">Add site</Button>
+      </form>
+      {schedule.sites.length > 0 && (
+        <ul className="fg-wrap fg-chip-list" aria-label={`Sites in ${schedule.name}`}>
+          {schedule.sites.map((site) => (
+            <li key={site}>
+              <Chip>
+                {site}
+                <button
+                  type="button"
+                  aria-label={`Remove ${site} from ${schedule.name}`}
+                  onClick={() =>
+                    onUpdate({ sites: schedule.sites.filter((item) => item !== site) })
+                  }
+                >
+                  ×
+                </button>
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form className="fg-inline-form" onSubmit={addKeyword}>
+        <input
+          aria-label={`Add keyword to ${schedule.name}`}
+          value={keywordDraft}
+          placeholder="Add a schedule-specific keyword"
+          onChange={(event) => {
+            setKeywordDraft(event.target.value);
+            if (error) setError("");
+          }}
+        />
+        <Button type="submit" variant="secondary">Add keyword</Button>
+      </form>
+      {schedule.keywords.length > 0 && (
+        <ul className="fg-wrap fg-chip-list" aria-label={`Keywords in ${schedule.name}`}>
+          {schedule.keywords.map((keyword) => (
+            <li key={keyword}>
+              <Chip>
+                {keyword}
+                <button
+                  type="button"
+                  aria-label={`Remove keyword ${keyword} from ${schedule.name}`}
+                  onClick={() =>
+                    onUpdate({
+                      keywords: schedule.keywords.filter((item) => item !== keyword),
+                    })
+                  }
+                >
+                  ×
+                </button>
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <p className="fg-field__error" role="alert">{error}</p>}
+    </div>
+  );
+}
+
 function LimitsPanel({ state }: { state: AppState }) {
   const showToast = useToast();
   const entries = Object.entries(state.allowances);
   const [addOpen, setAddOpen] = useState(false);
   const [domainInput, setDomainInput] = useState("");
-  const [domainError, setDomainError] = useState("");
+  const [mode, setMode] = useState<Allowance["mode"]>("time_budget");
+  const [amount, setAmount] = useState("60");
+  const [period, setPeriod] = useState("30");
+  const [formError, setFormError] = useState("");
+
+  function chooseMode(nextMode: Allowance["mode"]) {
+    setMode(nextMode);
+    setAmount(nextMode === "time_budget" ? "60" : nextMode === "count" ? "5" : "5");
+    setPeriod("30");
+    setFormError("");
+  }
+
   async function addLimit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalized = normalizeDomain(domainInput);
     if (!normalized) {
-      setDomainError("Enter a valid website address or domain.");
+      setFormError("Enter a valid website address or domain.");
       return;
     }
+    const amountValue = Number(amount);
+    const periodValue = Number(period);
+    const maxAmount = mode === "count" ? 10_000 : 1_440;
+    if (!Number.isInteger(amountValue) || amountValue < 1 || amountValue > maxAmount) {
+      setFormError(`Enter a whole number from 1 to ${maxAmount}.`);
+      return;
+    }
+    if (
+      mode === "interval" &&
+      (!Number.isInteger(periodValue) || periodValue < 1 || periodValue > 1_440)
+    ) {
+      setFormError("Enter an interval from 1 to 1440 minutes.");
+      return;
+    }
+    let alreadyExists = false;
     try {
       await uiStorageStore.set("allowances", (latest) => ({
         ...latest,
-        [normalized]: {
-          mode: "time_budget",
-          limitMin: 60,
-          duringBlocks: false,
-        },
+        ...(latest[normalized]
+          ? ((alreadyExists = true), {})
+          : {
+              [normalized]:
+                mode === "time_budget"
+                  ? {
+                      mode,
+                      limitMin: amountValue,
+                      duringBlocks: false,
+                    }
+                  : mode === "count"
+                    ? {
+                        mode,
+                        maxOpens: amountValue,
+                        duringBlocks: false,
+                      }
+                    : {
+                        mode,
+                        allowMin: amountValue,
+                        everyMin: periodValue,
+                        duringBlocks: false,
+                      },
+            }),
       }));
+      if (alreadyExists) {
+        setFormError("A limit already exists for this site. Edit it in the list.");
+        return;
+      }
       setDomainInput("");
-      setDomainError("");
+      setFormError("");
       setAddOpen(false);
-      showToast("A 60-minute daily limit was added.", "success");
+      showToast("Daily limit added.", "success");
     } catch {
       showToast("The limit could not be saved.", "error");
     }
   }
+
   return (
     <Card
       title="Daily limits"
-      description="Set a daily allowance before pages are blocked until midnight."
-      actions={<Button onClick={() => setAddOpen(true)}>Add limit</Button>}
+      description="Choose daily time or page-open caps, or a recurring time allowance."
+      actions={
+        <Button
+          onClick={() => {
+            setFormError("");
+            setAddOpen(true);
+          }}
+        >
+          Add limit
+        </Button>
+      }
     >
       {entries.length === 0 ? (
         <EmptyState
@@ -740,7 +1095,8 @@ function LimitsPanel({ state }: { state: AppState }) {
               key={domain}
               domain={domain}
               allowance={allowance}
-              used={state.usage[domain]?.usedMs ?? 0}
+              usedMs={state.usage[domain]?.usedMs ?? 0}
+              opens={state.usage[domain]?.opens ?? 0}
               onRemove={async () => {
                 try {
                   await uiStorageStore.set("allowances", (latest) => {
@@ -776,18 +1132,30 @@ function LimitsPanel({ state }: { state: AppState }) {
             <Button variant="secondary" onClick={() => setAddOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" form="limit-form">
+          <Button type="submit" form="limit-form">
               Add limit
             </Button>
           </>
         }
       >
         <form id="limit-form" className="fg-stack" onSubmit={addLimit}>
+          <Field id="limit-mode" label="Limit type">
+            <select
+              id="limit-mode"
+              value={mode}
+              onChange={(event) =>
+                chooseMode(event.target.value as Allowance["mode"])
+              }
+            >
+              <option value="time_budget">Minutes per day</option>
+              <option value="count">Page opens per day</option>
+              <option value="interval">Minutes in each interval</option>
+            </select>
+          </Field>
           <Field
             id="limit-domain"
             label="Website or URL"
-            helper="The limit starts at 60 minutes per day."
-            error={domainError}
+            helper="Enter a site-specific domain."
           >
             <input
               id="limit-domain"
@@ -795,11 +1163,72 @@ function LimitsPanel({ state }: { state: AppState }) {
               placeholder="example.com"
               onChange={(event) => {
                 setDomainInput(event.target.value);
-                if (domainError) setDomainError("");
+                if (formError) setFormError("");
               }}
               required
             />
           </Field>
+          <Field
+            id="limit-amount"
+            label={
+              mode === "time_budget"
+                ? "Minutes allowed per day"
+                : mode === "count"
+                  ? "Page opens allowed per day"
+                  : "Minutes allowed per interval"
+            }
+          >
+            <input
+              id="limit-amount"
+              type="number"
+              min={1}
+              max={mode === "count" ? 10_000 : 1_440}
+              value={amount}
+              onChange={(event) => {
+                setAmount(event.target.value);
+                if (formError) setFormError("");
+              }}
+              required
+            />
+          </Field>
+          <div className="fg-wrap" role="group" aria-label="Limit presets">
+            {(mode === "time_budget"
+              ? [15, 30, 60, 120]
+              : mode === "count"
+                ? [3, 5, 10, 20]
+                : [2, 5, 10]
+            ).map((preset) => (
+              <button
+                className={`fg-duration-chip ${amount === String(preset) ? "is-selected" : ""}`}
+                type="button"
+                key={preset}
+                aria-pressed={amount === String(preset)}
+                onClick={() => {
+                  setAmount(String(preset));
+                  setFormError("");
+                }}
+              >
+                {mode === "count" ? `${preset} opens` : `${preset} min`}
+              </button>
+            ))}
+          </div>
+          {mode === "interval" && (
+            <Field id="limit-period" label="Interval length in minutes">
+              <input
+                id="limit-period"
+                type="number"
+                min={1}
+                max={1_440}
+                value={period}
+                onChange={(event) => {
+                  setPeriod(event.target.value);
+                  if (formError) setFormError("");
+                }}
+                required
+              />
+            </Field>
+          )}
+          {formError && <p className="fg-field__error" role="alert">{formError}</p>}
         </form>
       </Modal>
     </Card>
@@ -809,59 +1238,156 @@ function LimitsPanel({ state }: { state: AppState }) {
 function AllowanceRow({
   domain,
   allowance,
-  used,
+  usedMs,
+  opens,
   onRemove,
   onChange,
 }: {
   domain: string;
   allowance: Allowance;
-  used: number;
+  usedMs: number;
+  opens: number;
   onRemove(): void;
   onChange(value: Allowance): void;
 }) {
-  const limitValue =
-    allowance.mode === "time_budget"
-      ? allowance.limitMin
-      : allowance.mode === "count"
-        ? allowance.maxOpens
-        : allowance.allowMin;
+  const [amountDraft, setAmountDraft] = useState(String(allowanceValue(allowance)));
+  const [periodDraft, setPeriodDraft] = useState(
+    allowance.mode === "interval" ? String(allowance.everyMin) : "30",
+  );
+  const [error, setError] = useState("");
+  useEffect(() => {
+    setAmountDraft(String(allowanceValue(allowance)));
+    setPeriodDraft(
+      allowance.mode === "interval" ? String(allowance.everyMin) : "30",
+    );
+    setError("");
+  }, [allowance]);
+
+  const limitValue = allowanceValue(allowance);
   const usedValue =
-    allowance.mode === "time_budget"
-      ? Math.floor(used / 60_000)
-      : allowance.mode === "count"
-        ? 0
-        : allowance.allowMin;
+    allowance.mode === "count" ? opens : Math.floor(usedMs / 60_000);
   const progress = Math.max(0, Math.min(1, usedValue / Math.max(1, limitValue)));
+  const usageLabel =
+    allowance.mode === "count"
+      ? `${usedValue} of ${limitValue} opens used`
+      : allowance.mode === "interval"
+        ? `${usedValue} of ${limitValue} minutes used in this interval`
+        : `${usedValue} of ${limitValue} minutes used today`;
+
+  function setMode(nextMode: Allowance["mode"]) {
+    const next: Allowance =
+      nextMode === "time_budget"
+        ? { mode: nextMode, limitMin: 60, duringBlocks: allowance.duringBlocks }
+        : nextMode === "count"
+          ? { mode: nextMode, maxOpens: 5, duringBlocks: allowance.duringBlocks }
+          : {
+              mode: nextMode,
+              allowMin: 5,
+              everyMin: 30,
+              duringBlocks: allowance.duringBlocks,
+            };
+    setAmountDraft(String(allowanceValue(next)));
+    setPeriodDraft(next.mode === "interval" ? String(next.everyMin) : "30");
+    setError("");
+    onChange(next);
+  }
+
+  function saveValues() {
+    const amount = Number(amountDraft);
+    const period = Number(periodDraft);
+    const max = allowance.mode === "count" ? 10_000 : 1_440;
+    if (!Number.isInteger(amount) || amount < 1 || amount > max) {
+      setError(`Enter a whole number from 1 to ${max}.`);
+      return;
+    }
+    if (
+      allowance.mode === "interval" &&
+      (!Number.isInteger(period) || period < 1 || period > 1_440)
+    ) {
+      setError("Enter an interval from 1 to 1440 minutes.");
+      return;
+    }
+    setError("");
+    onChange(
+      allowance.mode === "time_budget"
+        ? { ...allowance, limitMin: amount }
+        : allowance.mode === "count"
+          ? { ...allowance, maxOpens: amount }
+          : { ...allowance, allowMin: amount, everyMin: period },
+    );
+  }
+
   return (
     <li className="fg-list-item fg-list-item--column">
       <div className="fg-row">
         <div className="fg-list-item__copy">
           <strong>{domain}</strong>
-          <span className="fg-muted">
-            {allowance.mode === "time_budget"
-              ? `${allowance.limitMin} minutes per day`
-              : allowance.mode === "count"
-                ? `${allowance.maxOpens} opens per day`
-                : `${allowance.allowMin} minutes every ${allowance.everyMin} minutes`}
-          </span>
+          <span className="fg-muted">{usageLabel}</span>
         </div>
         <Button variant="quiet" onClick={onRemove} aria-label={`Remove limit for ${domain}`}>
           Remove
         </Button>
       </div>
-      <div className="fg-limit-bar" role="img" aria-label={`${usedValue} of ${limitValue} used`}>
+      <Field id={`allowance-mode-${domain}`} label="Limit type">
+        <select
+          id={`allowance-mode-${domain}`}
+          value={allowance.mode}
+          onChange={(event) => setMode(event.target.value as Allowance["mode"])}
+        >
+          <option value="time_budget">Minutes per day</option>
+          <option value="count">Page opens per day</option>
+          <option value="interval">Minutes in each interval</option>
+        </select>
+      </Field>
+      <div className="fg-grid-two">
+        <Field
+          id={`allowance-value-${domain}`}
+          label={allowance.mode === "count" ? "Opens allowed" : "Minutes allowed"}
+          error={error || undefined}
+        >
+          <input
+            id={`allowance-value-${domain}`}
+            type="number"
+            min={1}
+            max={allowance.mode === "count" ? 10_000 : 1_440}
+            value={amountDraft}
+            onChange={(event) => setAmountDraft(event.target.value)}
+            onBlur={saveValues}
+          />
+        </Field>
+        {allowance.mode === "interval" && (
+          <Field id={`allowance-period-${domain}`} label="Interval length">
+            <input
+              id={`allowance-period-${domain}`}
+              type="number"
+              min={1}
+              max={1_440}
+              value={periodDraft}
+              onChange={(event) => setPeriodDraft(event.target.value)}
+              onBlur={saveValues}
+            />
+          </Field>
+        )}
+      </div>
+      <div className="fg-limit-bar" role="img" aria-label={usageLabel}>
         <span style={{ width: `${progress * 100}%` }} />
       </div>
       <div className="fg-row">
-        <span className="fg-muted">Also applies during blocks</span>
         <Toggle
           label={`Apply limit during blocks for ${domain}`}
+          description="Count usage even when this site is blocked by another rule."
           checked={allowance.duringBlocks}
-          onCheckedChange={(duringBlocks) =>
-            onChange({ ...allowance, duringBlocks } as Allowance)
-          }
+          onCheckedChange={(duringBlocks) => onChange({ ...allowance, duringBlocks })}
         />
       </div>
     </li>
   );
+}
+
+function allowanceValue(allowance: Allowance): number {
+  return allowance.mode === "time_budget"
+    ? allowance.limitMin
+    : allowance.mode === "count"
+      ? allowance.maxOpens
+      : allowance.allowMin;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   BarChart3,
+  LayoutDashboard,
   ListTodo,
   Settings2,
   Shield,
@@ -13,6 +14,7 @@ import type { TabOption } from "../components/Tabs.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
+import { activeScheduleAt } from "../lib/scheduleStatus.ts";
 import { ThemeRoot } from "../theme.tsx";
 import { FocusView } from "./FocusView.tsx";
 import { RulesView } from "./RulesView.tsx";
@@ -66,6 +68,18 @@ function PopupShell() {
             />
           )}
           {status}
+          {!locked && (
+            <a
+              className="fg-dashboard-link"
+              href="./dashboard.html"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open the full FocusGate dashboard in a new tab"
+              title="Open full dashboard"
+            >
+              <LayoutDashboard aria-hidden="true" />
+            </a>
+          )}
         </div>
       </header>
       <main
@@ -108,6 +122,7 @@ function PopupScreen({
 
 function StatusChip({ state }: { state: AppState }) {
   const [now, setNow] = useState(() => Date.now());
+  const activeSchedule = activeScheduleAt(state.schedules, now);
   // Only this small header chip and the ring timer update once per second.
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1_000);
@@ -132,20 +147,7 @@ function StatusChip({ state }: { state: AppState }) {
     label = "Block now";
     active = true;
     until = state.standalone.until;
-  } else if (
-    state.schedules.some((schedule) => {
-      if (!schedule.enabled || !schedule.days.includes(new Date(now).getDay())) {
-        return false;
-      }
-      const current = new Date(now);
-      const currentMinutes = current.getHours() * 60 + current.getMinutes();
-      const [startHour, startMinute] = schedule.start.split(":").map(Number);
-      const [endHour, endMinute] = schedule.end.split(":").map(Number);
-      const startMinutes = startHour * 60 + startMinute;
-      const endMinutes = endHour * 60 + endMinute;
-      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
-    })
-  ) {
+  } else if (activeSchedule) {
     label = "Schedule";
     active = true;
   }
@@ -155,7 +157,10 @@ function StatusChip({ state }: { state: AppState }) {
     remaining % 60,
   ).padStart(2, "0")}`;
   return (
-    <span className={`fg-status ${active ? "is-active" : ""}`}>
+    <span
+      className={`fg-status ${active ? "is-active" : ""}`}
+      title={activeSchedule ? `Scheduled block: ${activeSchedule.name}` : undefined}
+    >
       {label}
       {active && until > now && ` ${time}`}
     </span>
