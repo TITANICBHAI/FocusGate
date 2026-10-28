@@ -26,6 +26,7 @@ These rules bind every implementing agent in addition to everything below. They 
 10. **Test style.** Use behavior tests with fake clocks and event sources. Do not add tests that read Kotlin source files as text. Logic under test must not call the system wall clock directly.
 11. **Tracker discipline.** Follow the tracker rules at the top of `fixes/TRACKER.md`: record dated phase starts, update after meaningful changes and each check, tick only complete-and-verified work, record evidence and failures, preserve history, and reconcile the tracker with reality before finishing.
 12. **Phase checkpoints.** Work on one work package at a time. At each phase boundary, stop and report; do not begin the next phase until the current phase's completion conditions and required checks pass. Respect all dependency gates in §6 and §9.
+13. **Preserve work outside the authorized batch.** Do not delete, revert, replace, or clean up files or work outside the currently owner-authorized work package/batch, including work from another agent or an earlier batch. A removal must be explicitly required by the active authorized scope and its plan gates; otherwise leave it untouched and ask the owner if it blocks progress.
 
 ---
 

@@ -27,6 +27,7 @@ Confirm current APIs and behavior rather than assuming the plan's code snapshot 
 
 - Work alone. Do not create, invoke, or delegate to sub-agents.
 - Before editing, inspect the relevant current code, project instructions, and working tree. Preserve unrelated changes and user data.
+- Scope preservation: do not delete, revert, replace, or clean up files or work outside the currently owner-authorized work package/batch, including work from another agent or an earlier batch. A removal must be explicitly required by the active authorized scope and its plan gates; otherwise leave it untouched and ask the owner if it blocks progress.
 - Respect the plan's no-touch list unless the owner explicitly changes the scope. Do not hand-edit `dist/`, blindly recreate files missing from the upload, or port anything on the plan's “Do not port” list, including telemetry or the Discord webhook. Do not overwrite the separate root `plan/` folder.
 - Treat task replacement and any other deletion of user data as destructive. Keep replacement disabled by default, preserve explicit confirmation and safety guards, and do not perform destructive actions without owner authorization.
 - For this browser-extension repository, run relevant checks on Replit using its existing workflows or scripts; use the applicable npm checks (`npm run typecheck`, `npm test`, `npm run build`). Do not run Android tests or build APKs here. If APK-building verification is explicitly requested, use GitHub Actions only when the owner asks; otherwise state clearly which checks were not run.
@@ -45,7 +46,7 @@ Follow the rules at the top of `fixes/TRACKER.md`:
 - Preserve failures, blockers, decisions, and deferred work; append outcomes instead of erasing history.
 - Before finishing, reconcile the tracker with current code and observed evidence. Explain why any item remains incomplete.
 
-The owner reset the tracker after confirming prior completion claims were inaccurate. Treat the tracker as 0/156 complete; do not rely on prior completion or pass claims. Reinspect the current code and record fresh evidence for each item after authorization.
+The owner later clarified that the reset must not erase verified non-browser work. Use the current checkmarks and progress in `fixes/TRACKER.md`; never blanket-reset progress. Reconcile each item against current source and evidence, and keep browser/runtime gates open until their behavior is directly observed.
 
 ## Final report
 
