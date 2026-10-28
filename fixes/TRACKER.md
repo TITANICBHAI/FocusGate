@@ -6,7 +6,7 @@
 
 - **Status:** IN PROGRESS
 - **Progress:** 34% (53/156 required checklist items currently verified)
-- **Current work package:** WP5 — UI foundation and screen fixes
+- **Current work package:** WP6 — staged security, standalone, protection, and backup work
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -39,8 +39,8 @@
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
 | WP3 — Blocking engine | IN PROGRESS | 10/22 | 2026-10-28 | — | WP3.5 alias UI; WP3.10 active v1 fallback removal; browser AC/S1 |
 | WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
-| WP5 — UI foundation and screen fixes | IN PROGRESS | 11/18 | 2026-10-28 | — | Accessibility/copy pass, legacy v1 cleanup, browser acceptance and gated cutover |
-| WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
+| WP5 — UI foundation and screen fixes | BLOCKED — owner authorized WP6 staged work; verification/cutover remain open | 11/18 | 2026-10-28 | — | WP1b/WP4 browser evidence, active-v1 copy audit, accessibility and atomic cutover |
+| WP6 — Security, standalone, protection, backup | IN PROGRESS | 0/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
@@ -541,7 +541,7 @@
 
 ## WP5 — UI foundation and screen fixes
 
-**Plan:** §6 WP5, Appendix C · **Blocked by:** WP4 browser/runtime gates (owner authorized staged UI work only) · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 11/18
+**Plan:** §6 WP5, Appendix C · **Blocked by:** WP1b/WP4 browser/runtime gates and atomic cutover · **Status:** BLOCKED — owner authorized WP6 staged work; verification/cutover remain open · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 11/18
 
 ### Tasks
 
@@ -663,18 +663,19 @@
 **Decisions / deferred work:**
 - Stage UI pages/components and deterministic checks without changing the active v1 popup/manifest/worker/content entrypoints.
 - Defer v2 activation, `ready()` migration on runtime entrypoints, legacy consumer deletion, and atomic cutover until the browser gates pass.
+- 2026-10-28 — Owner authorized proceeding to staged WP6 work. WP5 staged-source implementation has no remaining identified gap; WP5.11 (active-v1 copy audit), WP5.12 (keyboard/Lighthouse/browser verification), WP5.13 (legacy removal/cutover), and dependent acceptance criteria remain unchecked. No v1 copy or runtime changes are authorized by this exception.
 
 ---
 
 ## WP6 — Security, standalone, protection status, backup
 
-**Plan:** §6 WP6, Appendices D–E · **Blocked by:** WP5 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/17
+**Plan:** §6 WP6, Appendices D–E · **Blocked by:** WP5 cutover for runtime acceptance; staged work owner-authorized · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 3/17
 
 ### Tasks
 
-- [ ] WP6.1 Implement PBKDF2-SHA256 with 600,000 iterations and 16-byte salt; verify/upgrade legacy hashes; generate 20–28 character ambiguity-free passwords with `crypto.getRandomValues`.
-- [ ] WP6.2 Require custom passwords of 8–64 characters with strength hint and “Generate (recommended)” option.
-- [ ] WP6.3 Implement PasswordField: visible by default, setup copy/paste allowed, unlock paste blocked but autofill allowed, disabled below 8 characters.
+- [x] WP6.1 Implement PBKDF2-SHA256 with 600,000 iterations and 16-byte salt; verify/upgrade legacy hashes; generate 20–28 character ambiguity-free passwords with `crypto.getRandomValues`.
+- [x] WP6.2 Require custom passwords of 8–64 characters with strength hint and “Generate (recommended)” option.
+- [x] WP6.3 Implement PasswordField: visible by default, setup copy/paste allowed, unlock paste blocked but autofill allowed, disabled below 8 characters.
 - [ ] WP6.4 Implement one `guard(action, state)` returning Appendix E outcomes; UI explains/disables and background messages enforce it; test every action/state combination.
 - [ ] WP6.5 Implement Appendix D standalone Block now: own list, absolute 5-minute–30-day expiry, append-only while active, extend/add only, live countdown, confirmation, no “No limit”; remove old card/keys/functions and every stop path.
 - [ ] WP6.6 Add Protection status for incognito, host permission, notifications, heartbeat, reconcile/error, DNR count, recent gaps, settings link, and the limitations from plan §3.
@@ -693,11 +694,42 @@
 - [ ] WP6.AC8 Protection card reports missing incognito access and host permission, including Firefox behavior.
 - [ ] WP6.AC9 Appendix E.4 `guard()` matrix is fully covered by table-driven unit test.
 
-**Notes / progress:** Not started. Follow Appendices D and E for lock and destructive-action behavior.
+**Notes / progress:**
+- 2026-10-28 — Owner authorized starting WP6 before WP5 browser verification and cutover are complete. Begin with current-source audit and staged module/unit work only; preserve active v1 entrypoints and user data. Runtime activation and WP6 browser acceptance remain gated.
+- 2026-10-28 — Current-source review confirmed PBKDF2, legacy-hash verification/upgrade, and secure password generation already exist. Added staged background password actions/message handling and a staged setup/change/remove UI with current-password paste blocking. Active v1 routes and listeners remain unchanged; verification is pending.
+- 2026-10-28 — Restored local dependencies from the committed lockfile: `npm ci --no-audit` exited 0 and added 125 packages. No manifest or lockfile edits were made; rerun typecheck next.
+- 2026-10-28 — `npm run typecheck` now exits 0 with no diagnostics after dependency restoration. Password message/service behavior tests and the remaining required checks are still pending.
+- 2026-10-28 — Focused password batch verification passed: `npm test -- tests/background/passwordActions.test.ts tests/background/messages.test.ts tests/ui/passwordSettings.test.tsx` exited 0 with 3 files / 12 tests. Full suite, fresh typecheck, and build remain pending.
+- 2026-10-28 — Review against WP6.3 found the staged password submit button should remain disabled until the password meets the 8-character minimum and the confirmation matches. Added this UI guard; the earlier focused test result predates this small change and will be rerun.
+- 2026-10-28 — Focused tests passed again after the WP6.3 submit-policy refinement: 3 files / 13 tests.
+- 2026-10-28 — Full project test suite passed: `npm test` exited 0 with 35 files / 187 tests.
+- 2026-10-28 — Fresh TypeScript check passed after the full suite: `npm run typecheck` exited 0 with no diagnostics. Production build and preview health check remain.
+- 2026-10-28 — Production build passed: `npm run build` exited 0 and emitted the active v1 extension plus staged UI output. The v2 password service/message handler remains unregistered; the active manifest/worker were not cut over.
+- 2026-10-28 — Restarted `FocusGate Extension Preview` successfully after the code batch. Workflow logs and visual preview inspection remain.
+- 2026-10-28 — Preview logs show Vite ready on port 3000 with no startup error; browser console has no new output. Taking a screenshot of the active v1 page next (staged settings are intentionally not routed).
+- 2026-10-28 — Screenshot confirms the active v1 Focus view renders. Browser console showed one generic 404 with no URL/path in the capture; no visible layout failure, and this route was not changed by the staged password work.
+- 2026-10-28 — WP6.1–WP6.3 are verified and complete (3/17). WP6.4 and WP6.5–WP6.8 remain open; runtime/browser acceptance, active-v1 edits, and cutover remain gated by WP5.
+- 2026-10-28 — Final diff review: `git diff --check` passed; no diff in active v1 `src/App.tsx`, `src/background/index.ts`, or `src/hooks/useChromeStorage.ts`. Only staged WP6 code/tests and sequencing documentation/memory changed.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-28 | WP6 initial password-control batch | `src/background/passwordActions.ts`, `src/background/messages.ts`, `src/ui/lib/passwordActions.ts`, `src/ui/popup/PasswordSettings.tsx`, `src/ui/components/primitives.tsx`, `src/ui/popup/SettingsView.tsx`, `fixes/plan.md`, `fixes/TRACKER.md` | `npm run typecheck` — exit 127; `tsc: command not found`. | BLOCKED — dependencies are absent from `node_modules`; no typecheck ran. Restore from the existing lockfile before rerunning. |
+| 2026-10-28 | WP6 lockfile dependency restore | `node_modules/` only (ignored); `fixes/TRACKER.md` | `npm ci --no-audit` — exit 0; 125 packages added. | PASS — dependencies restored from the existing lockfile; package manifests and lockfile unchanged. |
+| 2026-10-28 | WP6 password batch typecheck | Password service, message handler, staged UI and `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — current staged password changes compile under strict TypeScript. Behavior tests and build remain pending. |
+| 2026-10-28 | WP6 focused password behavior tests | `src/background/passwordActions.ts`, `src/background/messages.ts`, staged password UI, and `tests/background/passwordActions.test.ts`, `tests/background/messages.test.ts`, `tests/ui/passwordSettings.test.tsx`. | `npm test -- tests/background/passwordActions.test.ts tests/background/messages.test.ts tests/ui/passwordSettings.test.tsx` — exit 0; 3 files / 12 tests passed. | PASS — validation, background guard/verification, locked-state refusal, concurrent lock recheck, message dispatch, visible form copy, and paste-friction helper are covered. Full suite/typecheck/build remain pending. |
+| 2026-10-28 | WP6 password submit-policy refinement | `src/ui/popup/PasswordSettings.tsx`, `tests/ui/passwordSettings.test.tsx`, `fixes/TRACKER.md`. | `npm test -- tests/background/passwordActions.test.ts tests/background/messages.test.ts tests/ui/passwordSettings.test.tsx` — exit 0; 3 files / 13 tests passed. | PASS — submit remains disabled until 8–64 characters match and no lock/busy state is active. |
+| 2026-10-28 | WP6 full test suite | All project tests and `fixes/TRACKER.md`. | `npm test` — exit 0; 35 files / 187 tests passed. | PASS — all current unit tests pass. Typecheck and production build remain pending. |
+| 2026-10-28 | WP6 full typecheck | TypeScript application/tests and `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — current project compiles. Production build and preview health check remain pending. |
+| 2026-10-28 | WP6 production build | Active v1 extension and staged v2 output; `fixes/TRACKER.md`. | `npm run build` — exit 0; active output plus staged popup/dashboard/onboarding/blocked pages built. | PASS — staged changes compile into the staged UI bundle; no atomic cutover performed. Preview health check remains. |
+| 2026-10-28 | WP6 preview workflow restart | Existing `FocusGate Extension Preview` workflow and `fixes/TRACKER.md`. | Workflow restart returned success; log and screenshot check pending. | PASS (restart only) — preview server restarted; browser-visible state remains to be inspected. |
+| 2026-10-28 | WP6 preview startup logs | `FocusGate Extension Preview` workflow; `fixes/TRACKER.md`. | `RefreshAllLogs` — Vite 6.4.3 ready in 307 ms on port 3000; no browser console output. | PASS — server started without a startup error. Visual check of active v1 page remains; staged settings are not routed before cutover. |
+| 2026-10-28 | WP6 active v1 preview screenshot | Active `/` page via port 3000; `fixes/TRACKER.md`. | App screenshot — Focus view rendered; browser log reported one generic resource 404 without identifying its URL. | PASS (render) — active UI is visible and usable in the capture; staged password UI is intentionally not activated. The unrelated 404 remains unlocalized and was not treated as a staged-code failure. |
+| 2026-10-28 | WP6 final diff-scope review | `fixes/plan.md`, `fixes/TRACKER.md`, staged password modules/tests; active v1 paths. | `git diff --check` — exit 0; active-v1 diff query returned no changes. | PASS — no whitespace errors; no edits to v1 UI, background entrypoint, or legacy storage hook. |
+
+**Failures / blockers:**
+- 2026-10-28 — First WP6 typecheck attempt: `npm run typecheck` exited 127 (`sh: 1: tsc: command not found`). Resolved by `npm ci --no-audit` from the existing lockfile; the subsequent typecheck, full test suite, and build passed.
 
 **Decisions / deferred work:** None recorded.
 

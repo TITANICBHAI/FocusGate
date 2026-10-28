@@ -1,4 +1,8 @@
 import type { SessionService } from "./session.ts";
+import type {
+  PasswordActionResult,
+  PasswordActionService,
+} from "./passwordActions.ts";
 
 export type SessionMessage =
   | {
@@ -14,6 +18,14 @@ export type SessionMessage =
 export type SessionMessageResponse =
   | { ok: true; session: Awaited<ReturnType<SessionService["getState"]>>["session"] }
   | { ok: false; code: string; message: string; waitMs?: number };
+
+export type PasswordMessage =
+  | {
+      type: "password/set";
+      currentPassword?: string;
+      newPassword: string;
+    }
+  | { type: "password/remove"; currentPassword?: string };
 
 /**
  * Returns a v2 message handler for the eventual WP5 cutover. This module does
@@ -88,6 +100,55 @@ export function createToggleFocusCommandHandler(
   };
 }
 
+/**
+ * Password changes are enforced by the dormant v2 background service. Keep
+ * this handler unregistered until the WP5 atomic cutover.
+ */
+export function createPasswordMessageHandler(
+  service: PasswordActionService,
+): (message: unknown) => Promise<PasswordActionResult> {
+  return async (message) => {
+    if (!isKnownPasswordMessageType(message)) {
+      return {
+        ok: false,
+        code: "UNKNOWN_MESSAGE",
+        message: "This password action is not supported.",
+      };
+    }
+    if (!isPasswordMessage(message)) {
+      return {
+        ok: false,
+        code: "INVALID_MESSAGE",
+        message: "Invalid password message.",
+      };
+    }
+
+    try {
+      switch (message.type) {
+        case "password/set":
+          return await service.setPassword({
+            ...(message.currentPassword !== undefined
+              ? { currentPassword: message.currentPassword }
+              : {}),
+            newPassword: message.newPassword,
+          });
+        case "password/remove":
+          return await service.removePassword({
+            ...(message.currentPassword !== undefined
+              ? { currentPassword: message.currentPassword }
+              : {}),
+          });
+      }
+    } catch {
+      return {
+        ok: false,
+        code: "PASSWORD_ACTION_FAILED",
+        message: "The password action could not be completed. Try again.",
+      };
+    }
+  };
+}
+
 function isSessionMessage(message: unknown): message is SessionMessage {
   if (!message || typeof message !== "object") return false;
   const candidate = message as Record<string, unknown>;
@@ -124,4 +185,30 @@ function isKnownSessionMessageType(message: unknown): boolean {
     type === "session/extend" ||
     type === "session/skipBreak"
   );
+}
+
+function isPasswordMessage(message: unknown): message is PasswordMessage {
+  if (!message || typeof message !== "object") return false;
+  const candidate = message as Record<string, unknown>;
+  switch (candidate.type) {
+    case "password/set":
+      return (
+        typeof candidate.newPassword === "string" &&
+        (candidate.currentPassword === undefined ||
+          typeof candidate.currentPassword === "string")
+      );
+    case "password/remove":
+      return (
+        candidate.currentPassword === undefined ||
+        typeof candidate.currentPassword === "string"
+      );
+    default:
+      return false;
+  }
+}
+
+function isKnownPasswordMessageType(message: unknown): boolean {
+  if (!message || typeof message !== "object") return false;
+  const type = (message as Record<string, unknown>).type;
+  return type === "password/set" || type === "password/remove";
 }

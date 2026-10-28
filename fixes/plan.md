@@ -742,6 +742,8 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 
 ### WP5 — UI foundation and screen fixes · 4–5 d · fixes B16, B17, B22, B25, B28, B29, U01–U14, H09/H10/H16 (UI part); most ❌ UI rows in §4.7
 
+**Owner-authorized sequencing exception (2026-10-28):** The owner authorized proceeding to staged WP6 implementation while WP5 browser/accessibility verification and the atomic v1→v2 cutover remain open. The staged UI source work is considered complete for now. Keep WP5.11, WP5.12, WP5.13 and their dependent acceptance criteria unchecked: the active-v1 copy audit, legacy consumer removal, and cutover remain gated; keyboard walkthrough, Lighthouse, and browser acceptance remain unverified. This exception permits WP6 module/unit work only. Do not activate v2 consumers, migrate runtime storage, remove v1 files, or claim WP5/M1 complete until the required evidence exists.
+
 **Owner-authorized gate deferral (2026-10-28):** The owner authorized beginning WP5 UI implementation while WP1b browser spikes and WP4 live-selector/runtime acceptance remain incomplete. This permits staged UI code and deterministic checks only; it does not establish browser behavior or authorize v2 activation. Keep the active v1 manifest, popup, background, and content entrypoints unchanged, do not call `ready()` from a runtime entrypoint, and do not remove legacy consumers. WP1b remains required before M1 is green and before the WP5 atomic cutover; WP2–WP4 browser/runtime acceptance must still be run on the cutover build. Keep those gates open until observed evidence is recorded.
 
 **Tasks**
@@ -791,6 +793,8 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 ---
 
 ### WP6 — Security, standalone, protection status, backup · 2–3 d · fixes B20, B21, B24; H07, H11, H12
+
+**Owner-authorized staging scope (2026-10-28):** Begin WP6 implementation and deterministic verification before WP5 cutover. Keep the active v1 UI/worker/content paths unchanged; do not register v2 message handlers, call `ready()` from runtime entrypoints, migrate live storage, or remove legacy consumers. Build WP6 behavior into staged modules/pages and keep browser-dependent acceptance criteria open until the WP5 cutover and controlled browser checks are authorized and observed.
 
 **Tasks**
 

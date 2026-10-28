@@ -315,6 +315,9 @@ export function PasswordField({
   onChange,
   autoComplete = "current-password",
   placeholder,
+  helper = "Used to verify this action.",
+  blockPaste = false,
+  maxLength,
 }: {
   id: string;
   label: string;
@@ -322,10 +325,13 @@ export function PasswordField({
   onChange(value: string): void;
   autoComplete?: InputHTMLAttributes<HTMLInputElement>["autoComplete"];
   placeholder?: string;
+  helper?: string;
+  blockPaste?: boolean;
+  maxLength?: number;
 }) {
   const [visible, setVisible] = useState(true);
   return (
-    <Field id={id} label={label} helper="Used to verify this action.">
+    <Field id={id} label={label} helper={helper}>
       <div className="fg-password-input">
         <input
           id={id}
@@ -333,6 +339,8 @@ export function PasswordField({
           autoComplete={autoComplete}
           value={value}
           placeholder={placeholder}
+          maxLength={maxLength}
+          onPaste={blockPaste ? preventPasswordPaste : undefined}
           onChange={(event) => onChange(event.target.value)}
         />
         <IconButton
@@ -344,4 +352,10 @@ export function PasswordField({
       </div>
     </Field>
   );
+}
+
+export function preventPasswordPaste(event: {
+  preventDefault(): void;
+}): void {
+  event.preventDefault();
 }

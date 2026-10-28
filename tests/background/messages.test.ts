@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import type { SessionService } from "../../src/background/session.ts";
 import {
+  createPasswordMessageHandler,
   createSessionMessageHandler,
   createToggleFocusCommandHandler,
 } from "../../src/background/messages.ts";
@@ -88,5 +89,49 @@ describe("staged background message handlers", () => {
 
     await expect(handleCommand("another-command")).resolves.toBe(false);
     expect(service.toggleFromShortcut).toHaveBeenCalledTimes(1);
+  });
+
+  it("validates and dispatches password actions without registering listeners", async () => {
+    const service = {
+      setPassword: vi.fn(async () => ({ ok: true as const, passwordSet: true })),
+      removePassword: vi.fn(async () => ({ ok: true as const, passwordSet: false })),
+    };
+    const handle = createPasswordMessageHandler(service);
+
+    await expect(
+      handle({
+        type: "password/set",
+        currentPassword: "current secret",
+        newPassword: "replacement secret",
+      }),
+    ).resolves.toEqual({ ok: true, passwordSet: true });
+    expect(service.setPassword).toHaveBeenCalledWith({
+      currentPassword: "current secret",
+      newPassword: "replacement secret",
+    });
+
+    await expect(
+      handle({ type: "password/remove", currentPassword: "current secret" }),
+    ).resolves.toEqual({ ok: true, passwordSet: false });
+    expect(service.removePassword).toHaveBeenCalledWith({
+      currentPassword: "current secret",
+    });
+  });
+
+  it("rejects malformed and unknown password messages", async () => {
+    const service = {
+      setPassword: vi.fn(),
+      removePassword: vi.fn(),
+    };
+    const handle = createPasswordMessageHandler(service);
+
+    await expect(
+      handle({ type: "password/set", newPassword: 12 }),
+    ).resolves.toMatchObject({ ok: false, code: "INVALID_MESSAGE" });
+    await expect(
+      handle({ type: "password/unknown" }),
+    ).resolves.toMatchObject({ ok: false, code: "UNKNOWN_MESSAGE" });
+    expect(service.setPassword).not.toHaveBeenCalled();
+    expect(service.removePassword).not.toHaveBeenCalled();
   });
 });
