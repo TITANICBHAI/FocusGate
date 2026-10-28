@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+@layer base {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid #34d399 !important;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
 @layer components {
   .staged-timer {
     @apply mx-auto flex min-h-screen w-full max-w-md flex-col gap-8 bg-neutral-950 px-6 py-5 font-sans text-neutral-100;

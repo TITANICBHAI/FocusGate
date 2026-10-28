@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Square, Shield, CheckCircle2, ListTodo, Plus, Trash2, Globe, CircleDashed, X, Search, AlertOctagon, Lock, Unlock, Clock, Calendar, Target, Info, Settings, BarChart2 } from 'lucide-react';
 import { useChromeStorage } from './hooks/useChromeStorage';
 import { cn } from './lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { MotionConfig, motion, AnimatePresence } from 'motion/react';
 
 type Tab = 'timer' | 'tasks' | 'blocker' | 'settings' | 'stats';
 
@@ -16,7 +16,84 @@ type Task = {
   lockLevel?: 'none' | 'strict' | 'commitment';
 };
 
+type LegacyToastTone = 'success' | 'error' | 'info';
+type LegacyToast = { id: number; message: string; tone: LegacyToastTone };
+type LegacyToastAction = (message: string, tone?: LegacyToastTone) => void;
+
+const LegacyToastContext = React.createContext<LegacyToastAction | null>(null);
+
+function LegacyToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<LegacyToast[]>([]);
+  const nextId = useRef(0);
+  const timers = useRef(new Map<number, number>());
+
+  const dismissToast = (id: number) => {
+    const timer = timers.current.get(id);
+    if (timer !== undefined) window.clearTimeout(timer);
+    timers.current.delete(id);
+    setToasts((items) => items.filter((item) => item.id !== id));
+  };
+
+  const showToast = React.useCallback<LegacyToastAction>((message, tone = 'info') => {
+    const id = ++nextId.current;
+    setToasts((items) => [...items, { id, message, tone }]);
+    timers.current.set(id, window.setTimeout(() => dismissToast(id), 4500));
+  }, []);
+
+  useEffect(
+    () => () => timers.current.forEach((timer) => window.clearTimeout(timer)),
+    [],
+  );
+
+  return (
+    <LegacyToastContext.Provider value={showToast}>
+      {children}
+      <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[100] flex flex-col items-center gap-2" aria-live="polite" aria-relevant="additions">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            role={toast.tone === 'error' ? 'alert' : 'status'}
+            className={cn(
+              "pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-xl border bg-neutral-900 px-4 py-3 text-xs shadow-xl",
+              toast.tone === 'error' ? "border-red-500/60 text-red-100" :
+                toast.tone === 'success' ? "border-emerald-500/60 text-emerald-100" :
+                  "border-blue-500/60 text-blue-100"
+            )}
+          >
+            <span>{toast.message}</span>
+            <button
+              type="button"
+              className="shrink-0 rounded px-2 py-1 font-semibold text-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+              aria-label="Dismiss notification"
+              onClick={() => dismissToast(toast.id)}
+            >
+              Dismiss
+            </button>
+          </div>
+        ))}
+      </div>
+    </LegacyToastContext.Provider>
+  );
+}
+
+function useLegacyToast(): LegacyToastAction {
+  const showToast = React.useContext(LegacyToastContext);
+  if (!showToast) throw new Error('useLegacyToast must be used inside LegacyToastProvider.');
+  return showToast;
+}
+
 export default function App() {
+  return (
+    <MotionConfig reducedMotion="user">
+      <LegacyToastProvider>
+        <AppContent />
+      </LegacyToastProvider>
+    </MotionConfig>
+  );
+}
+
+function AppContent() {
+  const showToast = useLegacyToast();
   const [activeTab, setActiveTab] = useState<Tab>('timer');
   const [isBlockedPage, setIsBlockedPage] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
@@ -59,10 +136,27 @@ export default function App() {
     };
   }, [isFullScreenLock]);
 
-  const [timeLeft] = useChromeStorage('timer_timeLeft', 0);
   const [temptationLog] = useChromeStorage<{domain: string, timestamp: number}[]>('temptationLog', []);
   const todayStart = new Date().setHours(0,0,0,0);
   const todayAttempts = temptationLog.filter(log => log.timestamp >= todayStart).length;
+
+  const closeBlockedTab = () => {
+    if (typeof chrome === 'undefined' || !chrome.tabs?.getCurrent) {
+      showToast('Close this tab using your browser controls.', 'info');
+      return;
+    }
+    chrome.tabs.getCurrent((tab) => {
+      if (typeof tab?.id !== 'number') {
+        showToast('This page is not in a closable browser tab.', 'info');
+        return;
+      }
+      chrome.tabs.remove(tab.id, () => {
+        if (chrome.runtime.lastError) {
+          showToast('The blocked tab could not be closed. Close it from your browser.', 'error');
+        }
+      });
+    });
+  };
 
   if (isBlockedPage) {
     return (
@@ -91,22 +185,12 @@ export default function App() {
           <div className="space-y-2">
             <h1 className="text-3xl font-black text-red-500 tracking-tight uppercase">Blocked</h1>
             <p className="text-neutral-300 max-w-[250px] mx-auto text-sm font-medium">
-              You are supposed to be focusing right now.
+              This page is blocked by your current FocusGate rules.
             </p>
           </div>
-          
-          {timeLeft > 0 && (
-            <div className="flex flex-col items-center gap-1 my-2">
-              <span className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Time Remaining</span>
-              <span className="text-3xl font-mono font-light text-neutral-200">
-                {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:
-                {(timeLeft % 60).toString().padStart(2, '0')}
-              </span>
-            </div>
-          )}
 
           {blockedUrl && (
-            <div className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs text-neutral-500 font-mono truncate max-w-full">
+            <div className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs text-neutral-300 font-mono truncate max-w-full">
               {blockedUrl}
             </div>
           )}
@@ -118,15 +202,12 @@ export default function App() {
           )}
 
           <button 
-            onClick={() => window.close()}
+            type="button"
+            onClick={closeBlockedTab}
             className="px-8 py-4 mt-2 bg-red-500 text-neutral-950 font-black rounded-xl hover:bg-red-400 transition-colors uppercase tracking-wider text-lg"
           >
             Close Tab
           </button>
-
-          <div className="absolute bottom-4 left-0 right-0 text-center text-[10px] text-neutral-600">
-            Also check out <a href="https://focusflowpc.pages.dev" target="_blank" rel="noreferrer" className="underline hover:text-neutral-400">FocusGate PC</a> and <a href="https://focusflowapp.pages.dev" target="_blank" rel="noreferrer" className="underline hover:text-neutral-400">FocusGate App</a>
-          </div>
         </motion.div>
       </div>
     );
@@ -134,7 +215,7 @@ export default function App() {
 
   if (isOnboarding) {
     return <OnboardingView onComplete={() => {
-      setActiveTab('settings');
+      setActiveTab('timer');
       setIsOnboarding(false);
     }} />;
   }
@@ -166,7 +247,7 @@ export default function App() {
       </main>
       
       {!isFullScreenLock && (
-        <nav className="border-t border-neutral-800/80 bg-neutral-950 p-2 sm:p-3 pb-safe z-10 shrink-0">
+        <nav className="border-t border-neutral-800/80 bg-neutral-950 p-2 sm:p-3 z-10 shrink-0">
           <div className="flex items-center justify-around max-w-sm mx-auto">
             <NavItem active={activeTab === 'timer'} onClick={() => setActiveTab('timer')} icon={<Play />} label="Focus" />
             <NavItem active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} icon={<ListTodo />} label="Tasks" />
@@ -185,9 +266,10 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-1.5 w-16 h-14 rounded-xl transition-all duration-300",
+        "relative flex flex-col items-center justify-center gap-1.5 w-16 h-14 rounded-xl transition-all duration-300",
         active ? "text-emerald-400" : "text-neutral-500 hover:text-neutral-300"
       )}
+      aria-current={active ? 'page' : undefined}
     >
       <div className={cn(
         "[&>svg]:w-5 [&>svg]:h-5 transition-transform duration-300",
@@ -195,7 +277,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
       )}>
         {icon}
       </div>
-      <span className="text-[10px] font-medium tracking-wide uppercase">{label}</span>
+      <span className="text-xs font-medium tracking-wide uppercase">{label}</span>
       {active && (
         <motion.div layoutId="nav-indicator" className="absolute bottom-1 w-8 h-0.5 rounded-full bg-emerald-500/50" />
       )}
@@ -295,7 +377,7 @@ function TimerView({ isFullScreenLock }: { isFullScreenLock: boolean; key?: stri
       endSession();
       return;
     }
-    if (lockLevel === 'commitment') return; // Cannot end early
+    if (lockLevel === 'commitment') return;
     if (lockLevel === 'strict') {
       if (password) setShowPasswordUnlock(true);
       else setShowQuitConfirm(true);
@@ -387,8 +469,8 @@ function TimerView({ isFullScreenLock }: { isFullScreenLock: boolean; key?: stri
               <span className="text-sm font-semibold flex items-center gap-2">
                 {lockLevel !== 'none' ? <Lock className="w-4 h-4 text-red-400" /> : <Unlock className="w-4 h-4 text-emerald-400" />} Lock Level
               </span>
-              <span className="text-[10px] text-neutral-500 mt-1 leading-relaxed">
-                {lockLevel === 'none' ? 'Standard blockers.' : lockLevel === 'strict' ? 'Enforces fullscreen (friction, not a true lock). Password to quit.' : 'Cannot be stopped early.'}
+              <span className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                {lockLevel === 'none' ? 'Standard blocking.' : lockLevel === 'strict' ? 'Ending early needs your password. Fullscreen adds friction; extension removal remains possible.' : 'No stop action is available; the session ends when its timer does.'}
               </span>
             </div>
             <select
@@ -500,6 +582,7 @@ function TimerView({ isFullScreenLock }: { isFullScreenLock: boolean; key?: stri
 }
 
 function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
+  const showToast = useLegacyToast();
   const [tasks, setTasks] = useChromeStorage<Task[]>('tasks', []);
   const [showForm, setShowForm] = useState(false);
 
@@ -541,7 +624,7 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
 
   const startTask = (task: Task) => {
     if (isActive) {
-      alert('A focus session is already active. Please end it before starting a new task.');
+      showToast('End the current focus session before starting another task.', 'error');
       return;
     }
     const totalSeconds = task.durationMinutes * 60;
@@ -549,7 +632,7 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
     setTotalTime(totalSeconds);
     let ll = (task as any).lockLevel || (task.isLocked ? 'strict' : 'none');
     if (ll === 'strict' && !password) {
-      alert('This task uses Strict mode, but no password is set in Settings. Downgrading to None.');
+      showToast('This task needs a password for Strict mode. It will start without a lock; set a password in Settings to use Strict.', 'info');
       ll = 'none';
     }
     setTimerLockLevel(ll);
@@ -573,8 +656,10 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
 
   const toggleTask = (id: string) => {
     if (isActive && activeTaskId === id) {
-      if (timerLockLevel === 'commitment') return; // Cannot complete commitment task until timer finishes? Actually maybe you can? Let's just prevent it. Wait, you can complete it if it's not commitment. Wait, they asked for "deleting the task... requires pass". Not completing.
-      // But they might complete to bypass.
+      if (timerLockLevel === 'commitment') {
+        showToast('Finish the active commitment session before completing this task.', 'info');
+        return;
+      }
       if (timerLockLevel === 'strict' && password) {
         setVerifyAction({ type: 'toggle', id });
         return;
@@ -585,7 +670,10 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
 
   const deleteTask = (id: string) => {
     if (isActive && activeTaskId === id) {
-      if (timerLockLevel === 'commitment') return;
+      if (timerLockLevel === 'commitment') {
+        showToast('Finish the active commitment session before deleting this task.', 'info');
+        return;
+      }
       if (timerLockLevel === 'strict' && password) {
         setVerifyAction({ type: 'delete', id });
         return;
@@ -606,17 +694,20 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
     >
       {showForm ? (
         <form onSubmit={addTask} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex flex-col gap-4 shrink-0 shadow-lg">
-          <input 
+            <input
             type="text" 
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What are you working on?" 
+              aria-label="Task name"
+              aria-describedby={!title.trim() ? "task-title-help" : undefined}
             className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50"
             autoFocus
           />
+          {!title.trim() && <p id="task-title-help" className="text-xs text-neutral-300">Enter a task name to enable Save Task.</p>}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider flex items-center gap-1"><Clock className="w-3 h-3"/> Duration (min)</label>
+              <label className="text-xs text-neutral-300 font-bold uppercase tracking-wider flex items-center gap-1"><Clock className="w-3 h-3"/> Duration (min)</label>
               <input 
                 type="number"
                 min="1"
@@ -630,7 +721,7 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider flex items-center gap-1"><Calendar className="w-3 h-3"/> Time (opt)</label>
+              <label className="text-xs text-neutral-300 font-bold uppercase tracking-wider flex items-center gap-1"><Calendar className="w-3 h-3"/> Time (opt)</label>
               <input 
                 type="time" 
                 value={scheduledTime}
@@ -645,8 +736,8 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
                 {lockLevel !== 'none' ? <Lock className="w-4 h-4 text-red-400"/> : <Unlock className="w-4 h-4 text-emerald-400"/>}
                 Lock Level
               </span>
-              <span className="text-[10px] text-neutral-500 mt-1 leading-relaxed">
-                {lockLevel === 'none' ? 'Standard blockers.' : lockLevel === 'strict' ? 'Enforces fullscreen (friction, not a true lock). Password to quit.' : 'Cannot be stopped early.'}
+              <span className="text-xs text-neutral-300 mt-1 leading-relaxed">
+                {lockLevel === 'none' ? 'Standard blocking.' : lockLevel === 'strict' ? 'Ending early needs your password. Fullscreen adds friction; extension removal remains possible.' : 'No stop action is available; the session ends when its timer does.'}
               </span>
             </div>
             <select
@@ -688,14 +779,14 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
         ) : (
           <div className="space-y-3">
             {activeTasks.map(task => (
-              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onStart={() => startTask(task)} />
+              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onStart={() => startTask(task)} isDeleteLocked={isActive && activeTaskId === task.id && timerLockLevel === 'commitment'} />
             ))}
             
             {completedTasks.length > 0 && (
               <div className="pt-4 border-t border-neutral-800/50 space-y-3">
-                <p className="text-xs font-semibold text-neutral-600 uppercase tracking-wider px-1">Completed</p>
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-1">Completed</p>
                 {completedTasks.map(task => (
-                  <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onStart={() => startTask(task)} />
+                  <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onStart={() => startTask(task)} isDeleteLocked={isActive && activeTaskId === task.id && timerLockLevel === 'commitment'} />
                 ))}
               </div>
             )}
@@ -726,7 +817,7 @@ function TasksView({ onStartTask }: { onStartTask: () => void; key?: string }) {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, onStart }: { task: Task; onToggle: (id: string) => void; onDelete: (id: string) => void; onStart: () => void; key?: string }) {
+function TaskItem({ task, onToggle, onDelete, onStart, isDeleteLocked }: { task: Task; onToggle: (id: string) => void; onDelete: (id: string) => void; onStart: () => void; isDeleteLocked: boolean; key?: string }) {
   const ll = (task as any).lockLevel || (task.isLocked ? 'strict' : 'none');
   return (
     <motion.div 
@@ -743,7 +834,10 @@ function TaskItem({ task, onToggle, onDelete, onStart }: { task: Task; onToggle:
     >
       <div className="flex items-center gap-3 overflow-hidden flex-1">
         <button 
+          type="button"
           onClick={() => onToggle(task.id)}
+          aria-label={task.completed ? `Reopen ${task.title}` : `Mark ${task.title} complete`}
+          aria-pressed={task.completed}
           className={cn(
             "w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all",
             task.completed 
@@ -754,10 +848,10 @@ function TaskItem({ task, onToggle, onDelete, onStart }: { task: Task; onToggle:
           <CheckCircle2 className="w-3.5 h-3.5" />
         </button>
         <div className="flex flex-col overflow-hidden">
-          <span className={cn("text-sm truncate font-semibold transition-all", task.completed ? "text-neutral-600 line-through" : "text-neutral-200")}>
+          <span className={cn("text-sm truncate font-semibold transition-all", task.completed ? "text-neutral-400 line-through" : "text-neutral-200")}>
             {task.title}
           </span>
-          <div className="flex items-center gap-2 text-[10px] text-neutral-500 uppercase font-bold tracking-wider mt-0.5">
+          <div className="flex items-center gap-2 text-xs text-neutral-400 uppercase font-bold tracking-wider mt-0.5">
             <span className="flex items-center gap-0.5"><Clock className="w-3 h-3"/> {task.durationMinutes}m</span>
             {task.scheduledTime && <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3"/> {task.scheduledTime}</span>}
             {ll !== 'none' ? <Lock className="w-3 h-3 text-red-400" /> : <Unlock className="w-3 h-3 text-emerald-400" />}
@@ -766,16 +860,16 @@ function TaskItem({ task, onToggle, onDelete, onStart }: { task: Task; onToggle:
       </div>
       <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
         {!task.completed && (
-          <button onClick={onStart} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Start Focus Session">
+          <button type="button" onClick={onStart} className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Start Focus Session" aria-label={`Start ${task.title}`}>
             <Play className="w-4 h-4 fill-current" />
           </button>
         )}
-        {ll === 'commitment' ? (
-          <div className="p-2 text-neutral-800 rounded-lg cursor-not-allowed" title="Cannot delete commitment task">
+        {isDeleteLocked ? (
+          <button type="button" disabled className="p-2 text-neutral-500 rounded-lg cursor-not-allowed" title="Finish the active commitment session before deleting this task." aria-label={`Delete ${task.title} is unavailable until its commitment session ends`}>
             <Trash2 className="w-4 h-4" />
-          </div>
+          </button>
         ) : (
-          <button onClick={() => onDelete(task.id)} className="p-2 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete Task">
+          <button type="button" onClick={() => onDelete(task.id)} className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete Task" aria-label={`Delete ${task.title}`}>
             <Trash2 className="w-4 h-4" />
                     </button>
         )}
@@ -785,6 +879,7 @@ function TaskItem({ task, onToggle, onDelete, onStart }: { task: Task; onToggle:
 }
 
 function BlockerView({ key }: { key?: string }) {
+  const showToast = useLegacyToast();
   const [activeTab, setActiveTab] = useState<'sites' | 'whitelist' | 'keywords' | 'schedules'>('sites');
 
   const [sites, setSites] = useChromeStorage<string[]>('blockedSites', []);
@@ -820,7 +915,8 @@ function BlockerView({ key }: { key?: string }) {
     }
 
     if (isStandaloneActive && lessensRestrictions) {
-      return; 
+      showToast('Rule removals are paused while Standalone Block is active.', 'info');
+      return;
     }
     
     if (password && lessensRestrictions) {
@@ -855,9 +951,13 @@ function BlockerView({ key }: { key?: string }) {
     } else if (action.type === 'remove_whitelist') {
       setWhitelistedUrls(whitelistedUrls.filter(u => u !== action.payload.wUrl));
     } else if (action.type === 'add_keyword') {
-      const kw = action.payload.kw;
-      if (kw && !keywords.includes(kw)) {
-        setKeywords([...keywords, kw]);
+      const addedKeywords = Array.isArray(action.payload.kws)
+        ? action.payload.kws
+        : action.payload.kw
+          ? [action.payload.kw]
+          : [];
+      if (addedKeywords.length) {
+        setKeywords([...new Set([...keywords, ...addedKeywords])]);
       }
       setNewKeyword('');
     } else if (action.type === 'remove_keyword') {
@@ -875,9 +975,17 @@ function BlockerView({ key }: { key?: string }) {
 
   const addKeyword = (e: React.FormEvent) => {
     e.preventDefault();
-    const kw = newKeyword.trim().toLowerCase();
-    if (!kw) return;
-    requestAction('add_keyword', { kw });
+    const kws = [...new Set(
+      newKeyword
+        .split(/[,\n]+/)
+        .map((keyword) => keyword.trim().toLowerCase())
+        .filter(Boolean),
+    )];
+    if (!kws.length) {
+      showToast('Enter at least one keyword.', 'error');
+      return;
+    }
+    requestAction('add_keyword', { kws });
   };
 
   const addWhitelist = (e: React.FormEvent) => {
@@ -916,7 +1024,7 @@ function BlockerView({ key }: { key?: string }) {
         <button
           onClick={() => setActiveTab('sites')}
           className={cn(
-            "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-all",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
             activeTab === 'sites' ? "bg-neutral-800 text-emerald-400" : "text-neutral-500 hover:text-neutral-300"
           )}
         >
@@ -925,16 +1033,16 @@ function BlockerView({ key }: { key?: string }) {
         <button
           onClick={() => setActiveTab('whitelist')}
           className={cn(
-            "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-all",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
             activeTab === 'whitelist' ? "bg-neutral-800 text-emerald-400" : "text-neutral-500 hover:text-neutral-300"
           )}
         >
-          Whitelist
+          Exceptions
         </button>
         <button
           onClick={() => setActiveTab('keywords')}
           className={cn(
-            "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-all",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
             activeTab === 'keywords' ? "bg-neutral-800 text-emerald-400" : "text-neutral-500 hover:text-neutral-300"
           )}
         >
@@ -943,7 +1051,7 @@ function BlockerView({ key }: { key?: string }) {
         <button
           onClick={() => setActiveTab('schedules')}
           className={cn(
-            "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-all",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
             activeTab === 'schedules' ? "bg-neutral-800 text-emerald-400" : "text-neutral-500 hover:text-neutral-300"
           )}
         >
@@ -951,14 +1059,20 @@ function BlockerView({ key }: { key?: string }) {
         </button>
       </div>
 
+          {isStandaloneActive && (
+        <p role="status" className="text-xs text-neutral-300">
+          Actions that reduce blocking are paused while Standalone Block is active.
+        </p>
+      )}
+
       {activeTab === 'sites' ? (
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3 shrink-0">
             <Globe className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-emerald-400">Strict Site Blocker</h3>
+              <h3 className="text-sm font-semibold text-emerald-400">Blocked Sites</h3>
               <p className="text-xs text-emerald-500/80 leading-relaxed">
-                Sites listed below will be completely inaccessible during an active Focus Session.
+                Sites listed here are blocked when your FocusGate rules are active. Embedded content on other sites may remain available.
               </p>
             </div>
           </div>
@@ -969,7 +1083,7 @@ function BlockerView({ key }: { key?: string }) {
               value={newSite}
               onChange={(e) => setNewSite(e.target.value)}
               placeholder="e.g. twitter.com" 
-              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-neutral-600"
+              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-neutral-400"
             />
             <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-semibold">
               Add
@@ -988,8 +1102,10 @@ function BlockerView({ key }: { key?: string }) {
                   <div key={site} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-800 transition-all group">
                     <span className="text-sm text-neutral-300 truncate font-mono">{site}</span>
                     {!isStandaloneActive && (<button 
+                      type="button"
                       onClick={() => requestAction('remove_site', { site })}
-                      className="text-neutral-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                      aria-label={`Remove blocked site ${site}`}
+                      className="text-neutral-400 hover:text-red-400 transition-all"
                     >
                       <X className="w-4 h-4" />
                     </button>)}
@@ -1004,9 +1120,9 @@ function BlockerView({ key }: { key?: string }) {
           <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex items-start gap-3 shrink-0">
             <Unlock className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-purple-400">Allowed URLs (Whitelist)</h3>
+              <h3 className="text-sm font-semibold text-purple-400">Exceptions</h3>
               <p className="text-xs text-purple-500/80 leading-relaxed">
-                URLs listed here will bypass blocks. E.g., add 'youtube.com/watch?v=specific' to allow a video while blocking 'youtube.com'.
+                URLs listed here are excluded from matching site blocks. For example, add a specific video URL to allow it while blocking its site.
               </p>
             </div>
           </div>
@@ -1017,7 +1133,7 @@ function BlockerView({ key }: { key?: string }) {
               value={newWhitelistUrl}
               onChange={(e) => setNewWhitelistUrl(e.target.value)}
               placeholder="e.g. youtube.com/watch?v=123" 
-              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-neutral-600"
+              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-neutral-400"
             />
             <button type="submit" className="bg-purple-500 hover:bg-purple-400 text-neutral-950 px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-semibold">
               Add
@@ -1028,7 +1144,7 @@ function BlockerView({ key }: { key?: string }) {
             {whitelistedUrls.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 text-neutral-500 gap-2">
                 <Unlock className="w-8 h-8 stroke-[1.5]" />
-                <p className="text-xs">No URLs whitelisted yet.</p>
+                <p className="text-xs">No exceptions added yet.</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -1036,8 +1152,10 @@ function BlockerView({ key }: { key?: string }) {
                   <div key={wUrl} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-800 transition-all group">
                     <span className="text-sm text-neutral-300 truncate font-mono">{wUrl}</span>
                     {!isStandaloneActive && (<button 
+                      type="button"
                       onClick={() => requestAction('remove_whitelist', { wUrl })}
-                      className="text-neutral-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                      aria-label={`Remove exception ${wUrl}`}
+                      className="text-neutral-400 hover:text-red-400 transition-all"
                     >
                       <X className="w-4 h-4" />
                     </button>)}
@@ -1052,9 +1170,9 @@ function BlockerView({ key }: { key?: string }) {
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-start gap-3 shrink-0">
             <Search className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-blue-400">Content & Search Filter</h3>
+              <h3 className="text-sm font-semibold text-blue-400">Keyword Filters</h3>
               <p className="text-xs text-blue-500/80 leading-relaxed">
-                Keywords will be blocked in Google/YouTube searches, and YouTube recommendations containing them will be hidden during Focus Sessions.
+                Matching keywords are filtered on supported searches and pages while FocusGate blocking is active.
               </p>
             </div>
           </div>
@@ -1065,12 +1183,17 @@ function BlockerView({ key }: { key?: string }) {
               value={newKeyword}
               onChange={(e) => setNewKeyword(e.target.value)}
               placeholder="e.g. funny shorts, #gaming" 
-              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-neutral-600"
+              aria-label="Keywords to filter"
+              aria-describedby="keyword-entry-help"
+              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-neutral-400"
             />
             <button type="submit" className="bg-blue-500 hover:bg-blue-400 text-neutral-950 px-4 py-2 rounded-xl transition-all shadow-sm text-sm font-semibold">
               Add
             </button>
           </form>
+          <p id="keyword-entry-help" className="text-xs text-neutral-300">
+            Separate multiple keywords with commas or new lines.
+          </p>
 
           <div className="flex-1 overflow-y-auto bg-neutral-900/50 rounded-xl border border-neutral-800 p-2 flex flex-wrap gap-2 content-start">
             {keywords.length === 0 ? (
@@ -1083,8 +1206,10 @@ function BlockerView({ key }: { key?: string }) {
                 <div key={kw} className="inline-flex items-center gap-1.5 bg-neutral-800 border border-neutral-700 px-3 py-1.5 rounded-full group">
                   <span className="text-xs text-neutral-300">{kw}</span>
                   {!isStandaloneActive && (<button 
+                      type="button"
                       onClick={() => requestAction('remove_keyword', { kw })}
-                    className="text-neutral-500 hover:text-red-400 transition-colors"
+                      aria-label={`Remove keyword ${kw}`}
+                    className="text-neutral-300 hover:text-red-400 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>)}
@@ -1100,7 +1225,7 @@ function BlockerView({ key }: { key?: string }) {
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-purple-400">Scheduled Blocks</h3>
               <p className="text-xs text-purple-500/80 leading-relaxed">
-                Automatically block your rules list during specific time windows.
+                Each schedule uses the sites and keywords saved with it during its active days and hours.
               </p>
             </div>
           </div>
@@ -1129,11 +1254,12 @@ function BlockerView({ key }: { key?: string }) {
                 <label className="text-xs text-neutral-500">Days of Week</label>
                 <div className="flex gap-1 justify-between">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                    <button type="button" key={idx} onClick={() => setNewScheduleDays(prev => prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx])} className={cn("w-8 h-8 rounded-md text-xs font-semibold flex items-center justify-center transition-colors", newScheduleDays.includes(idx) ? "bg-purple-500 text-neutral-950" : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700")}>
+                    <button type="button" key={idx} aria-pressed={newScheduleDays.includes(idx)} aria-label={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][idx]} onClick={() => setNewScheduleDays(prev => prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx])} className={cn("w-8 h-8 rounded-md text-xs font-semibold flex items-center justify-center transition-colors", newScheduleDays.includes(idx) ? "bg-purple-500 text-neutral-950" : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700")}>
                       {day}
                     </button>
                   ))}
                 </div>
+                {newScheduleDays.length === 0 && <p id="schedule-days-help" className="text-xs text-neutral-300">Choose at least one day to save the schedule.</p>}
               </div>
               <div className="flex gap-2 mt-2">
                 <button type="button" onClick={() => setShowScheduleForm(false)} className="flex-1 py-2 text-sm font-semibold text-neutral-400 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors">
@@ -1157,7 +1283,7 @@ function BlockerView({ key }: { key?: string }) {
                         {schedule.startTime} - {schedule.endTime}
                       </span>
                     </div>
-                    <div className="text-[10px] text-neutral-500 font-medium pl-6">
+                    <div className="text-xs text-neutral-300 font-medium pl-6">
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].filter((_, i) => schedule.days.includes(i)).join(' ')}
                     </div>
                   </div>
@@ -1180,8 +1306,8 @@ function BlockerView({ key }: { key?: string }) {
                     </button>)}
                   </div>
                 </div>
-                <div className="text-[10px] text-neutral-500 font-medium">
-                  Blocks all configured sites and filters during this window.
+                <div className="text-xs text-neutral-300 font-medium">
+                  Applies the sites and keywords saved with this schedule.
                 </div>
               </div>
             ))}
@@ -1231,23 +1357,23 @@ function HowToUse() {
             <div className="p-4 pt-0 text-xs text-neutral-400 leading-relaxed space-y-4 border-t border-neutral-800/50 mt-2 pt-4">
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">1. Focus Sessions & Tasks</h4>
-                <p>The <strong>Focus</strong> tab is where you start your deep work sessions. You can run a timer and focus completely on your work. The <strong>Tasks</strong> tab lets you list down what you want to achieve. Link a task to your timer to keep your goal visible and stay motivated.</p>
+                <p>Start a timed focus session from the <strong>Focus</strong> tab. Add goals in <strong>Tasks</strong> and link a task to a session to keep it visible while you work.</p>
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">2. Rules (Website Blocking)</h4>
-                <p>In the <strong>Rules</strong> tab, you can add distracting websites (like <code>reddit.com</code>) or keywords. If you try to visit them, FocusGate will instantly block access to keep you on track. We recommend adding the sites that usually break your concentration.</p>
+                <p>Add sites, URL exceptions, and keywords in <strong>Rules</strong>. Matching entries are blocked according to your active schedules, focus sessions, or standalone block.</p>
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">3. Security Password</h4>
-                <p>Set a long password (20-28 chars) in the Settings to stop yourself from cheating! Once enabled, you'll need this password to delete rules or cancel a focus session early. This adds an extra layer of friction to prevent impulsive actions.</p>
+                <p>Set a password from 20 to 28 characters in <strong>Settings</strong>. FocusGate asks for it before selected rule changes or ending a Strict session early. Store it safely; there is no reset option.</p>
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">4. Standalone Block</h4>
-                <p>Don't want to start a timer, but still want to block distractions? Use <strong>Standalone Block</strong>. Lock your rules for any duration up to 1000 hours, or choose no limit. You won't be able to access blocked sites or reduce restrictions while it is active.</p>
+                <p>Use <strong>Standalone Block</strong> to apply selected restrictions without a focus timer. Choose a duration up to 1000 hours or no limit; restrictions stay active until the block ends.</p>
               </div>
               <div>
                 <h4 className="text-emerald-400 font-semibold mb-1 text-sm">5. Daily Allowances</h4>
-                <p>Give yourself guilt-free break time. Set a daily limit for a site (e.g., 15 mins for Twitter). You can browse it freely until the time runs out, after which it will be blocked for the rest of the day.</p>
+                <p>Set daily time or cooldown limits for a site. When a limit is reached, FocusGate blocks that site until its daily reset.</p>
               </div>
             </div>
           </motion.div>
@@ -1258,6 +1384,7 @@ function HowToUse() {
 }
 
 function SettingsView({ key }: { key?: string }) {
+  const showToast = useLegacyToast();
   const [password, setPassword] = useChromeStorage('app_password_hash', '');
   const [standaloneUntil, setStandaloneUntil] = useChromeStorage('standaloneUntil', 0);
   const [standaloneMode, setStandaloneMode] = useChromeStorage('standaloneMode', false);
@@ -1265,9 +1392,12 @@ function SettingsView({ key }: { key?: string }) {
   const isStandaloneActive = (standaloneMode && standaloneUntil === 0) || standaloneUntil > Date.now();
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [passwordAcknowledged, setPasswordAcknowledged] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   
   const [standaloneDurationHours, setStandaloneDurationHours] = useState('1');
   const [standaloneUnlimited, setStandaloneUnlimited] = useState(false);
+  const [standaloneError, setStandaloneError] = useState('');
 
   const [allowances, setAllowances] = useChromeStorage<Record<string, any>>('dailyAllowances', {});
   const [newAllowanceType, setNewAllowanceType] = useState('time');
@@ -1285,6 +1415,8 @@ function SettingsView({ key }: { key?: string }) {
       const hashed = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
       setPassword(hashed);
       setNewPassword('');
+      setPasswordAcknowledged(false);
+      setPasswordError('');
       setShowPasswordSetup(false);
     }
   };
@@ -1296,7 +1428,7 @@ function SettingsView({ key }: { key?: string }) {
     }
 
     if (action === 'remove_password' && (isSessionActive || isStandaloneActive)) {
-      alert('Password cannot be removed during an active Focus Session or Standalone Block.');
+      showToast('Password removal is disabled while a focus session or standalone block is active.', 'error');
       return;
     }
 
@@ -1336,10 +1468,11 @@ function SettingsView({ key }: { key?: string }) {
 
     const hours = Number(standaloneDurationHours);
     if (!Number.isFinite(hours) || hours <= 0 || hours > 1000) {
-      alert('Enter a duration greater than 0 and no more than 1000 hours.');
+      setStandaloneError('Enter a duration greater than 0 and no more than 1000 hours.');
       return;
     }
 
+    setStandaloneError('');
     setStandaloneMode(false);
     setStandaloneUntil(Date.now() + hours * 60 * 60 * 1000);
   };
@@ -1382,13 +1515,26 @@ function SettingsView({ key }: { key?: string }) {
             )}
           </div>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Require a long password (20-28 characters) to edit rules, exit strict focus early, or disable standalone blocking.
+            A password confirms selected rule changes, ending a Strict session early, or disabling Standalone Block.
           </p>
           
           {password ? (
-            <button onClick={() => handleAction('remove_password')} className={cn("mt-2 py-2 text-sm font-semibold text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors")}>
-              Remove Password
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => handleAction('remove_password')}
+                disabled={isSessionActive || isStandaloneActive}
+                aria-describedby={isSessionActive || isStandaloneActive ? "remove-password-help" : undefined}
+                className={cn("mt-2 py-2 text-sm font-semibold text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50")}
+              >
+                Remove Password
+              </button>
+              {(isSessionActive || isStandaloneActive) && (
+                <p id="remove-password-help" className="text-xs text-neutral-300">
+                  Password removal is disabled while a focus session or standalone block is active.
+                </p>
+              )}
+            </>
           ) : (
             showPasswordSetup ? (
               <div className="flex flex-col gap-3 mt-2">
@@ -1396,7 +1542,10 @@ function SettingsView({ key }: { key?: string }) {
                   <input 
                     type="text" 
                     value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    onChange={e => {
+                      setNewPassword(e.target.value);
+                      setPasswordError('');
+                    }}
                     placeholder="Enter 20-28 char password"
                     maxLength={28}
                     className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-emerald-500"
@@ -1416,23 +1565,34 @@ function SettingsView({ key }: { key?: string }) {
                   </button>
                 </div>
                 <div className="flex items-start gap-2">
-                  <input type="checkbox" id="ack" className="mt-1" required />
-                  <label htmlFor="ack" className="text-xs text-neutral-400">
-                    I acknowledge that I have written this password down or kept it somewhere safe. It cannot be recovered if lost.
+                  <input
+                    type="checkbox"
+                    id="settings-password-ack"
+                    className="mt-1"
+                    checked={passwordAcknowledged}
+                    onChange={(event) => {
+                      setPasswordAcknowledged(event.target.checked);
+                      setPasswordError('');
+                    }}
+                  />
+                  <label htmlFor="settings-password-ack" className="text-xs text-neutral-300">
+                    Store this password safely; it has no reset option.
                   </label>
                 </div>
+                {passwordError && <p role="alert" className="text-sm text-red-300">{passwordError}</p>}
+                <p className="text-xs text-neutral-300">Use 20 to 28 characters.</p>
                 <button 
                   type="button"
                   onClick={(e) => {
-                    const ack = document.getElementById('ack') as HTMLInputElement;
-                    if (!ack || !ack.checked) {
-                      alert('Please acknowledge that you have saved the password.');
+                    if (!passwordAcknowledged) {
+                      setPasswordError('Confirm that you stored the password safely.');
                       return;
                     }
                     if (newPassword.length < 20 || newPassword.length > 28) {
-                      alert('Password must be between 20 and 28 characters.');
+                      setPasswordError('Use a password from 20 to 28 characters.');
                       return;
                     }
+                    setPasswordError('');
                     handleSavePassword(e as any);
                   }}
                   disabled={newPassword.length < 20 || newPassword.length > 28} 
@@ -1442,7 +1602,11 @@ function SettingsView({ key }: { key?: string }) {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => setShowPasswordSetup(false)}
+                  onClick={() => {
+                    setShowPasswordSetup(false);
+                    setPasswordAcknowledged(false);
+                    setPasswordError('');
+                  }}
                   className="text-neutral-500 hover:text-neutral-300 text-xs text-center mt-1"
                 >
                   Cancel
@@ -1463,7 +1627,7 @@ function SettingsView({ key }: { key?: string }) {
             <h3 className="font-semibold text-neutral-100">Standalone Block</h3>
           </div>
           <p className="text-xs text-neutral-400 leading-relaxed">
-             Lock your rules (sites, keywords) for any duration up to 1000 hours, or choose no limit. You cannot remove or reduce restrictions while active.
+             Block the sites you choose for up to 1000 hours or choose no limit. Restrictions stay in place while the block is active.
           </p>
 
           {isStandaloneActive ? (
@@ -1489,10 +1653,14 @@ function SettingsView({ key }: { key?: string }) {
                    max="1000"
                    step="0.01"
                    value={standaloneDurationHours}
-                   onChange={(e) => setStandaloneDurationHours(e.target.value)}
+                   onChange={(e) => {
+                     setStandaloneDurationHours(e.target.value);
+                     setStandaloneError('');
+                   }}
                    disabled={standaloneUnlimited}
                    className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
-                   aria-describedby="standalone-duration-help"
+                   aria-invalid={Boolean(standaloneError)}
+                   aria-describedby={standaloneError ? "standalone-duration-help standalone-duration-error" : "standalone-duration-help"}
                  />
                  <span className="text-sm text-neutral-400">hours</span>
                  <button
@@ -1509,9 +1677,10 @@ function SettingsView({ key }: { key?: string }) {
                    No limit
                  </button>
                </div>
-               <p id="standalone-duration-help" className="text-[11px] text-neutral-500">
+               <p id="standalone-duration-help" className="text-xs text-neutral-300">
                  Enter any duration from 0.01 to 1000 hours.
                </p>
+               {standaloneError && <p id="standalone-duration-error" role="alert" className="text-sm text-red-300">{standaloneError}</p>}
               <button 
                 onClick={startStandalone}
                 className="bg-blue-500 hover:bg-blue-400 text-neutral-950 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
@@ -1563,15 +1732,22 @@ function SettingsView({ key }: { key?: string }) {
 
           {Object.entries(allowances).length > 0 && (
             <div className="flex flex-col gap-2 mt-2">
+              {isStandaloneActive && (
+                <p role="status" className="text-xs text-neutral-300">
+                  Removing daily limits is paused while Standalone Block is active.
+                </p>
+              )}
               {Object.entries(allowances).map(([site, limit]) => (
                 <div key={site} className="flex items-center justify-between p-2 bg-neutral-950 rounded-lg border border-neutral-800 group">
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">{site}</span>
-                    <span className="text-[10px] text-neutral-500">{typeof limit === 'number' ? limit + ' min / day' : limit.type === 'interval' ? limit.limit + ' min cooldown' : limit.limit + ' min'}</span>
+                    <span className="text-xs text-neutral-300">{typeof limit === 'number' ? limit + ' min / day' : limit.type === 'interval' ? limit.limit + ' min cooldown' : limit.limit + ' min'}</span>
                   </div>
                   {!isStandaloneActive && (<button 
+                    type="button"
                     onClick={() => handleAction({ type: 'remove_allowance', site })}
-                    className="text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                    aria-label={`Remove daily limit for ${site}`}
+                    className="text-neutral-300 hover:text-red-400 transition-all p-1"
                   >
                     <Trash2 className="w-4 h-4" />
                     </button>)}
@@ -1650,7 +1826,7 @@ function StatsView({ key }: { key?: string }) {
         <h3 className="text-sm font-semibold text-neutral-400 mb-3 px-1">Session History</h3>
         <div className="flex flex-col gap-2">
           {history.length === 0 ? (
-            <p className="text-sm text-neutral-600 text-center py-4">No sessions recorded yet.</p>
+            <p className="text-sm text-neutral-400 text-center py-4">No sessions recorded yet.</p>
           ) : (
             [...history].reverse().slice(0, 10).map(session => (
               <div key={session.id} className="bg-neutral-950 border border-neutral-800 rounded-lg p-3 flex items-center justify-between">
@@ -1665,7 +1841,7 @@ function StatsView({ key }: { key?: string }) {
                     {Math.floor((session.elapsed || session.duration) / 60)}m
                   </span>
                   <span className={cn(
-                    "text-[10px] uppercase font-bold px-2 py-1 rounded",
+                    "text-xs uppercase font-bold px-2 py-1 rounded",
                     session.status === 'completed' ? "bg-emerald-500/10 text-emerald-400" :
                     session.status === 'abandoned' ? "bg-red-500/10 text-red-400" :
                     "bg-blue-500/10 text-blue-400"
@@ -1704,6 +1880,8 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
   const [password, setPassword] = useChromeStorage('app_password_hash', '');
   const [newPassword, setNewPassword] = useState('');
+  const [passwordAcknowledged, setPasswordAcknowledged] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const [sites, setSites] = useChromeStorage<string[]>('blockedSites', []);
   const [newSite, setNewSite] = useState('');
 
@@ -1715,6 +1893,8 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
       const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(newPassword));
       const hashed = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
       setPassword(hashed);
+      setPasswordAcknowledged(false);
+      setPasswordError('');
       nextStep();
     }
   };
@@ -1778,7 +1958,7 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
               </div>
               <h1 className="text-2xl font-bold">Secure Your Settings</h1>
               <p className="text-neutral-400 text-sm leading-relaxed max-w-[280px]">
-                Set a long password (20-28 characters) to prevent yourself from cheating during Strict focus sessions or easily deleting rules.
+                Set a password from 20 to 28 characters to confirm selected rule changes or end a Strict session early.
               </p>
               
               <div className="w-full mt-4 flex flex-col gap-3">
@@ -1786,7 +1966,10 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
                   <input 
                     type="text" 
                     value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    onChange={e => {
+                      setNewPassword(e.target.value);
+                      setPasswordError('');
+                    }}
                     onCopy={e => e.preventDefault()}
                     onPaste={e => e.preventDefault()}
                     onCut={e => e.preventDefault()}
@@ -1808,21 +1991,32 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
                 </div>
                 
                 <div className="flex items-start gap-2 text-left bg-neutral-900/50 p-3 rounded-lg border border-neutral-800">
-                  <input type="checkbox" id="onboard_ack" className="mt-1" />
-                  <label htmlFor="onboard_ack" className="text-xs text-neutral-400 leading-tight">
-                    I acknowledge that I have written this password down or kept it somewhere safe. It cannot be recovered.
+                  <input
+                    type="checkbox"
+                    id="onboard_ack"
+                    className="mt-1"
+                    checked={passwordAcknowledged}
+                    onChange={(event) => {
+                      setPasswordAcknowledged(event.target.checked);
+                      setPasswordError('');
+                    }}
+                  />
+                  <label htmlFor="onboard_ack" className="text-xs text-neutral-300 leading-tight">
+                    Store this password safely; it has no reset option.
                   </label>
                 </div>
+                {passwordError && <p role="alert" className="text-sm text-red-300">{passwordError}</p>}
+                <p className="text-xs text-neutral-300">Use 20 to 28 characters.</p>
                 
                 <button 
-                  onClick={(e) => {
-                    const ack = document.getElementById('onboard_ack') as HTMLInputElement;
-                    if (!ack || !ack.checked) {
-                      alert('Please acknowledge that you have saved the password.');
+                  type="button"
+                  onClick={() => {
+                    if (!passwordAcknowledged) {
+                      setPasswordError('Confirm that you stored the password safely.');
                       return;
                     }
                     if (newPassword.length < 20 || newPassword.length > 28) {
-                      alert('Password must be between 20 and 28 characters.');
+                      setPasswordError('Use a password from 20 to 28 characters.');
                       return;
                     }
                     handleSavePassword();
@@ -1832,7 +2026,7 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
                 >
                   Save Password
                 </button>
-                <button onClick={nextStep} className="text-neutral-500 text-xs font-semibold hover:text-neutral-300 mt-2">
+                <button type="button" onClick={nextStep} className="text-neutral-300 text-xs font-semibold hover:text-neutral-100 mt-2">
                   Skip for now
                 </button>
               </div>
@@ -1850,7 +2044,7 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
               </p>
               
               <button onClick={onComplete} className="w-full bg-purple-500 text-neutral-950 py-4 rounded-xl font-bold text-lg mt-8 hover:bg-purple-400 transition-colors">
-                Start Focusing
+                Open FocusGate
               </button>
             </motion.div>
           )}
@@ -1871,6 +2065,8 @@ function OnboardingView({ onComplete }: { onComplete: () => void }) {
 export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => void, onCancel: () => void }) {
   const [password, setPassword] = useChromeStorage('app_password_hash', '');
   const [newPassword, setNewPassword] = useState('');
+  const [passwordAcknowledged, setPasswordAcknowledged] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   const handleSavePassword = async () => {
     if (newPassword.length >= 20 && newPassword.length <= 28) {
@@ -1878,6 +2074,8 @@ export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => voi
       const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(newPassword));
       const hashed = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
       setPassword(hashed);
+      setPasswordAcknowledged(false);
+      setPasswordError('');
       onSuccess();
     }
   };
@@ -1894,7 +2092,7 @@ export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => voi
           <Lock className="w-8 h-8 text-blue-400 mx-auto" />
           <h3 className="text-lg font-bold text-neutral-100">Set a Password</h3>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Strict mode requires a long password (20-28 characters). Write this down, it cannot be recovered.
+            Strict mode requires a password from 20 to 28 characters. Store it safely; it has no reset option.
           </p>
         </div>
         <div className="flex flex-col gap-3">
@@ -1902,7 +2100,10 @@ export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => voi
             <input 
               type="text" 
               value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
+              onChange={e => {
+                setNewPassword(e.target.value);
+                setPasswordError('');
+              }}
               onCopy={e => e.preventDefault()}
               onPaste={e => e.preventDefault()}
               onCut={e => e.preventDefault()}
@@ -1924,11 +2125,22 @@ export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => voi
           </div>
           
           <div className="flex items-start gap-2 text-left bg-neutral-950 p-3 rounded-lg border border-neutral-800">
-            <input type="checkbox" id="set_pwd_ack" className="mt-1 shrink-0" />
-            <label htmlFor="set_pwd_ack" className="text-[10px] text-neutral-400 leading-tight">
-              I acknowledge that I have written this password down or kept it somewhere safe.
+            <input
+              type="checkbox"
+              id="set_pwd_ack"
+              className="mt-1 shrink-0"
+              checked={passwordAcknowledged}
+              onChange={(event) => {
+                setPasswordAcknowledged(event.target.checked);
+                setPasswordError('');
+              }}
+            />
+            <label htmlFor="set_pwd_ack" className="text-xs text-neutral-300 leading-tight">
+              Store this password safely; it has no reset option.
             </label>
           </div>
+          {passwordError && <p role="alert" className="text-sm text-red-300">{passwordError}</p>}
+          <p className="text-xs text-neutral-300">Use 20 to 28 characters.</p>
 
           <div className="flex gap-2 mt-2">
             <button 
@@ -1939,14 +2151,14 @@ export function SetPasswordModal({ onSuccess, onCancel }: { onSuccess: () => voi
               Cancel
             </button>
             <button 
-              onClick={(e) => {
-                const ack = document.getElementById('set_pwd_ack') as HTMLInputElement;
-                if (!ack || !ack.checked) {
-                  alert('Please acknowledge that you have saved the password.');
+              type="button"
+              onClick={() => {
+                if (!passwordAcknowledged) {
+                  setPasswordError('Confirm that you stored the password safely.');
                   return;
                 }
                 if (newPassword.length < 20 || newPassword.length > 28) {
-                  alert('Password must be between 20 and 28 characters.');
+                  setPasswordError('Use a password from 20 to 28 characters.');
                   return;
                 }
                 handleSavePassword();

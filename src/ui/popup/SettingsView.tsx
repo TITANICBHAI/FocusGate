@@ -77,7 +77,7 @@ export function SettingsView({ state }: { state: AppState }) {
         {section === "security" && (
           <Card title="Password">
             <p className="fg-muted">
-              A password can confirm ending a Strict session early. It cannot
+              A password can confirm ending a Strict session early. It does not
               prevent this extension from being disabled or removed.
             </p>
             <Button variant="secondary" disabled title="Password controls are not ready yet.">
