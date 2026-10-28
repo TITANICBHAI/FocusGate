@@ -61,9 +61,10 @@ describe("DNR rule builder", () => {
     });
   });
 
-  it("skips non-ASCII entries and caps exception rules at 200", () => {
+  it("normalizes IDN exceptions, skips invalid entries, and caps rules at 200", () => {
     const exceptions = [
-      "xn--bcher-kva.example/ü",
+      "https://www.BÜCHER.example/ü/",
+      "not a valid host",
       ...Array.from({ length: 200 }, (_, index) => `site${index}.example`),
     ];
     const { rules, skipped } = buildDnrRules(
@@ -74,9 +75,12 @@ describe("DNR rule builder", () => {
       "blocked",
     );
     expect(rules.filter((rule) => rule.id >= 100)).toHaveLength(199);
+    expect(rules.find((rule) => rule.id === 100)?.condition.regexFilter).toBe(
+      "^https?://(www\\.)?xn--bcher-kva\\.example/%C3%BC([/?&#]|$)",
+    );
     expect(skipped).toContainEqual({
-      entry: "xn--bcher-kva.example/ü",
-      reason: "non-ascii",
+      entry: "not a valid host",
+      reason: "invalid-entry",
     });
     expect(skipped).toContainEqual({
       entry: "site199.example",

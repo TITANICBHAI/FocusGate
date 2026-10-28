@@ -136,6 +136,94 @@ describe("block planning", () => {
     expect(isBlockingActive(state, 1_000)).toBe(true);
   });
 
+  it("respects the configured query and URL keyword scopes", () => {
+    const state = stateWith({
+      keywords: [{ text: "gaming", mode: "block", when: "always" }],
+      settings: {
+        ...createDefaultState().settings,
+        keywords: {
+          scope: { searchQuery: false, url: false, title: false },
+          match: "substring",
+        },
+      },
+    });
+
+    expect(
+      explainBlock("https://google.com/search?q=gaming", state, 1_000),
+    ).toBeNull();
+    expect(explainBlock("https://example.com/gaming", state, 1_000)).toBeNull();
+
+    state.settings.keywords.scope.searchQuery = true;
+    expect(
+      explainBlock("https://google.com/search?q=gaming", state, 1_000),
+    ).toMatchObject({ kind: "keyword", where: "query" });
+    expect(explainBlock("https://example.com/gaming", state, 1_000)).toBeNull();
+
+    state.settings.keywords.scope.url = true;
+    expect(explainBlock("https://example.com/gaming", state, 1_000)).toMatchObject({
+      kind: "keyword",
+      where: "url",
+    });
+  });
+
+  it("ignores malformed stored schedules without losing valid planning", () => {
+    const state = stateWith({
+      blockedSites: ["global.example"],
+      schedules: [
+        {
+          id: "broken",
+          name: "Broken",
+          enabled: true,
+          days: [1],
+          start: "25:99",
+          end: "26:00",
+          sites: ["broken.example"],
+          keywords: [],
+          useGlobalLists: false,
+        },
+        {
+          id: "valid",
+          name: "Valid",
+          enabled: true,
+          days: [1],
+          start: "09:00",
+          end: "17:00",
+          sites: ["valid.example"],
+          keywords: [],
+          useGlobalLists: false,
+        },
+      ] as AppState["schedules"],
+    });
+    const mondayAtTen = new Date(2026, 9, 26, 10, 0).getTime();
+
+    expect(() =>
+      computeBlockPlan(state, mondayAtTen),
+    ).not.toThrow();
+    expect(explainBlock("https://broken.example", state, mondayAtTen)).toBeNull();
+    expect(explainBlock("https://valid.example", state, mondayAtTen)).toMatchObject({
+      kind: "schedule",
+      name: "Valid",
+    });
+  });
+
+  it("does not schedule an interval reset before its first attention window", () => {
+    const now = new Date(2026, 9, 28, 12, 0).getTime();
+    const state = stateWith({
+      allowances: {
+        "example.com": {
+          mode: "interval",
+          allowMin: 1,
+          everyMin: 5,
+          duringBlocks: true,
+        },
+      },
+    });
+
+    expect(computeBlockPlan(state, now).nextBoundaryAt).toBe(
+      new Date(2026, 9, 29, 0, 0).getTime(),
+    );
+  });
+
   it("does not use generic p, and honors the active global allow-only list", () => {
     const state = stateWith({
       settings: {

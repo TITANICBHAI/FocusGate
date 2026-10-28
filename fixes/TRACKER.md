@@ -35,7 +35,7 @@
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
 | WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
-| WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP2; S1 before runtime enforcement |
+| WP3 — Blocking engine | IN PROGRESS | 0/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
 | WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
 | WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
@@ -308,7 +308,7 @@
 
 ## WP3 — Blocking engine
 
-**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/22
+**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/22
 
 ### Tasks
 
@@ -338,11 +338,34 @@
 - [ ] WP3.AC9 One block produces one recent-block entry and one daily-stat increment regardless of event path.
 - [ ] WP3.AC10 Schedule/standalone end removes their domains from dynamic rules without storage change; rules survive browser restart.
 
-**Notes / progress:** Not started. Follow plan §6 WP3 and Appendix A.
+**Notes / progress:**
+- 2026-10-28 — Owner authorized WP3 module and unit-test work. Keep DNR rules and navigation enforcement out of the active runtime until S1 is verified; WP1b remains deferred and does not block code/unit work. No WP3 item is marked complete yet.
+- 2026-10-28 — Fixed the pure-planning gaps: query/URL keyword scopes are honored, interval boundaries require a live window, malformed schedules are ignored without aborting other rules, and DNR exception patterns now use normalized exception entries. Focused tests are pending.
+- 2026-10-28 — Added the staged `recordBlock` service: serialized per-tab/domain dedupe, local-day/domain counters, active-session attempts, and a 200-record cap are written together through injected state/dedupe adapters. Its fake-clock behavior tests are pending.
+- 2026-10-28 — Pure planning/DNR and block-recording checks passed: 7 files / 39 tests. Broader WP3 services remain unimplemented, so no WP3 checklist item is complete.
+- 2026-10-28 — Exported schedule validation for reuse by the upcoming reconcile health report; this is a module-only helper and remains outside the active worker. Reconcile tests are pending.
+- 2026-10-28 — Added a dependency-injected staged reconciler with serialized/coalesced calls, atomic DNR batch installation plus failure isolation, health reporting, transition-only tab audit, and alarm reconciliation. Reconcile behavior tests are pending; it is not registered in the active v1 worker.
+- 2026-10-28 — Reconcile and block-recording behavior tests passed: 4 files / 23 tests, including serialized coalescing, DNR failure isolation, new-domain tab audits, health reporting, dedupe, caps, and atomic state patches.
+- 2026-10-28 — Added the staged `webNavigation` fallback listener module with HTTP(S) filters, main-frame checks, shared `explainBlock`, block-recording, and original-URL redirect construction. It remains unregistered; behavior tests are pending.
+- 2026-10-28 — Fixed the two strict-TypeScript diagnostics found in `isBlockingActive` and malformed-schedule reporting; the typecheck rerun is pending.
+- Follow plan §6 WP3 and Appendix A.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-28 | WP3 pure planning and DNR normalization | `src/shared/plan.ts`, `src/shared/dnr.ts`, `tests/shared/plan.test.ts`, `tests/shared/dnr.test.ts`. | `npm test -- tests/shared/plan.test.ts tests/shared/dnr.test.ts tests/shared/domains.test.ts tests/shared/keywords.test.ts tests/shared/time.test.ts tests/shared/allowance.test.ts` — exit 0; 6 files / 35 tests passed. | PASS — query/URL scopes, malformed schedule tolerance, interval reset boundaries, normalized exception rules, and existing pure helpers pass focused behavior tests. |
+| 2026-10-28 | WP3 pure planning plus block recording | `src/shared/plan.ts`, `src/shared/dnr.ts`, `src/background/recordBlock.ts`, `tests/shared/plan.test.ts`, `tests/shared/dnr.test.ts`, `tests/background/recordBlock.test.ts`. | `npm test -- tests/background/recordBlock.test.ts tests/shared/plan.test.ts tests/shared/dnr.test.ts tests/shared/domains.test.ts tests/shared/keywords.test.ts tests/shared/time.test.ts tests/shared/allowance.test.ts` — exit 0; 7 files / 39 tests passed. | PASS — pure-plan edge cases and deterministic block-attempt persistence/dedupe/caps pass. |
+| 2026-10-28 | WP3 reconciliation and block-recording behavior | `src/background/reconcile.ts`, `src/background/recordBlock.ts`, `tests/background/reconcile.test.ts`, `tests/background/recordBlock.test.ts`, `src/shared/plan.ts`, `src/shared/dnr.ts`. | `npm test -- tests/background/reconcile.test.ts tests/background/recordBlock.test.ts tests/shared/plan.test.ts tests/shared/dnr.test.ts` — exit 0; 4 files / 23 tests passed. | PASS — injected tests cover coalescing, one-call install, bisection fallback, health, transition audits, counters, and dedupe. |
+| 2026-10-28 | WP3 strict typecheck | `src/shared/plan.ts`, `src/background/reconcile.ts`, `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — staged plan and reconcile modules compile strictly. |
+
+**Failures / blockers:**
+- 2026-10-28 — Resolved: after correcting the stale `activeSchedules` call and narrowing malformed schedules from `unknown`, `npm run typecheck` exited 0 with no diagnostics.
+- 2026-10-28 — Resolved: the new reconciler/recorder suite passed 4 files / 23 tests; no real browser DNR rules were installed.
+- 2026-10-28 — `npm run typecheck` exited 2 with two diagnostics: `isBlockingActive` still referenced the removed `activeSchedules` helper, and the invalid-schedule reporter narrowed an already-typed `Schedule` branch to `never`. Fix both typing references, then rerun.
+- 2026-10-28 — Resolved: corrected the hostname-escaping expectation; the combined focused suite passed 7 files / 39 tests.
+- 2026-10-28 — Resolved: corrected the new DNR test to expect the hostname dot escaped; the focused suite then passed 6 files / 35 tests.
+- 2026-10-28 — `npm test -- tests/shared/plan.test.ts tests/shared/dnr.test.ts tests/shared/domains.test.ts tests/shared/keywords.test.ts tests/shared/time.test.ts tests/shared/allowance.test.ts` exited 1: 34/35 tests passed; the new DNR assertion expected the normalized hostname dot to be unescaped, while the builder correctly escapes it for regex matching. The test expectation was corrected and rerun.
 
 **Decisions / deferred work:** None recorded.
 

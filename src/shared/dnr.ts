@@ -1,4 +1,4 @@
-import { escapeRegex } from "./domains.ts";
+import { escapeRegex, normalizeException } from "./domains.ts";
 import type { BlockPlan } from "./plan.ts";
 
 export interface SkippedDnrEntry {
@@ -69,7 +69,12 @@ export function buildDnrRules(
       skipped.push({ entry: raw, reason: "rule-limit" });
       continue;
     }
-    if (!isAscii(raw)) {
+    const entry = normalizeException(raw);
+    if (!entry) {
+      skipped.push({ entry: raw, reason: "invalid-entry" });
+      continue;
+    }
+    if (!isAscii(entry)) {
       skipped.push({ entry: raw, reason: "non-ascii" });
       continue;
     }
@@ -78,7 +83,7 @@ export function buildDnrRules(
       priority: 2,
       action: { type: "allow" },
       condition: {
-        regexFilter: `^https?://(www\\.)?${escapeRegex(raw)}([/?&#]|$)`,
+        regexFilter: `^https?://(www\\.)?${escapeRegex(entry)}([/?&#]|$)`,
         resourceTypes: ["main_frame"],
       },
     });

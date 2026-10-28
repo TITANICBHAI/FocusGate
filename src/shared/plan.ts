@@ -4,9 +4,19 @@ import {
   matchesDomain,
   normalizeDomain,
 } from "./domains.ts";
-import { isExhausted, nextResetAt } from "./allowance.ts";
+import {
+  isExhausted,
+  nextResetAt,
+  normalizeRecord,
+} from "./allowance.ts";
 import { extractSearchText, matchKeyword } from "./keywords.ts";
-import { isScheduleActiveAt, localDateKey, nextScheduleBoundary, startOfNextLocalDay } from "./time.ts";
+import {
+  isScheduleActiveAt,
+  localDateKey,
+  nextScheduleBoundary,
+  parseHHMM,
+  startOfNextLocalDay,
+} from "./time.ts";
 import type {
   Allowance,
   AppState,
@@ -33,8 +43,37 @@ export interface BlockPlan {
   nextBoundaryAt: number | null;
 }
 
-function activeSchedules(state: AppState, now: Date): Schedule[] {
-  return state.schedules.filter((schedule) => isScheduleActiveAt(schedule, now));
+export function isValidSchedule(value: unknown): value is Schedule {
+  if (!value || typeof value !== "object") return false;
+  const schedule = value as Partial<Schedule>;
+  if (
+    typeof schedule.id !== "string" ||
+    typeof schedule.name !== "string" ||
+    typeof schedule.enabled !== "boolean" ||
+    typeof schedule.useGlobalLists !== "boolean" ||
+    !Array.isArray(schedule.days) ||
+    schedule.days.length === 0 ||
+    !schedule.days.every(
+      (day) => Number.isInteger(day) && day >= 0 && day <= 6,
+    ) ||
+    !Array.isArray(schedule.sites) ||
+    !schedule.sites.every((site) => typeof site === "string") ||
+    !Array.isArray(schedule.keywords) ||
+    !schedule.keywords.every((keyword) => typeof keyword === "string") ||
+    typeof schedule.start !== "string" ||
+    typeof schedule.end !== "string"
+  ) {
+    return false;
+  }
+  try {
+    return parseHHMM(schedule.start) !== parseHHMM(schedule.end);
+  } catch {
+    return false;
+  }
+}
+
+function validSchedules(schedules: unknown): Schedule[] {
+  return Array.isArray(schedules) ? schedules.filter(isValidSchedule) : [];
 }
 
 function standaloneActive(state: AppState, now: number): boolean {
@@ -122,10 +161,15 @@ function addKeyword(
   }
 }
 
-function minBoundary(boundaries: Array<number | null>): number | null {
+function minBoundary(
+  boundaries: Array<number | null>,
+  nowMs: number,
+): number | null {
   const valid = boundaries.filter(
     (boundary): boundary is number =>
-      typeof boundary === "number" && Number.isFinite(boundary),
+      typeof boundary === "number" &&
+      Number.isFinite(boundary) &&
+      boundary > nowMs,
   );
   return valid.length ? Math.min(...valid) : null;
 }
@@ -134,12 +178,17 @@ export function isBlockingActive(state: AppState, nowMs: number): boolean {
   if (state.alwaysBlockedSites.length > 0) return true;
   if (state.session.status === "work") return true;
   if (standaloneActive(state, nowMs)) return true;
-  return activeSchedules(state, new Date(nowMs)).length > 0;
+  return validSchedules(state.schedules).some((schedule) =>
+    isScheduleActiveAt(schedule, new Date(nowMs)),
+  );
 }
 
 export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   const now = new Date(nowMs);
-  const schedules = activeSchedules(state, now);
+  const configuredSchedules = validSchedules(state.schedules);
+  const schedules = configuredSchedules.filter((schedule) =>
+    isScheduleActiveAt(schedule, now),
+  );
   const blocked = new Map<string, BlockReason>();
 
   addDomains(blocked, state.alwaysBlockedSites, { kind: "always" });
@@ -236,7 +285,7 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
       : null;
 
   const nextBoundaryAt = minBoundary([
-    nextScheduleBoundary(state.schedules, now),
+    nextScheduleBoundary(configuredSchedules, now),
     state.standalone.active && state.standalone.startsAt > nowMs
       ? state.standalone.startsAt
       : null,
@@ -248,11 +297,17 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
       : null,
     ...Object.entries(state.allowances).map(([domain, allowance]) => {
       const record = usageFor(domain, state.usage);
-      if (!record && allowance.mode !== "interval") return null;
-      return nextResetAt(record ?? emptyUsage(now), allowance, nowMs);
+      if (!record) return null;
+      if (allowance.mode === "interval") {
+        const current = normalizeRecord(record, allowance, nowMs);
+        return current.windowStartMs > 0
+          ? nextResetAt(current, allowance, nowMs)
+          : null;
+      }
+      return nextResetAt(record, allowance, nowMs);
     }),
     startOfNextLocalDay(nowMs),
-  ]);
+  ], nowMs);
 
   return {
     blocked,
@@ -303,19 +358,23 @@ export function explainBlock(
   }
 
   const searchTerms = extractSearchText(url);
-  const queryMatch = matchKeyword(
-    searchTerms.join(" "),
-    plan.keywords,
-    state.settings.keywords.match,
-  );
+  const queryMatch = state.settings.keywords.scope.searchQuery
+    ? matchKeyword(
+        searchTerms.join(" "),
+        plan.keywords,
+        state.settings.keywords.match,
+      )
+    : null;
   if (queryMatch) {
     return { kind: "keyword", keyword: queryMatch, where: "query" };
   }
-  const urlMatch = matchKeyword(
-    `${url.origin}${url.pathname}${url.search}`,
-    plan.keywords,
-    state.settings.keywords.match,
-  );
+  const urlMatch = state.settings.keywords.scope.url
+    ? matchKeyword(
+        `${url.origin}${url.pathname}${url.search}`,
+        plan.keywords,
+        state.settings.keywords.match,
+      )
+    : null;
   return urlMatch
     ? { kind: "keyword", keyword: urlMatch, where: "url" }
     : null;
