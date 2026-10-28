@@ -36,6 +36,27 @@ describe("block planning", () => {
     expect(explainBlock("https://example.com", state, 1_000)?.kind).toBe("session");
   });
 
+  it("does not activate a future standalone block before its start", () => {
+    const startsAt = 10_000;
+    const until = 20_000;
+    const state = stateWith({
+      standalone: {
+        ...createDefaultState().standalone,
+        active: true,
+        startsAt,
+        until,
+        sites: ["later.example"],
+      },
+    });
+
+    expect(explainBlock("https://later.example", state, startsAt - 1)).toBeNull();
+    expect(computeBlockPlan(state, startsAt - 1).nextBoundaryAt).toBe(startsAt);
+    expect(explainBlock("https://later.example", state, startsAt)).toEqual({
+      kind: "standalone",
+      until,
+    });
+  });
+
   it("uses schedule-owned lists and the correct overnight schedule reason", () => {
     const state = stateWith({
       schedules: [

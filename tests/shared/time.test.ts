@@ -82,4 +82,28 @@ describe("schedule time helpers", () => {
       else process.env.TZ = previousTimezone;
     }
   });
+
+  it("evaluates a wall-clock schedule through a fall-back overlap", () => {
+    const previousTimezone = process.env.TZ;
+    process.env.TZ = "America/New_York";
+    try {
+      const rule = schedule({
+        days: [0],
+        start: "01:30",
+        end: "02:30",
+      });
+      const beforeOverlap = new Date(2026, 10, 1, 0, 45);
+      const next = nextScheduleBoundary([rule], beforeOverlap);
+      expect(next).toBe(new Date(2026, 10, 1, 1, 30).getTime());
+      expect(
+        isScheduleActiveAt(rule, new Date("2026-11-01T05:45:00Z")),
+      ).toBe(true);
+      expect(
+        isScheduleActiveAt(rule, new Date("2026-11-01T06:45:00Z")),
+      ).toBe(true);
+    } finally {
+      if (previousTimezone === undefined) delete process.env.TZ;
+      else process.env.TZ = previousTimezone;
+    }
+  });
 });

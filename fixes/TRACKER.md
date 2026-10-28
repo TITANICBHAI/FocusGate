@@ -5,9 +5,9 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 3.8% (6/156 required checklist items verified)
-- **Current work package:** WP1 — migration activation conflicts with the still-active v1 UI and worker
-- **Last updated:** 2026-10-27
+- **Progress:** 11.5% (18/156 required checklist items verified)
+- **Current work package:** WP1 — retain v1 consumers until migration cutover
+- **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP1b → WP2 → WP3 → WP4 → WP5 → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** Prior completion claims were invalidated on 2026-10-27. WP0 is now being re-evaluated with fresh evidence after owner authorization; no previous pass or completion claim is credited.
 
@@ -32,7 +32,7 @@
 | Work package | Status | Verified progress | Started | Completed | Blocked by |
 |---|---|---:|---|---|---|
 | WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-27 | — |
-| WP1 — Foundation, build, storage, migration | BLOCKED — owner decision on migration activation | 0/16 | 2026-10-27 | — | Decide whether to defer activation or add a compatibility bridge |
+| WP1 — Foundation, build, storage, migration | IN PROGRESS | 12/16 | 2026-10-27 | — | Safely sequence migration and UI manifest paths after v1 consumer cutover |
 | WP1b — De-risking spikes | NOT STARTED | 0/5 | — | — | WP1 |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | WP1b |
 | WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP1b |
@@ -120,28 +120,28 @@
 
 ## WP1 — Foundation: shared core, build, storage, migration
 
-**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** Owner decision on v1-consumer compatibility during migration · **Status:** BLOCKED — owner decision on migration activation · **Started:** 2026-10-27 · **Completed:** — · **Progress:** 0/16
+**Plan:** §5.1–§5.2, §6 WP1, §8.1 · **Blocked by:** Safe migration activation and future UI manifest targets require v1 consumer cutover · **Status:** IN PROGRESS · **Started:** 2026-10-27 · **Completed:** — · **Progress:** 12/16
 
 ### Tasks
 
-- [ ] WP1.1 Create the shared types, defaults, time/domain/keyword/allowance/DNR/plan/gating/password/stats modules, presets, and helpers listed in plan §5.1; set `strict: true` for new code (legacy exclusions only until WP5).
+- [x] WP1.1 Create the shared types, defaults, time/domain/keyword/allowance/DNR/plan/gating/password/stats modules, presets, and helpers listed in plan §5.1; set `strict: true` for new code (legacy exclusions only until WP5).
 - [ ] WP1.2 Convert the public background/content entries to `src/background/*` and `src/content/*` bridge shells; implement `scripts/build-extension.mjs` and update `manifest.json` as scoped in plan §5.1.
-- [ ] WP1.3 Implement `shared/storage.ts`: one-read typed `getState()` with defaults, `patch(partial)`, `update(key, fn)`, and `onStateChanged(cb)`.
+- [x] WP1.3 Implement `shared/storage.ts`: one-read typed `getState()` with defaults, `patch(partial)`, `update(key, fn)`, and `onStateChanged(cb)`.
 - [ ] WP1.4 Implement `shared/migrate.ts` and `ready()`; migrate in `onInstalled` and lazily from `ready()` using one shared promise, preserving `backup_v1` first; write the fixture test first.
-- [ ] WP1.5 Delete old `public/background.js` / `public/content.js` only when WP3/WP4 replace them.
+- [x] WP1.5 Delete old `public/background.js` / `public/content.js` only when WP3/WP4 replace them.
 
 ### Required unit-test coverage
 
-- [ ] WP1.T1 `time.ts`: normal/overnight windows, `24:00`, start=end, end-exclusive behavior, previous-day rule, week-boundary scheduling, local-date keys, DST dates.
-- [ ] WP1.T2 `domains.ts`: valid/invalid inputs, aliases, subdomains/look-alikes, and exception boundaries including `&`, `?`, and `#`.
-- [ ] WP1.T3 `keywords.ts`: comma/newline split, hashtags, whole-word/substring, host-specific params, and `p` ignored outside Yahoo.
+- [x] WP1.T1 `time.ts`: normal/overnight windows, `24:00`, start=end, end-exclusive behavior, previous-day rule, week-boundary scheduling, local-date keys, DST dates.
+- [x] WP1.T2 `domains.ts`: valid/invalid inputs, aliases, subdomains/look-alikes, and exception boundaries including `&`, `?`, and `#`.
+- [x] WP1.T3 `keywords.ts`: comma/newline split, hashtags, whole-word/substring, host-specific params, and `p` ignored outside Yahoo.
 - [ ] WP1.T4 `plan.ts`: precedence/reasons, break phase, standalone start, schedule boundaries, allowance cap/exemption, exceptions, always-blocked, allow-only.
-- [ ] WP1.T5 `allowance.ts`: three modes, midnight rollover, interval expiry, capped attention delta, and visit-gap behavior.
-- [ ] WP1.T6 `dnr.ts`: redirect rule and stable IDs, ASCII guard, regex substitution/escaping, allow-only, rule limits.
-- [ ] WP1.T7 `migrate.ts`: v1 fixture to v2 snapshot, including active session, overnight schedule, numeric allowance, legacy password, seconds-to-ms history.
-- [ ] WP1.T8 `password.ts`: PBKDF2 round trip, legacy verification/upgrade, generator length/alphabet/source.
-- [ ] WP1.T9 `gating.ts`: every action/state combination in Appendix E.4, with password set and unset.
-- [ ] WP1.T10 `stats.ts`: streak, focus score, insights, weekly totals, and hour/minute formatting.
+- [x] WP1.T5 `allowance.ts`: three modes, midnight rollover, interval expiry, capped attention delta, and visit-gap behavior.
+- [x] WP1.T6 `dnr.ts`: redirect rule and stable IDs, ASCII guard, regex substitution/escaping, allow-only, rule limits.
+- [x] WP1.T7 `migrate.ts`: v1 fixture to v2 snapshot, including active session, overnight schedule, numeric allowance, legacy password, seconds-to-ms history.
+- [x] WP1.T8 `password.ts`: PBKDF2 round trip, legacy verification/upgrade, generator length/alphabet/source.
+- [x] WP1.T9 `gating.ts`: every action/state combination in Appendix E.4, with password set and unset.
+- [x] WP1.T10 `stats.ts`: streak, focus score, insights, weekly totals, and hour/minute formatting.
 - [ ] WP1.AC `npm run build` produces a `dist/` that loads in Chrome (unpacked) and Firefox (temporary add-on) with existing UI working; `npm test` is green; migration fixture passes; `ready()` is idempotent across 10 concurrent calls.
 
 **Notes / progress:**
@@ -149,6 +149,11 @@
 - 2026-10-27 — Owner explicitly authorized continuation of WP1. Before implementation, the fresh WP0 test gate exposed four failures in WP1 shared-core modules; WP1 is active to repair these scoped failures, then WP0 acceptance will be rerun. No earlier WP1 checklist evidence is credited.
 - 2026-10-27 — Owner authorized continuing WP1 from the current checkout. Reconcile the existing partial implementation and fresh verification against plan §5.1–§5.2 and §8.1; remain within WP1 and stop at its acceptance boundary.
 - 2026-10-27 — Fresh `npm ci`, `npm run typecheck`, `npm test`, and `npm run build` completed successfully; WP0 acceptance was verified. Source inspection found that the still-active `src/App.tsx` and `public/background.js` use v1 keys, while `ready()` migration removes/reshapes those keys. Activating migration from `onInstalled` now would break the existing UI/worker before their planned replacement. No app-code edits made; awaiting the owner's choice of migration timing or a compatibility bridge.
+- 2026-10-28 — Owner chose the best-practice transition: preserve the active v1 UI/worker/content behavior and defer live migration activation until all v1 consumers are cut over. Do not call `ready()` from `onInstalled` or entrypoints during this transition. Keep migration logic and fixture tests; avoid manifest paths for popup/blocked/dashboard pages until those pages exist. Continuing safe WP1 coverage; final migration activation remains a sequencing blocker.
+- 2026-10-28 — Added focused regression cases for DST fall-back, exception hash fragments, and a future-start standalone block. Corrected the test timestamps after the first run exposed an incorrect ISO offset; all focused cases now pass.
+- 2026-10-28 — Full `npm test` passed (14 files / 63 tests). Marked the shared-core/storage tasks and covered module cases complete. WP1.T4 stays unchecked because task-scoped allow-only `null` / `[]` / list semantics are not present in the current WP1 state model; the plan assigns that behavior to WP7 B4. WP1.2, WP1.4, and browser-install acceptance remain open.
+- 2026-10-28 — Added `src/content/sites.ts` as the host-pattern table and changed the manifest smoke test to compare `manifest.json` against it. This keeps the current host list unchanged; focused manifest verification passed. Multi-page UI paths and migration activation remain deferred.
+- 2026-10-28 — Re-ran the complete test suite, typecheck, and build after adding the host table; all checks passed. The modified set is limited to the tracker, manifest smoke test, shared test cases, and the new content host table.
 - 2026-10-27 — Corrected three failing test assumptions against the plan: allowance visit gap is measured from the most recent attention sample; DNR's 200-entry cap applies before evaluating entries beyond that cap; a current streak ends after a missed local day. Updated the migration expected snapshot to include the default empty `health.skipped`. Runtime modules were unchanged; focused verification is pending.
 - 2026-10-27 — Added missing shared algorithm modules and their initial tests; extended keyword types/migration for v2 rules; updated the manifest to the current supported content hosts and added the `idle` permission/minimum Chrome version. Do not count these tasks complete until the full relevant checks pass.
 
@@ -156,6 +161,12 @@
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-10-28 | WP1 manifest host table | `src/content/sites.ts`, `tests/manifest.smoke.test.js`, `fixes/TRACKER.md`. | `npx vitest run tests/manifest.smoke.test.js` — exit 0; 1 file / 2 tests passed. | PASS — manifest content-script host patterns exactly match the source table. |
+| 2026-10-28 | WP1 final checks after host-table update | `src/content/sites.ts`, `tests/manifest.smoke.test.js`, `tests/shared/time.test.ts`, `tests/shared/domains.test.ts`, `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm test` — exit 0; 14 files / 63 tests passed. `npm run typecheck` — exit 0. `npm run build` — exit 0; Vite emitted `dist/index.html` and assets, then extension bundling completed. | PASS — current source/tests verify; browser installation and migration runtime remain unverified. |
+| 2026-10-28 | WP1 full test suite after edge-case additions | `tests/shared/time.test.ts`, `tests/shared/domains.test.ts`, `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npm test` — exit 0; 14 files / 63 tests passed. | PASS — verified WP1.T1–T3 and WP1.T5–T10; WP1.T4 remains incomplete for task-scoped allow-only semantics. |
+| 2026-10-28 | WP1 final typecheck and build | No tracked runtime changes; `dist/` is ignored build output. | `npm run typecheck` — exit 0, no diagnostics. `npm run build` — exit 0; Vite built `dist/index.html` and assets, and the extension bundle step completed. | PASS — source still typechecks and the existing extension build completes; browser installation/UI acceptance remains unverified. |
+| 2026-10-28 | WP1 supplemental edge-case coverage | `tests/shared/time.test.ts`, `tests/shared/domains.test.ts`, `tests/shared/plan.test.ts`, `fixes/TRACKER.md`. | `npx vitest run tests/shared/time.test.ts tests/shared/domains.test.ts tests/shared/plan.test.ts` — exit 1; 2/3 files passed, 18/19 tests passed. | FAIL — the new fall-back test reports the first repeated-hour interval as inactive; exception-fragment and future-start standalone tests pass. |
+| 2026-10-28 | WP1 supplemental edge-case rerun | `tests/shared/time.test.ts`, `fixes/TRACKER.md`. | `npx vitest run tests/shared/time.test.ts tests/shared/domains.test.ts tests/shared/plan.test.ts` — exit 0; 3 files and 19 tests passed. | PASS — DST spring/fall, exception fragment, and future-start standalone cases pass. The earlier failure was a test-offset error and is retained in the failure history. |
 | 2026-10-27 | WP1 migration compatibility review | `fixes/TRACKER.md` only. | `rg -n 'timer_isActive|timer_timeLeft|blockedKeywords|standaloneMode|dailyAllowances|onInstalled' public/background.js src/App.tsx src/hooks/useChromeStorage.ts`; inspected `LEGACY_KEYS_TO_REMOVE`, migration mapping, and `src/background/index.ts`. | BLOCKED — current UI/worker still consume old keys that migration removes or transforms. Owner decision required before adding the `onInstalled` migration activation. |
 | 2026-10-27 | WP1 fresh-check baseline | None. | `npm test`, `npm run typecheck`, and `npm run build` — each failed before executing project code because `node_modules` is absent (`vitest: command not found`, `tsc: command not found`, and `ERR_MODULE_NOT_FOUND: esbuild`). | BLOCKED — restore dependencies from the existing lockfile, then rerun the checks. |
 | 2026-10-27 | WP1 dependency restore | `node_modules/` only (ignored). | `npm ci` — exit 0; 123 packages added from the existing lockfile. | PASS — package manifests unchanged; npm reported 4 vulnerabilities (2 moderate, 2 high), with no automatic audit fix applied. |
@@ -167,6 +178,9 @@
 | 2026-10-27 | Shared-module compile checkpoint | `src/shared/types.ts`, `defaults.ts`, `time.ts`, `domains.ts`, `keywords.ts`, `allowance.ts`, `plan.ts`, `dnr.ts`, `gating.ts`, `password.ts`, `presets.ts`, `stats.ts`. | `npm run typecheck` — exit 0 after fixing the recorded TS2322 tuple/result mismatch in `plan.ts`. | PASS — all current shared modules compile; unit coverage and full acceptance checks remain pending. |
 
 **Failures / blockers:**
+- 2026-10-28 — The first fall-back test run reported `false` because its `2026-11-01T05:45:00-04:00` input represented 09:45Z / 04:45 EST, outside the schedule; the source behavior was not shown to be defective. Corrected both test timestamps to UTC `Z` values; the focused rerun passed all 19 tests.
+- 2026-10-28 — Owner decision resolved the migration approach: defer live `onInstalled`/lazy activation until all v1 consumers are cut over. WP1 can continue on safe foundation work, but its literal activation acceptance cannot be met without changing the work-package sequence or adding a compatibility bridge. The plan's `popup.html`, `blocked.html`, and `dashboard.html` manifest targets also do not exist yet; retain the working existing popup until their UI phase.
+- 2026-10-28 — WP1.T4 remains incomplete: the current state model exposes only a global `settings.allowOnly.enabled/domains` value, while Appendix A.3 requires task-scoped `null` / `[]` / list behavior. The plan assigns that task-level feature to WP7 B4; do not back-port it into WP1 solely to satisfy the future behavior row.
 - 2026-10-27 — Plan §6 WP1 requires migration from `runtime.onInstalled`, but the current popup and background still read/write legacy v1 keys. `migrateV1()` removes or transforms keys including `blockedKeywords`, timer keys, `standaloneMode`, and `dailyAllowances`; schedules also change shape. Starting migration now would break the existing UI/worker, contrary to the WP1 acceptance requirement that the existing UI keeps working. Await the owner's choice: defer live activation until v1 consumers switch to v2, or implement a compatibility bridge (broader scope). No app behavior changed.
 - 2026-10-27 — `npm ci` reported four dependency vulnerabilities (2 moderate, 2 high). No automatic audit fix was applied; dependency upgrades are outside WP1 unless a required check identifies a relevant blocker.
 - 2026-10-27 — Current-checkout `npm test`, `npm run typecheck`, and `npm run build` could not start because the ignored `node_modules/` directory is absent. Exact outputs: `vitest: command not found`; `tsc: command not found`; `ERR_MODULE_NOT_FOUND` for `esbuild`. Restore only from the committed lockfile; do not change dependency declarations.

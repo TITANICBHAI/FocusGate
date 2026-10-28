@@ -48,6 +48,10 @@ describe("domain and exception helpers", () => {
     expect(
       matchException("https://www.youtube.com/watch?v=abc&t=5", [exception!]),
     ).toBe(true);
+    expect(
+      matchException("https://www.youtube.com/watch?v=abc#comments", [exception!]),
+    ).toBe(true);
+    expect(normalizeException("youtube.com/watch?v=abc#comments")).toBe(exception);
     expect(matchException("https://youtube.com/watch?v=abcd", [exception!])).toBe(
       false,
     );

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { CONTENT_SCRIPT_MATCHES } from "../src/content/sites.ts";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const manifest = JSON.parse(
@@ -35,17 +36,8 @@ describe("extension manifest smoke test", () => {
     }
   });
 
-  it("limits the content script to hosts supported by the current script", () => {
+  it("keeps manifest matches aligned with the supported site table", () => {
     const matches = manifest.content_scripts[0].matches;
-    expect(matches).toEqual([
-      "*://*.youtube.com/*",
-      "*://*.google.com/*",
-      "*://*.reddit.com/*",
-      "*://*.twitter.com/*",
-      "*://*.x.com/*",
-      "*://*.instagram.com/*",
-      "*://*.tiktok.com/*",
-      "*://*.linkedin.com/*",
-    ]);
+    expect(matches).toEqual(CONTENT_SCRIPT_MATCHES);
   });
 });
