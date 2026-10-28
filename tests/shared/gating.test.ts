@@ -2,149 +2,195 @@ import { describe, expect, it } from "vitest";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import { guard, type GuardAction, type GuardState } from "../../src/shared/gating.ts";
 
-const base = (): GuardState => ({
-  session: createDefaultState().session,
-  standalone: createDefaultState().standalone,
-  hasPassword: false,
-  now: 1_000,
-});
+type GuardActionClass =
+  | "strengthen"
+  | "weaken"
+  | "end"
+  | "password"
+  | "wipe"
+  | "task";
 
-const strengthening: GuardAction[] = [
-  "add_site",
-  "add_always_site",
-  "add_keyword",
-  "add_schedule",
-  "turn_filter_on",
-  "extend_session",
-  "add_standalone_site",
-  "extend_standalone",
-  "add_cap_limit",
-  "lower_limit",
-  "remove_exception",
-  "skip_break",
-  "import_backup",
-  "change_theme",
-  "change_notifications",
-  "manage_presets",
-  "edit_unlinked_task",
+// Deliberately independent of gating.ts so a misclassified action fails this matrix.
+const ACTION_CLASS: Record<GuardAction, GuardActionClass> = {
+  add_site: "strengthen",
+  add_always_site: "strengthen",
+  add_keyword: "strengthen",
+  add_schedule: "strengthen",
+  turn_filter_on: "strengthen",
+  extend_session: "strengthen",
+  add_standalone_site: "strengthen",
+  extend_standalone: "strengthen",
+  add_cap_limit: "strengthen",
+  lower_limit: "strengthen",
+  remove_exception: "strengthen",
+  skip_break: "strengthen",
+  import_backup: "strengthen",
+  change_theme: "strengthen",
+  change_notifications: "strengthen",
+  manage_presets: "strengthen",
+  edit_unlinked_task: "strengthen",
+  remove_site: "weaken",
+  remove_always_site: "weaken",
+  remove_keyword: "weaken",
+  clear_keywords: "weaken",
+  weaken_keyword: "weaken",
+  remove_schedule_site: "weaken",
+  shorten_schedule: "weaken",
+  disable_schedule: "weaken",
+  delete_schedule: "weaken",
+  add_exception: "weaken",
+  remove_allowance: "weaken",
+  raise_limit: "weaken",
+  turn_during_blocks_on: "weaken",
+  add_exempt_allowance: "weaken",
+  turn_filter_off: "weaken",
+  stop_session: "end",
+  change_password: "password",
+  remove_password: "password",
+  reset_data: "wipe",
+  delete_linked_task: "task",
+};
+
+type MatrixState = "idle" | "normal" | "strict" | "commitment" | "standalone";
+const matrixStates: MatrixState[] = [
+  "idle",
+  "normal",
+  "strict",
+  "commitment",
+  "standalone",
 ];
 
-const weakening: GuardAction[] = [
-  "remove_site",
-  "remove_always_site",
-  "remove_keyword",
-  "clear_keywords",
-  "weaken_keyword",
-  "remove_schedule_site",
-  "shorten_schedule",
-  "disable_schedule",
-  "delete_schedule",
-  "add_exception",
-  "remove_allowance",
-  "raise_limit",
-  "turn_during_blocks_on",
-  "add_exempt_allowance",
-  "turn_filter_off",
-];
-
-describe("weakening-action guard", () => {
-  it("allows every strengthening action in every lock state", () => {
-    const states = [base(), base(), base(), base()];
-    states[1]!.session = {
-      ...createDefaultState().session,
-      status: "work",
-      lockLevel: "strict",
-      phaseEndsAt: 50_000,
-    };
-    states[2]!.session = {
-      ...createDefaultState().session,
-      status: "work",
-      lockLevel: "commitment",
-      phaseEndsAt: 50_000,
-    };
-    states[3]!.standalone = {
-      ...createDefaultState().standalone,
-      active: true,
-      startsAt: 0,
-      until: 50_000,
-    };
-    for (const action of strengthening) {
-      for (const state of states) expect(guard(action, state).result).toBe("allow");
-    }
-  });
-
-  it("gates every weakening action by password when unlocked and locks it during protection", () => {
-    const idleWithPassword = base();
-    idleWithPassword.hasPassword = true;
-    const strict = base();
-    strict.session = {
-      ...createDefaultState().session,
-      status: "work",
-      lockLevel: "strict",
-      phaseEndsAt: 50_000,
-    };
-    const commitment = base();
-    commitment.session = {
-      ...createDefaultState().session,
-      status: "work",
-      lockLevel: "commitment",
-      phaseEndsAt: 50_000,
-    };
-    const standalone = base();
-    standalone.standalone = {
-      ...createDefaultState().standalone,
-      active: true,
-      startsAt: 0,
-      until: 50_000,
-    };
-
-    for (const action of weakening) {
-      expect(guard(action, base()).result).toBe("allow");
-      expect(guard(action, idleWithPassword).result).toBe("password");
-      expect(guard(action, strict).result).toBe("locked");
-      expect(guard(action, commitment).result).toBe("locked");
-      expect(guard(action, standalone).result).toBe("locked");
-    }
-  });
-
-  it("applies the stop, password, reset, and linked-task rows", () => {
-    const normal = base();
-    normal.session = {
-      ...createDefaultState().session,
+function stateFor(matrixState: MatrixState, hasPassword: boolean): GuardState {
+  const defaults = createDefaultState();
+  const state: GuardState = {
+    session: defaults.session,
+    standalone: defaults.standalone,
+    hasPassword,
+    now: 1_000,
+  };
+  if (matrixState === "normal" || matrixState === "standalone") {
+    state.session = {
+      ...defaults.session,
       status: "work",
       lockLevel: "none",
-      phaseEndsAt: 50_000,
+      taskId: "task-1",
+      phaseEndsAt: 10_000,
     };
-    expect(guard("stop_session", normal).result).toBe("confirm");
-
-    const strict = base();
-    strict.session = {
-      ...createDefaultState().session,
+  } else if (matrixState === "strict" || matrixState === "commitment") {
+    state.session = {
+      ...defaults.session,
       status: "work",
-      lockLevel: "strict",
-      phaseEndsAt: 50_000,
+      lockLevel: matrixState,
+      taskId: "task-1",
+      phaseEndsAt: 10_000,
     };
-    expect(guard("stop_session", strict)).toEqual({
+  }
+  if (matrixState === "standalone") {
+    state.standalone = {
+      ...defaults.standalone,
+      active: true,
+      startsAt: 1_000,
+      until: 10_000,
+    };
+  }
+  return state;
+}
+
+function expectedResult(
+  actionClass: GuardActionClass,
+  matrixState: MatrixState,
+  hasPassword: boolean,
+): string {
+  const isProtected =
+    matrixState === "strict" ||
+    matrixState === "commitment" ||
+    matrixState === "standalone";
+  switch (actionClass) {
+    case "strengthen":
+      return "allow";
+    case "weaken":
+      return isProtected ? "locked" : hasPassword ? "password" : "allow";
+    case "end":
+      if (matrixState === "idle" || matrixState === "commitment") return "locked";
+      if (matrixState === "strict") return hasPassword ? "password" : "phrase";
+      return "confirm";
+    case "password":
+      return isProtected ? "locked" : hasPassword ? "password" : "allow";
+    case "wipe":
+      return isProtected ? "locked" : hasPassword ? "password" : "confirm";
+    case "task":
+      return matrixState === "strict" || matrixState === "commitment"
+        ? "locked"
+        : "allow";
+  }
+}
+
+describe("Appendix E.4 guard matrix", () => {
+  it("covers every action × state × password-set combination", () => {
+    const actions = Object.keys(ACTION_CLASS) as GuardAction[];
+    expect(actions).toHaveLength(37);
+
+    for (const action of actions) {
+      for (const matrixState of matrixStates) {
+        for (const hasPassword of [false, true]) {
+          const label = `${action} / ${matrixState} / password=${hasPassword}`;
+          const actual = guard(action, stateFor(matrixState, hasPassword));
+          expect(actual.result, label).toBe(
+            expectedResult(ACTION_CLASS[action], matrixState, hasPassword),
+          );
+          if (
+            actual.result === "locked" &&
+            (matrixState === "strict" ||
+              matrixState === "commitment" ||
+              matrixState === "standalone") &&
+            action !== "stop_session"
+          ) {
+            expect(actual.reason, label).toContain("Locked until");
+            expect(actual.until, label).toBe(10_000);
+          }
+        }
+      }
+    }
+  });
+
+  it("treats standalone start and expiry as boundaries, not active locks", () => {
+    const future = stateFor("idle", false);
+    future.standalone = {
+      ...createDefaultState().standalone,
+      active: true,
+      startsAt: 2_000,
+      until: 10_000,
+    };
+    expect(guard("remove_site", future).result).toBe("allow");
+
+    const expired = stateFor("idle", false);
+    expired.standalone = {
+      ...createDefaultState().standalone,
+      active: true,
+      startsAt: 0,
+      until: 1_000,
+    };
+    expect(guard("remove_site", expired).result).toBe("allow");
+  });
+
+  it("only locks task deletion when it is linked to a strict or commitment session", () => {
+    const strict = stateFor("strict", false);
+    expect(guard("delete_linked_task", { ...strict, taskId: "task-1" }).result).toBe(
+      "locked",
+    );
+    expect(guard("delete_linked_task", { ...strict, taskId: "other" }).result).toBe(
+      "allow",
+    );
+  });
+
+  it("keeps the strict stop phrase and the normal stop confirmation precise", () => {
+    expect(guard("stop_session", stateFor("strict", false))).toEqual({
       result: "phrase",
       phrase: "I GIVE UP",
       waitMs: 15_000,
     });
-    strict.hasPassword = true;
-    expect(guard("stop_session", strict).result).toBe("password");
-
-    const commitment = base();
-    commitment.session = {
-      ...createDefaultState().session,
-      status: "work",
-      lockLevel: "commitment",
-      phaseEndsAt: 50_000,
-    };
-    expect(guard("stop_session", commitment).result).toBe("locked");
-    expect(guard("delete_linked_task", commitment).result).toBe("allow");
-    commitment.session.taskId = "task-1";
-    expect(guard("delete_linked_task", commitment).result).toBe("locked");
-    expect(guard("reset_data", base()).result).toBe("confirm");
-    expect(guard("change_password", base()).result).toBe("allow");
-    expect(guard("remove_password", base()).result).toBe("allow");
+    expect(guard("stop_session", stateFor("normal", false))).toEqual({
+      result: "confirm",
+    });
   });
 });

@@ -710,6 +710,9 @@
 - 2026-10-28 — Screenshot confirms the active v1 Focus view renders. Browser console showed one generic 404 with no URL/path in the capture; no visible layout failure, and this route was not changed by the staged password work.
 - 2026-10-28 — WP6.1–WP6.3 are verified and complete (3/17). WP6.4 and WP6.5–WP6.8 remain open; runtime/browser acceptance, active-v1 edits, and cutover remain gated by WP5.
 - 2026-10-28 — Final diff review: `git diff --check` passed; no diff in active v1 `src/App.tsx`, `src/background/index.ts`, or `src/hooks/useChromeStorage.ts`. Only staged WP6 code/tests and sequencing documentation/memory changed.
+- 2026-10-28 — WP6.4 audit found the guard’s fallback allowed unclassified future actions, the current test did not cover every action/state/password combination, and staged Rules/Tasks mutations write storage directly without a background guard message. Implementing exhaustive action classification and a staged guarded-write path; worker registration remains deferred until cutover.
+- 2026-10-28 — Replaced implicit set membership with an exhaustive typed action-class map that fails closed for an unknown action class. Replaced partial guard tests with an independent Appendix E.4 table over 37 actions × 5 states × both password states; targeted verification pending.
+- 2026-10-28 — Guard matrix test passed: `npm test -- tests/shared/gating.test.ts` exited 0 with 1 file / 4 tests. UI/storage and background enforcement remain in progress.
 
 **Evidence:**
 
@@ -727,6 +730,7 @@
 | 2026-10-28 | WP6 preview startup logs | `FocusGate Extension Preview` workflow; `fixes/TRACKER.md`. | `RefreshAllLogs` — Vite 6.4.3 ready in 307 ms on port 3000; no browser console output. | PASS — server started without a startup error. Visual check of active v1 page remains; staged settings are not routed before cutover. |
 | 2026-10-28 | WP6 active v1 preview screenshot | Active `/` page via port 3000; `fixes/TRACKER.md`. | App screenshot — Focus view rendered; browser log reported one generic resource 404 without identifying its URL. | PASS (render) — active UI is visible and usable in the capture; staged password UI is intentionally not activated. The unrelated 404 remains unlocalized and was not treated as a staged-code failure. |
 | 2026-10-28 | WP6 final diff-scope review | `fixes/plan.md`, `fixes/TRACKER.md`, staged password modules/tests; active v1 paths. | `git diff --check` — exit 0; active-v1 diff query returned no changes. | PASS — no whitespace errors; no edits to v1 UI, background entrypoint, or legacy storage hook. |
+| 2026-10-28 | WP6.4 exhaustive guard matrix | `src/shared/gating.ts`, `tests/shared/gating.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/gating.test.ts` — exit 0; 1 file / 4 tests passed, including all 370 action/state/password cells. | PASS — state boundaries, task-link behavior, stop outcomes, and all action classifications match Appendix E.4. UI/storage and background enforcement remain in progress. |
 
 **Failures / blockers:**
 - 2026-10-28 — First WP6 typecheck attempt: `npm run typecheck` exited 127 (`sh: 1: tsc: command not found`). Resolved by `npm ci --no-audit` from the existing lockfile; the subsequent typecheck, full test suite, and build passed.

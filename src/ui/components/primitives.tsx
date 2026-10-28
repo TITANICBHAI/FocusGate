@@ -318,6 +318,7 @@ export function PasswordField({
   helper = "Used to verify this action.",
   blockPaste = false,
   maxLength,
+  autoFocus = false,
 }: {
   id: string;
   label: string;
@@ -328,6 +329,7 @@ export function PasswordField({
   helper?: string;
   blockPaste?: boolean;
   maxLength?: number;
+  autoFocus?: boolean;
 }) {
   const [visible, setVisible] = useState(true);
   return (
@@ -340,6 +342,7 @@ export function PasswordField({
           value={value}
           placeholder={placeholder}
           maxLength={maxLength}
+          autoFocus={autoFocus}
           onPaste={blockPaste ? preventPasswordPaste : undefined}
           onChange={(event) => onChange(event.target.value)}
         />

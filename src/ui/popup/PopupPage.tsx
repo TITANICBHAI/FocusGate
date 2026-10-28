@@ -10,6 +10,7 @@ import {
 import type { AppState } from "../../shared/types.ts";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { Tabs } from "../components/Tabs.tsx";
+import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import type { TabOption } from "../components/Tabs.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
@@ -37,6 +38,7 @@ export function PopupPage() {
     <StorageGate keys={APP_STATE_KEYS}>
       <ToastProvider>
         <ThemeRoot>
+          <GuardPromptHost />
           <PopupShell />
         </ThemeRoot>
       </ToastProvider>

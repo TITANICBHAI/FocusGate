@@ -3,6 +3,11 @@ import type {
   PasswordActionResult,
   PasswordActionService,
 } from "./passwordActions.ts";
+import type {
+  GuardedStateWriteResult,
+  GuardedStateWriteService,
+} from "./guardedStateWrites.ts";
+import type { GuardedStateKey } from "../shared/guardMutations.ts";
 
 export type SessionMessage =
   | {
@@ -26,6 +31,14 @@ export type PasswordMessage =
       newPassword: string;
     }
   | { type: "password/remove"; currentPassword?: string };
+
+export type GuardedStateWriteMessage =
+  | {
+      type: "state/write";
+      key: GuardedStateKey;
+      value: unknown;
+      currentPassword?: string;
+    };
 
 /**
  * Returns a v2 message handler for the eventual WP5 cutover. This module does
@@ -149,6 +162,46 @@ export function createPasswordMessageHandler(
   };
 }
 
+/**
+ * This v2 handler is installed only at the WP5 cutover. It is the sole UI
+ * message path for edits to user-configurable state.
+ */
+export function createGuardedStateWriteMessageHandler(
+  service: GuardedStateWriteService,
+): (message: unknown) => Promise<GuardedStateWriteResult> {
+  return async (message) => {
+    if (!isKnownStateWriteMessageType(message)) {
+      return {
+        ok: false,
+        code: "UNKNOWN_MESSAGE",
+        message: "This settings change is not supported.",
+      };
+    }
+    if (!isStateWriteMessage(message)) {
+      return {
+        ok: false,
+        code: "INVALID_MESSAGE",
+        message: "Invalid settings change.",
+      };
+    }
+    try {
+      return await service.write({
+        key: message.key,
+        value: message.value,
+        ...(message.currentPassword !== undefined
+          ? { currentPassword: message.currentPassword }
+          : {}),
+      });
+    } catch {
+      return {
+        ok: false,
+        code: "STATE_WRITE_FAILED",
+        message: "The settings change could not be saved. Try again.",
+      };
+    }
+  };
+}
+
 function isSessionMessage(message: unknown): message is SessionMessage {
   if (!message || typeof message !== "object") return false;
   const candidate = message as Record<string, unknown>;
@@ -211,4 +264,35 @@ function isKnownPasswordMessageType(message: unknown): boolean {
   if (!message || typeof message !== "object") return false;
   const type = (message as Record<string, unknown>).type;
   return type === "password/set" || type === "password/remove";
+}
+
+const GUARDED_STATE_KEYS: readonly GuardedStateKey[] = [
+  "blockedSites",
+  "alwaysBlockedSites",
+  "keywords",
+  "exceptions",
+  "schedules",
+  "allowances",
+  "tasks",
+  "settings",
+];
+
+function isStateWriteMessage(
+  message: unknown,
+): message is GuardedStateWriteMessage {
+  if (!message || typeof message !== "object") return false;
+  const candidate = message as Record<string, unknown>;
+  return (
+    candidate.type === "state/write" &&
+    typeof candidate.key === "string" &&
+    GUARDED_STATE_KEYS.includes(candidate.key as GuardedStateKey) &&
+    "value" in candidate &&
+    (candidate.currentPassword === undefined ||
+      typeof candidate.currentPassword === "string")
+  );
+}
+
+function isKnownStateWriteMessageType(message: unknown): boolean {
+  if (!message || typeof message !== "object") return false;
+  return (message as Record<string, unknown>).type === "state/write";
 }

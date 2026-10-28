@@ -4,6 +4,7 @@ import { Button, Card, EmptyState } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { Tabs } from "../components/Tabs.tsx";
 import type { TabOption } from "../components/Tabs.tsx";
+import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
@@ -27,6 +28,7 @@ export function DashboardPage() {
     <StorageGate keys={APP_STATE_KEYS}>
       <ToastProvider>
         <ThemeRoot>
+          <GuardPromptHost />
           <DashboardShell />
         </ThemeRoot>
       </ToastProvider>

@@ -1,5 +1,10 @@
 import { DEFAULT_STATE } from "../../shared/defaults.ts";
+import type { GuardedStateKey } from "../../shared/guardMutations.ts";
 import type { AppState } from "../../shared/types.ts";
+import {
+  GuardedStorageWriteError,
+  requestGuardPassword,
+} from "../lib/guardPrompts.ts";
 
 export type StorageKey = keyof AppState;
 export const APP_STATE_KEYS = Object.keys(DEFAULT_STATE) as StorageKey[];
@@ -14,6 +19,7 @@ export interface StorageSnapshot<K extends StorageKey = StorageKey> {
 export interface StorageBackend {
   read(key: StorageKey): Promise<unknown>;
   write(key: StorageKey, value: unknown): Promise<void>;
+  writeGuarded?(key: StorageKey, value: unknown): Promise<void>;
   subscribe(listener: (key: StorageKey, value: unknown) => void): () => void;
 }
 
@@ -101,12 +107,47 @@ export function createBrowserStorageRuntime(): StorageRuntime {
 export function createBrowserStorageBackend(
   runtime: StorageRuntime = createBrowserStorageRuntime(),
 ): StorageBackend {
+  const guardedKeys: readonly GuardedStateKey[] = [
+    "blockedSites",
+    "alwaysBlockedSites",
+    "keywords",
+    "exceptions",
+    "schedules",
+    "allowances",
+    "tasks",
+    "settings",
+  ];
+
   const readFallback = async (key: StorageKey) => {
     const storage = runtime.getLocalStorage();
     if (!storage) throw new Error("FocusGate local preview storage is unavailable.");
     const serialized = storage.getItem(key);
     return serialized === null ? undefined : JSON.parse(serialized);
   };
+
+  const writeDirect = async (key: StorageKey, value: unknown) => {
+    const area = runtime.getExtensionArea();
+    if (area) {
+      await area.set({ [key]: value });
+      return;
+    }
+    const storage = runtime.getLocalStorage();
+    if (!storage) throw new Error("FocusGate local preview storage is unavailable.");
+    storage.setItem(key, JSON.stringify(value));
+  };
+
+  async function sendGuardedWrite(
+    key: GuardedStateKey,
+    value: unknown,
+    currentPassword?: string,
+  ): Promise<unknown> {
+    return chrome.runtime.sendMessage({
+      type: "state/write",
+      key,
+      value,
+      ...(currentPassword !== undefined ? { currentPassword } : {}),
+    });
+  }
 
   return {
     async read(key) {
@@ -117,15 +158,70 @@ export function createBrowserStorageBackend(
       }
       return readFallback(key);
     },
-    async write(key, value) {
-      const area = runtime.getExtensionArea();
-      if (area) {
-        await area.set({ [key]: value });
+    write: writeDirect,
+    async writeGuarded(key, value) {
+      if (!guardedKeys.includes(key as GuardedStateKey)) {
+        throw new GuardedStorageWriteError(
+          "UNSUPPORTED_STATE_KEY",
+          "This setting must be changed through its dedicated control.",
+        );
+      }
+      if (
+        typeof chrome === "undefined" ||
+        !chrome.runtime?.sendMessage ||
+        !runtime.getExtensionArea()
+      ) {
+        await writeDirect(key, value);
         return;
       }
-      const storage = runtime.getLocalStorage();
-      if (!storage) throw new Error("FocusGate local preview storage is unavailable.");
-      storage.setItem(key, JSON.stringify(value));
+
+      const guardedKey = key as GuardedStateKey;
+      let response = await sendGuardedWrite(guardedKey, value);
+      if (
+        !response ||
+        typeof response !== "object" ||
+        !("ok" in response) ||
+        typeof response.ok !== "boolean"
+      ) {
+        throw new GuardedStorageWriteError(
+          "INVALID_RESPONSE",
+          "FocusGate could not verify this change. Reopen the extension and try again.",
+        );
+      }
+      if (response.ok) return;
+
+      if ("code" in response && response.code === "PASSWORD_REQUIRED") {
+        const reason =
+          "message" in response && typeof response.message === "string"
+            ? response.message
+            : "Enter your current password to continue.";
+        const currentPassword = await requestGuardPassword(reason);
+        if (!currentPassword) {
+          throw new GuardedStorageWriteError("PASSWORD_REQUIRED", reason);
+        }
+        response = await sendGuardedWrite(
+          guardedKey,
+          value,
+          currentPassword,
+        );
+        if (
+          response &&
+          typeof response === "object" &&
+          "ok" in response &&
+          response.ok === true
+        ) {
+          return;
+        }
+      }
+      const code =
+        "code" in response && typeof response.code === "string"
+          ? response.code
+          : "STATE_WRITE_REJECTED";
+      const message =
+        "message" in response && typeof response.message === "string"
+          ? response.message
+          : "FocusGate refused this settings change.";
+      throw new GuardedStorageWriteError(code, message);
     },
     subscribe(listener) {
       return runtime.getExtensionArea()
@@ -229,7 +325,11 @@ export class StorageStore {
               clone(current),
             )
           : valueOrUpdater;
-      await this.backend.write(key, next);
+      if (this.backend.writeGuarded) {
+        await this.backend.writeGuarded(key, next);
+      } else {
+        await this.backend.write(key, next);
+      }
       this.publish(key, next, true, null);
       return clone(next);
     });
