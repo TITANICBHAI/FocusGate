@@ -20,7 +20,12 @@ function makeTask(id: string): Task {
   };
 }
 
-function createHarness(initialState = createDefaultState()) {
+function createHarness(
+  initialState = createDefaultState(),
+  failures: Partial<
+    Record<"alarms" | "badge" | "notification" | "reconcile", boolean>
+  > = {},
+) {
   let now = fakeStart;
   let state: AppState = structuredClone(initialState);
   let nextId = 0;
@@ -43,15 +48,19 @@ function createHarness(initialState = createDefaultState()) {
     createSessionId: () => `session-${++nextId}`,
     ensureAlarms: async (_current, at) => {
       alarmSyncs.push(at);
+      if (failures.alarms) throw new Error("alarm API unavailable");
     },
     updateBadge: async (_current, at) => {
       badges.push(at);
+      if (failures.badge) throw new Error("badge API unavailable");
     },
     notify: async (notice) => {
+      if (failures.notification) throw new Error("notification API unavailable");
       notices.push(notice);
     },
     reconcile: async (reason) => {
       reconciles.push(reason);
+      if (failures.reconcile) throw new Error("reconcile unavailable");
     },
     verifyPassword: async (password) => ({
       valid: password === "correct horse battery staple",
@@ -251,6 +260,43 @@ describe("background-owned session service", () => {
     expect(harness.getState().session.lastHeartbeatAt).toBe(fakeStart + 60_000);
     expect(harness.getState().health.lastHeartbeatAt).toBe(fakeStart + 60_000);
     expect(harness.alarmSyncs.length).toBeGreaterThan(0);
+  });
+
+  it("commits phase transitions even when browser side effects fail", async () => {
+    const harness = createHarness(createDefaultState(), {
+      alarms: true,
+      badge: true,
+      notification: true,
+      reconcile: true,
+    });
+    const started = await harness.service.start({
+      durationMin: 1,
+      lockLevel: "none",
+    });
+    expect(started.ok).toBe(true);
+
+    harness.advance(60_000);
+    await harness.service.handleAlarm("session_phase_end");
+
+    const state = harness.getState();
+    expect(state.session.status).toBe("shortBreak");
+    expect(state.sessionHistory).toHaveLength(1);
+    expect(state.sessionHistory[0]?.status).toBe("completed");
+    expect(harness.effectErrors).toEqual(
+      expect.arrayContaining(["alarms", "badge", "reconcile", "notification"]),
+    );
+  });
+
+  it("finalizes an overdue session when recovery runs after a worker wake", async () => {
+    const harness = createHarness();
+    await harness.service.start({ durationMin: 2, lockLevel: "none" });
+    harness.advance(2 * 60_000);
+
+    await harness.service.recover();
+
+    expect(harness.getState().session.status).toBe("shortBreak");
+    expect(harness.getState().sessionHistory).toHaveLength(1);
+    expect(harness.getState().sessionHistory[0]?.elapsedMs).toBe(120_000);
   });
 
   it("uses the configured default duration and reports the shortcut start", async () => {

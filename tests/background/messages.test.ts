@@ -17,6 +17,14 @@ describe("staged background message handlers", () => {
         ok: true as const,
         session: createDefaultState().session,
       })),
+      stop: vi.fn(async () => ({
+        ok: true as const,
+        session: createDefaultState().session,
+      })),
+      skipBreak: vi.fn(async () => ({
+        ok: true as const,
+        session: createDefaultState().session,
+      })),
     } as unknown as SessionService;
     const handle = createSessionMessageHandler(service);
 
@@ -31,9 +39,19 @@ describe("staged background message handlers", () => {
       lockLevel: "strict",
     });
 
+    const stopped = await handle({ type: "session/stop", phrase: "I GIVE UP" });
+    expect(stopped).toMatchObject({ ok: true });
+    expect(service.stop).toHaveBeenCalledWith({
+      phrase: "I GIVE UP",
+    });
+
     const extended = await handle({ type: "session/extend", minutes: 15 });
     expect(extended).toMatchObject({ ok: true });
     expect(service.extend).toHaveBeenCalledWith(15);
+
+    const skipped = await handle({ type: "session/skipBreak" });
+    expect(skipped).toMatchObject({ ok: true });
+    expect(service.skipBreak).toHaveBeenCalledOnce();
   });
 
   it("rejects malformed and unknown message payloads", async () => {
@@ -50,13 +68,13 @@ describe("staged background message handlers", () => {
     });
     expect(await handle({ type: "session/unknown" })).toEqual({
       ok: false,
-      code: "INVALID_MESSAGE",
-      message: "Invalid session message.",
+      code: "UNKNOWN_MESSAGE",
+      message: "This session action is not supported.",
     });
     expect(service.start).not.toHaveBeenCalled();
   });
 
-  it("installs the shortcut callback as a handler without registering listeners", async () => {
+  it("handles only the toggle-focus command without registering listeners", async () => {
     const service = {
       toggleFromShortcut: vi.fn(async () => ({
         action: "started" as const,
@@ -64,14 +82,11 @@ describe("staged background message handlers", () => {
       })),
     } as unknown as SessionService;
     const handleCommand = createToggleFocusCommandHandler(service);
-    const callback = vi.fn();
 
-    handleCommand("toggle-focus", callback);
-    expect(callback).toHaveBeenCalledWith({ action: "started", durationMin: 25 });
+    await expect(handleCommand("toggle-focus")).resolves.toBe(true);
     expect(service.toggleFromShortcut).toHaveBeenCalledTimes(1);
 
-    const unrelated = vi.fn();
-    handleCommand("another-command", unrelated);
-    expect(unrelated).not.toHaveBeenCalled();
+    await expect(handleCommand("another-command")).resolves.toBe(false);
+    expect(service.toggleFromShortcut).toHaveBeenCalledTimes(1);
   });
 });

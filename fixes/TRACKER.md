@@ -34,7 +34,7 @@
 | WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-27 | — |
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
 | WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
-| WP2 — Session engine | IN PROGRESS | 0/14 | 2026-10-28 | — | — |
+| WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
 | WP3 — Blocking engine | NOT STARTED | 0/22 | — | — | WP2; S1 before runtime enforcement |
 | WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
 | WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
@@ -43,7 +43,7 @@
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **22/156** | — | — | |
+| **Total** | **IN PROGRESS** | **26/156** | — | — | |
 
 **Implementation gates:** The owner deferred WP1b, so it does not block WP2/WP3 code or unit tests. Use the documented attention/alarm fallbacks; S1 still gates navigation enforcement, and WP1b must be complete before WP5 cutover/M1 green. WP2–WP4 must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until M1 is green.
 
@@ -237,14 +237,14 @@
 
 ## WP2 — Session engine owned by the background
 
-**Plan:** §5.3–§5.4, §6 WP2, §8 · **Blocked by:** — · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/14
+**Plan:** §5.3–§5.4, §6 WP2, §8 · **Blocked by:** — · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 4/14
 
 ### Tasks
 
-- [ ] WP2.1 Implement `isBlockingActive` and session helpers; `background/session.ts`, `alarms.ts` (`ensureAlarms`), `notify.ts` (badge/notifications), and `messages.ts` handlers for `session/*`.
-- [ ] WP2.2 Prepare the staged v2 timer view: read session and render `max(0, endsAt - now)` with a one-second local-state interval; message start/stop/extend. Keep the active v1 popup unchanged until WP5.
-- [ ] WP2.3 Write `sessionHistory` and `dayStats` at phase end using `SessionRecord`/`DayStats`; cap history at 500; never write history at session start.
-- [ ] WP2.4 Replace keyboard command handling: idle starts the default duration with lock `none` and notification; running/unlocked stops; locked reports locked and does nothing.
+- [x] WP2.1 Implement `isBlockingActive` and session helpers; `background/session.ts`, `alarms.ts` (`ensureAlarms`), `notify.ts` (badge/notifications), and `messages.ts` handlers for `session/*`.
+- [x] WP2.2 Prepare the staged v2 timer view: read session and render `max(0, endsAt - now)` with a one-second local-state interval; message start/stop/extend. Keep the active v1 popup unchanged until WP5.
+- [x] WP2.3 Write `sessionHistory` and `dayStats` at phase end using `SessionRecord`/`DayStats`; cap history at 500; never write history at session start.
+- [x] WP2.4 Prepare the v2 keyboard command handler: idle starts the default duration with lock `none` and notification; running/unlocked stops; locked reports locked and does nothing. Keep the active v1 handler until WP5.
 
 ### Acceptance criteria
 
@@ -260,6 +260,8 @@
 - [ ] WP2.AC10 Stats › Session History shows UI-started sessions; claims C06–C11 pass.
 
 **Notes / progress:**
+- 2026-10-28 — WP2.1–WP2.4 module/staging work is verified (4/14). Session, alarm, message, notification/badge, recovery, and transition-failure behavior have unit coverage; staged timer compiles; build routing confirms the v1 worker and popup remain active. WP2 remains IN PROGRESS because all ten browser/runtime acceptance criteria must run after WP5 cutover.
+- 2026-10-28 — Owner authorized continuation of WP2 with the attached work-package checklist. Re-inspected current source: the v2 session service, alarm/notification helpers, message handlers, shared session logic, and staged timer exist; the active background entry still imports the v1 worker as required. WP2 remains 0/14 until fresh checks pass.
 - 2026-10-28 — Started WP2 after the owner's instruction to defer WP1b without blocking further work. Keep v1 popup/worker active until WP5; build v2 modules and unit tests only. Use focused/active attention with background-audio credit off, and idempotently re-arm alarms; runtime/browser acceptance remains deferred.
 - 2026-10-28 — Owner explicitly authorized WP2 and asked the agent to choose best-practice defaults without clarification questions, documenting decisions. Keep all v2 listeners and UI staged until WP5; use background-enforced password verification or the no-password phrase plus 15-second wait for Strict stops, and persist a clock-skew flag when recovery extends a phase after a backward clock jump. State transitions will be serialized and phase-end state written atomically; external notification/badge failures must not roll back session state.
 - 2026-10-28 — First implementation slice added shared clock-skew recovery state, dormant v2 alarm/notification/session/command modules, and behavior tests. No WP2 checklist item is marked complete yet; source and tests remain unverified. The live v1 entrypoint and popup have not been changed.
@@ -268,18 +270,39 @@
 - 2026-10-28 — Added a staged React timer view and v2-only storage hook, included them in strict typechecking, and kept both unmounted from the active v1 popup. This staged UI supports timestamp-rendered time, start/extend/skip/stop messages, Strict password/phrase handling, and inline confirmation; it is not yet verified.
 - 2026-10-28 — Added isolated Tailwind component styles for the staged timer and synced its duration field after settings hydration. The active `App` still does not import or render the staged view; verification is pending.
 - 2026-10-28 — Added the missing `@types/react` development dependency through the workspace package manager so the staged TSX can remain in strict typechecking; the next typecheck is pending.
+- 2026-10-28 — Restored dependencies with `npm ci` — exit 0; 125 packages installed; npm reported 4 vulnerabilities (2 moderate, 2 high). No audit fix was applied.
+- 2026-10-28 — Re-ran `npm test -- tests/background/session.test.ts tests/background/alarms.test.ts tests/background/messages.test.ts` — exit 1; session and alarm tests passed (16 tests), while all 3 message tests failed. Failures expose test/handler contract mismatches: start forwards the discriminator, malformed payloads are reported as unknown, and the command test expects a callback that Chrome's command event does not provide. Correct the handler contract/tests, then rerun.
+- 2026-10-28 — Corrected the staged message contract to distinguish invalid from unknown message types and pass only session fields to `start`/`stop`; expanded handler tests to cover stop/skipBreak and the actual command return contract. Verification is pending.
+- 2026-10-28 — Added deterministic notification/badge adapter tests and service tests for overdue-session recovery and state persistence when alarm, badge, reconcile, and notification APIs fail. The new tests are pending execution.
 - 2026-10-28 — `npm run typecheck` now exits 0 with the staged TSX included after adding `@types/react`. The prior missing-typings failure is resolved; message-handler coverage and the final full verification remain pending.
 - 2026-10-28 — Added focused tests for valid/invalid v2 messages and the staged shortcut callback. Listener registration remains intentionally absent from the active background entrypoint; run the full unit suite and confirm build outputs before marking implementation tasks complete.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
+
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-28 | WP2 message, alarm, and service unit tests | `src/background/messages.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/session.test.ts tests/background/alarms.test.ts tests/background/messages.test.ts` — exit 0; 3 files / 19 tests passed. | PASS — staged session service, alarm scheduling, and corrected message/command contracts pass their focused behavior tests; browser/runtime acceptance remains deferred. |
+| 2026-10-28 | WP2 message payload normalization rerun | `src/background/messages.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/session.test.ts tests/background/alarms.test.ts tests/background/messages.test.ts` — exit 0; 3 files / 19 tests passed. | PASS — both start and stop pass only their typed fields to the service; malformed and unknown messages return distinct errors. |
+| 2026-10-28 | WP2 notification, alarm, message, and recovery tests | `tests/background/notify.test.ts`, `tests/background/session.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/background/session.test.ts tests/background/alarms.test.ts tests/background/messages.test.ts tests/background/notify.test.ts` — exit 0; 4 files / 25 tests passed. | PASS — badge/notification formatting, overdue recovery, and state preservation despite browser side-effect failures are covered with deterministic test inputs. |
+| 2026-10-28 | WP2 typecheck | `src/background/messages.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — the staged background modules and timer view compile under strict TypeScript. |
+| 2026-10-28 | WP2 full unit suite | `src/background/messages.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`. | `npm test` — exit 0; 17 files / 83 tests passed. | PASS — full current test suite is green; browser/runtime acceptance remains deferred until WP5 cutover and WP1b evidence. |
+| 2026-10-28 | WP2 full unit suite with adapter/recovery coverage | `tests/background/notify.test.ts`, `tests/background/session.test.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`. | `npm test` — exit 0; 18 files / 89 tests passed. | PASS — full current suite remains green with new WP2 behavior tests included. |
+| 2026-10-28 | WP2 staged build | `src/background/messages.ts`, `tests/background/messages.test.ts`, `fixes/TRACKER.md`; generated output in ignored `dist/`. | `npm run build` — exit 0; Vite transformed 2,079 modules and emitted `dist/index.html` plus JS/CSS bundles. | PASS — current extension build completes. The v2 modules remain staged and the v1 entry remains active pending the WP5 cutover. |
+| 2026-10-28 | WP2 staged-build routing smoke check | `src/background/index.ts`, generated `dist/manifest.json` / `dist/background.js` (ignored), `fixes/TRACKER.md`. | Node assertions checked popup=`index.html`, service worker=`background.js`, both output bundles exist, source bridge imports `public/background.js`, and the generated bundle retains the v1 `timer_isActive` consumer. | PASS — current v1 behavior remains the active background; `type: module` describes bundle format and does not activate v2 session handlers. |
+| 2026-10-28 | WP2 extension preview smoke check | `fixes/TRACKER.md`; no app-preview files changed. | Restarted `FocusGate Extension Preview`; screenshot of `/` on port 3000 shows the existing v1 timer UI. | PASS — active preview renders. Browser console reported one 404 resource; screenshot does not exercise the staged v2 timer. |
 
 **Failures / blockers:**
+- 2026-10-28 — Runtime acceptance remains open by design: the v1 consumers stay active through WP4, and WP1b browser spikes remain deferred. WP2.AC1–WP2.AC10 cannot be claimed until the WP5 atomic cutover and browser verification; the current preview screenshot only confirms the active v1 popup loads.
+- 2026-10-28 — Resolved after correcting the message handler/test contracts: the focused suite passed 3 files / 19 tests (exact command and changed files recorded in Evidence). Earlier failure entries are retained as history.
+- 2026-10-28 — The post-install focused suite exposed 3 failing message tests (16/19 passed) for the mismatches recorded in Notes / progress. Session/alarm tests passed. This is the current WP2 test blocker.
+- 2026-10-28 — Resolved the focused-suite startup blocker: `npm ci` exited 0 and restored the lockfile dependencies (125 packages). The earlier baseline test command remains recorded above; rerun it now that Vitest is installed.
+- 2026-10-28 — Baseline focused suite `npm test -- tests/background/session.test.ts tests/background/alarms.test.ts tests/background/messages.test.ts` exited 127 because `vitest` is not installed (`sh: 1: vitest: command not found`). Restore dependencies from the existing lockfile before running checks; no project code changed for this check.
 - 2026-10-28 — Initial WP2 verification could not start because dependencies are absent: `npm run typecheck` exited 127 (`tsc: command not found`); `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` exited 1 because Vitest could not load `vite.config.ts` without `@tailwindcss/vite`, `@vitejs/plugin-react`, and `vite`. Restore the existing lockfile dependencies with `npm ci`, then rerun the checks. No package manifests were intentionally changed.
 - 2026-10-28 — After `npm ci`, `npm run typecheck` passed. `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` failed 2 of 22 tests: the clock-skew fixture was exactly at the 60-second threshold (the plan says more than 60 seconds), and the recovery notification test exposed that break-end transitions with no `SessionRecord` did not notify. Correct the fixture threshold and notify on session-state transitions, then rerun.
 - 2026-10-28 — Resolved the test failures: `npm run typecheck` exited 0; `npx vitest run tests/shared/session.test.ts tests/background/session.test.ts tests/background/alarms.test.ts` exited 0 with 3 files / 22 tests passing.
 - 2026-10-28 — Expanding strict typecheck to the staged TSX view exposed the repository's missing React type declarations: `npm run typecheck` exited 2 with 70 diagnostics in the two staged TSX files, all beginning with unresolved React/JSX typings and implicit JSX elements. Add the matching React type package, then rerun; do not suppress the diagnostics.
 
-**Decisions / deferred work:** None recorded.
+**Decisions / deferred work:** Keep WP2.AC1–WP2.AC10 unchecked until WP5 cutover and required browser verification. Do not promote the staged v2 worker, messages, or timer into the active runtime early.
 
 ---
 

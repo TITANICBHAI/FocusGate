@@ -23,20 +23,38 @@ export function createSessionMessageHandler(
   service: SessionService,
 ): (message: unknown) => Promise<SessionMessageResponse> {
   return async (message) => {
-    if (!isSessionMessage(message)) {
+    if (!isKnownSessionMessageType(message)) {
       return {
         ok: false,
         code: "UNKNOWN_MESSAGE",
         message: "This session action is not supported.",
       };
     }
+    if (!isSessionMessage(message)) {
+      return {
+        ok: false,
+        code: "INVALID_MESSAGE",
+        message: "Invalid session message.",
+      };
+    }
 
     try {
       switch (message.type) {
-        case "session/start":
-          return await service.start(message);
-        case "session/stop":
-          return await service.stop(message);
+        case "session/start": {
+          const { durationMin, lockLevel, taskId } = message;
+          return await service.start({
+            durationMin,
+            lockLevel,
+            ...(taskId !== undefined ? { taskId } : {}),
+          });
+        }
+        case "session/stop": {
+          const { password, phrase } = message;
+          return await service.stop({
+            ...(password !== undefined ? { password } : {}),
+            ...(phrase !== undefined ? { phrase } : {}),
+          });
+        }
         case "session/extend":
           return await service.extend(message.minutes);
         case "session/skipBreak":
@@ -95,4 +113,15 @@ function isSessionMessage(message: unknown): message is SessionMessage {
     default:
       return false;
   }
+}
+
+function isKnownSessionMessageType(message: unknown): boolean {
+  if (!message || typeof message !== "object") return false;
+  const type = (message as Record<string, unknown>).type;
+  return (
+    type === "session/start" ||
+    type === "session/stop" ||
+    type === "session/extend" ||
+    type === "session/skipBreak"
+  );
 }
