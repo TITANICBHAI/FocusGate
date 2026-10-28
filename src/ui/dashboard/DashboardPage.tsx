@@ -1,13 +1,20 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import type { AppState, WeeklyReport } from "../../shared/types.ts";
-import { Button, Card, EmptyState } from "../components/primitives.tsx";
+import { Button, Card, EmptyState, Field } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { Tabs } from "../components/Tabs.tsx";
 import type { TabOption } from "../components/Tabs.tsx";
 import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
-import { ToastProvider } from "../components/feedback.tsx";
+import { Modal, ToastProvider, useToast } from "../components/feedback.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
+import { applyBackup, BACKUP_MAX_BYTES, createBackupJson, parseBackupJson } from "../../shared/backup.ts";
+import type { FocusGateBackup } from "../../shared/backup.ts";
+import { guard } from "../../shared/gating.ts";
+import { RESET_CONFIRMATION_PHRASE } from "../../shared/dataActions.ts";
+import type { DataActionResult } from "../../background/dataActions.ts";
+import { sendDataActionMessage } from "../lib/dataActions.ts";
 import { RulesView } from "../popup/RulesView.tsx";
 import { SettingsView } from "../popup/SettingsView.tsx";
 import { StatsView } from "../popup/StatsView.tsx";
@@ -178,13 +185,120 @@ function WeeklyReportCard({ report }: { report: WeeklyReport }) {
 }
 
 function BackupPanel({ state }: { state: AppState }) {
+  const showToast = useToast();
+  const [backupJson, setBackupJson] = useState<string | null>(null);
+  const [backupPreview, setBackupPreview] = useState<FocusGateBackup | null>(null);
+  const [backupError, setBackupError] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetText, setResetText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<DataActionResult | null>(null);
+
+  const resetDecision = guard("reset_data", {
+    session: state.session,
+    standalone: state.standalone,
+    hasPassword: state.password !== null,
+    now: Date.now(),
+  });
+  const resetLocked = resetDecision.result === "locked";
+  const preview = backupPreview ? applyBackup(state, backupPreview).report : null;
+
+  function exportBackup() {
+    try {
+      const json = createBackupJson(state);
+      const url = URL.createObjectURL(
+        new Blob([json], { type: "application/json" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `focusgate-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      showToast("Backup exported.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "FocusGate could not export this backup.",
+        "error",
+      );
+    }
+  }
+
+  async function readBackup(file: File | undefined) {
+    setBackupError("");
+    setResult(null);
+    setBackupJson(null);
+    setBackupPreview(null);
+    if (!file) return;
+    if (file.size > BACKUP_MAX_BYTES) {
+      setBackupError("Backup files must be 2 MB or smaller.");
+      return;
+    }
+    try {
+      const json = await file.text();
+      const parsed = parseBackupJson(json);
+      if (!parsed.ok) {
+        setBackupError(parsed.error);
+        return;
+      }
+      setBackupJson(json);
+      setBackupPreview(parsed.backup);
+    } catch {
+      setBackupError("FocusGate could not read this file.");
+    }
+  }
+
+  async function importBackup() {
+    if (!backupJson) return;
+    setBusy(true);
+    const response = await sendDataActionMessage({
+      type: "backup/import",
+      json: backupJson,
+    });
+    setBusy(false);
+    if (!response.ok) {
+      showToast(response.message ?? "The backup could not be imported.", "error");
+      return;
+    }
+    setResult(response);
+    setImportOpen(false);
+    showToast(
+      response.mode === "merge" ? "Backup merged safely." : "Backup restored.",
+      "success",
+    );
+    if (response.warning) showToast(response.warning, "error");
+  }
+
+  async function resetData(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    const response = await sendDataActionMessage({
+      type: "data/reset",
+      confirm: resetText,
+    });
+    setBusy(false);
+    if (!response.ok) {
+      showToast(response.message ?? "Data could not be reset.", "error");
+      return;
+    }
+    setResetOpen(false);
+    setResetText("");
+    setResult(null);
+    setBackupJson(null);
+    setBackupPreview(null);
+    showToast("FocusGate data was reset.", "success");
+    if (response.warning) showToast(response.warning, "error");
+  }
+
   return (
     <section className="fg-page" aria-labelledby="backup-title">
       <div className="fg-page__heading">
         <div>
           <h1 id="backup-title">Backup and restore</h1>
           <p className="fg-muted">
-            Backup export and restore are not available yet.
+            Export your settings and activity, or restore from a FocusGate backup.
           </p>
         </div>
       </div>
@@ -195,38 +309,161 @@ function BackupPanel({ state }: { state: AppState }) {
             {new Date(state.backup_v1.createdAt).toLocaleString()}.
           </p>
           <p className="fg-muted">
-            This is a migration safety copy, not an export you can restore from this page.
+            This migration safety copy is separate from your downloadable backup.
           </p>
         </Card>
       ) : (
         <Card title="Your browser data">
           <p className="fg-muted">
-            Your settings, tasks, and focus history are stored in browser storage.
-            A downloadable backup is not available yet.
+            Your data stays in browser storage. Backups never contain your
+            password record, active session, standalone block, usage ledger, or
+            enforcement health.
           </p>
         </Card>
       )}
       <div className="fg-wrap">
-        <Button
-          variant="secondary"
-          disabled
-          aria-describedby="backup-controls-help"
-          title="Backup export is not available yet."
-        >
+        <Button variant="secondary" onClick={exportBackup}>
           Export backup
         </Button>
-        <Button
-          variant="secondary"
-          disabled
-          aria-describedby="backup-controls-help"
-          title="Backup restore is not available yet."
-        >
-          Restore backup
-        </Button>
+        <input
+          id="backup-file"
+          type="file"
+          accept=".json,application/json"
+          aria-label="Choose a FocusGate backup file"
+          onChange={(event) => void readBackup(event.currentTarget.files?.[0])}
+        />
       </div>
-      <p className="fg-muted" id="backup-controls-help">
-        Backup export and restore are not available yet.
-      </p>
+      {backupError && <p className="fg-field__error" role="alert">{backupError}</p>}
+      {backupPreview && preview && (
+        <Card title="Backup preview">
+          <p className="fg-muted">
+            Exported {new Date(backupPreview.exportedAt).toLocaleString()}.
+            This will {preview.mode === "merge" ? "merge safely with existing data" : "restore into an empty state"}.
+          </p>
+          <dl className="fg-stat-list">
+            <div><dt>Sites</dt><dd>{backupPreview.data.sites.length + backupPreview.data.alwaysBlockedSites.length}</dd></div>
+            <div><dt>Keywords</dt><dd>{backupPreview.data.keywords.length}</dd></div>
+            <div><dt>Schedules</dt><dd>{backupPreview.data.schedules.length}</dd></div>
+            <div><dt>Allowances</dt><dd>{Object.keys(backupPreview.data.allowances).length}</dd></div>
+            <div><dt>Exceptions</dt><dd>{backupPreview.data.exceptions.length}</dd></div>
+            <div><dt>Tasks</dt><dd>{backupPreview.data.tasks.length}</dd></div>
+            <div><dt>Session records</dt><dd>{backupPreview.data.stats.sessionHistory.length}</dd></div>
+          </dl>
+          <p className="fg-muted">
+            Import only adds or strengthens data in a working state. It never
+            replaces existing data and is allowed during a lock.
+          </p>
+          <Button onClick={() => setImportOpen(true)}>Import backup</Button>
+        </Card>
+      )}
+      {result?.ok && (
+        <Card title={result.mode === "merge" ? "Backup merge results" : result.mode === "reset" ? "Data reset" : "Backup restore results"}>
+          {result.added && result.added.length > 0 && (
+            <>
+              <h3>Added or restored</h3>
+              <ul>{result.added.map((item) => <li key={item}>{item}</li>)}</ul>
+            </>
+          )}
+          {result.skipped && result.skipped.length > 0 && (
+            <>
+              <h3>Skipped for safety</h3>
+              <ul>{result.skipped.map((item) => <li key={item}>{item}</li>)}</ul>
+            </>
+          )}
+          {(!result.skipped || result.skipped.length === 0) && (
+            <p className="fg-muted">No imported data needed to be skipped.</p>
+          )}
+        </Card>
+      )}
+      <Card title="Reset all data">
+        <p className="fg-muted">
+          Reset removes your rules, tasks, settings, password, and saved activity.
+          Export a backup first if you may need this data later.
+        </p>
+        <Button
+          variant="danger"
+          disabled={resetLocked}
+          title={resetLocked ? resetDecision.reason : undefined}
+          onClick={() => setResetOpen(true)}
+        >
+          Reset all data
+        </Button>
+        {resetLocked && (
+          <p className="fg-muted" role="status">{resetDecision.reason}</p>
+        )}
+      </Card>
+      <Modal
+        open={importOpen}
+        title="Import this backup?"
+        description={
+          preview?.mode === "merge"
+            ? "Existing data will be kept. Only new or stricter settings will be added; exceptions and history are skipped."
+            : "This backup will be restored into the empty state. Passwords and live runtime state are never imported."
+        }
+        onClose={() => setImportOpen(false)}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setImportOpen(false)}>
+              Cancel
+            </Button>
+            <Button disabled={busy || !backupJson} onClick={() => void importBackup()}>
+              {busy ? "Importing…" : "Import backup"}
+            </Button>
+          </>
+        }
+      >
+        {preview && (
+          <ul>
+            {preview.added.map((item) => <li key={item}>{item}</li>)}
+            {preview.skipped.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        )}
+      </Modal>
+      <Modal
+        open={resetOpen}
+        title="Reset all FocusGate data?"
+        description="This cannot be undone unless you first export a backup. Reset is refused while a strict, commitment, or standalone block is active."
+        onClose={() => {
+          setResetOpen(false);
+          setResetText("");
+        }}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setResetOpen(false);
+                setResetText("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="reset-data-form"
+              variant="danger"
+              disabled={busy || resetText !== RESET_CONFIRMATION_PHRASE || resetLocked}
+            >
+              {busy ? "Resetting…" : "Confirm reset"}
+            </Button>
+          </>
+        }
+      >
+        <form id="reset-data-form" className="fg-stack" onSubmit={resetData}>
+          <Field
+            id="reset-confirmation"
+            label={`Type ${RESET_CONFIRMATION_PHRASE}`}
+            helper="Your current password will also be required if one is set."
+          >
+            <input
+              id="reset-confirmation"
+              value={resetText}
+              autoComplete="off"
+              onChange={(event) => setResetText(event.target.value)}
+            />
+          </Field>
+        </form>
+      </Modal>
     </section>
   );
 }

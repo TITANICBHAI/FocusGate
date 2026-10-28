@@ -695,6 +695,7 @@
 - [ ] WP6.AC9 Appendix E.4 `guard()` matrix is fully covered by table-driven unit test.
 
 **Notes / progress:**
+- 2026-10-28 — Owner authorized continuing WP6 through its completion boundary. Re-inspected the clean checkout: WP6.1–WP6.3 remain verified, WP6.4 has exhaustive guard-matrix unit coverage but lacks complete guarded UI/background integration, and WP6.5–WP6.8 remain open. Continue staged WP6 implementation only; keep v1 consumers, runtime migration, and browser-dependent acceptance gated on WP5 cutover.
 - 2026-10-28 — Owner authorized starting WP6 before WP5 browser verification and cutover are complete. Begin with current-source audit and staged module/unit work only; preserve active v1 entrypoints and user data. Runtime activation and WP6 browser acceptance remain gated.
 - 2026-10-28 — Current-source review confirmed PBKDF2, legacy-hash verification/upgrade, and secure password generation already exist. Added staged background password actions/message handling and a staged setup/change/remove UI with current-password paste blocking. Active v1 routes and listeners remain unchanged; verification is pending.
 - 2026-10-28 — Restored local dependencies from the committed lockfile: `npm ci --no-audit` exited 0 and added 125 packages. No manifest or lockfile edits were made; rerun typecheck next.

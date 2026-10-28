@@ -20,6 +20,7 @@ import {
 import { ConfirmDialog, Modal, useToast } from "../components/feedback.tsx";
 import { Tabs } from "../components/Tabs.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
+import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 
 type RuleSection = "sites" | "exceptions" | "keywords" | "schedules" | "limits";
 type SiteMode = "focus" | "always";
@@ -109,8 +110,8 @@ function SitesPanel({ state }: { state: AppState }) {
       setInput("");
       setError("");
       showToast(`${domain} added to ${mode === "focus" ? "Focus" : "Always"}.`, "success");
-    } catch {
-      showToast("The site could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The site could not be saved."), "error");
     }
   }
 
@@ -121,8 +122,8 @@ function SitesPanel({ state }: { state: AppState }) {
         latest.filter((item) => item !== domain),
       );
       showToast(`${domain} removed.`, "success");
-    } catch {
-      showToast("The site could not be removed.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The site could not be removed."), "error");
     }
   }
 
@@ -330,8 +331,8 @@ function ExceptionsPanel({ state }: { state: AppState }) {
       setInput("");
       setError("");
       showToast("Exception added.", "success");
-    } catch {
-      showToast("The exception could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The exception could not be saved."), "error");
     }
   }
   return (
@@ -379,7 +380,12 @@ function ExceptionsPanel({ state }: { state: AppState }) {
                         latest.filter((item) => item !== exception),
                       )
                       .then(() => showToast("Exception removed.", "success"))
-                      .catch(() => showToast("The exception could not be removed.", "error"));
+                      .catch((error) =>
+                        showToast(
+                          storageWriteErrorMessage(error, "The exception could not be removed."),
+                          "error",
+                        ),
+                      );
                   }}
                 >
                   Remove
@@ -415,8 +421,8 @@ function KeywordsPanel({ state }: { state: AppState }) {
       });
       setInput("");
       showToast(`${entries.length} keyword${entries.length === 1 ? "" : "s"} saved.`, "success");
-    } catch {
-      showToast("The keywords could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The keywords could not be saved."), "error");
     }
   }
 
@@ -498,7 +504,12 @@ function KeywordsPanel({ state }: { state: AppState }) {
                         ),
                       )
                       .then(() => showToast("Keyword removed.", "success"))
-                      .catch(() => showToast("The keyword could not be removed.", "error"));
+                      .catch((error) =>
+                        showToast(
+                          storageWriteErrorMessage(error, "The keyword could not be removed."),
+                          "error",
+                        ),
+                      );
                   }}
                 >
                   Remove
@@ -554,8 +565,8 @@ function SchedulesPanel({ state }: { state: AppState }) {
       setAddOpen(false);
       setFormError("");
       showToast("Schedule added.", "success");
-    } catch {
-      showToast("The schedule could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The schedule could not be saved."), "error");
     }
   }
 
@@ -566,8 +577,8 @@ function SchedulesPanel({ state }: { state: AppState }) {
           schedule.id === id ? { ...schedule, ...changes } : schedule,
         ),
       );
-    } catch {
-      showToast("The schedule could not be updated.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The schedule could not be updated."), "error");
     }
   }
 
@@ -578,8 +589,8 @@ function SchedulesPanel({ state }: { state: AppState }) {
         latest.filter((schedule) => schedule.id !== deleteId),
       );
       showToast("Schedule deleted.", "success");
-    } catch {
-      showToast("The schedule could not be deleted.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The schedule could not be deleted."), "error");
     } finally {
       setDeleteId(null);
     }
@@ -1071,8 +1082,8 @@ function LimitsPanel({ state }: { state: AppState }) {
       setFormError("");
       setAddOpen(false);
       showToast("Daily limit added.", "success");
-    } catch {
-      showToast("The limit could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The limit could not be saved."), "error");
     }
   }
 
@@ -1114,8 +1125,8 @@ function LimitsPanel({ state }: { state: AppState }) {
                     return next;
                   });
                   showToast("Daily limit removed.", "success");
-                } catch {
-                  showToast("The limit could not be removed.", "error");
+                } catch (error) {
+                  showToast(storageWriteErrorMessage(error, "The limit could not be removed."), "error");
                 }
               }}
               onChange={async (next) => {
@@ -1124,8 +1135,8 @@ function LimitsPanel({ state }: { state: AppState }) {
                     ...latest,
                     [domain]: next,
                   }));
-                } catch {
-                  showToast("The limit could not be updated.", "error");
+                } catch (error) {
+                  showToast(storageWriteErrorMessage(error, "The limit could not be updated."), "error");
                 }
               }}
             />

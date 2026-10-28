@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AppState, Settings } from "../../shared/types.ts";
 import { Button, Card, Field, Toggle } from "../components/primitives.tsx";
 import { Tabs } from "../components/Tabs.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { PasswordSettings } from "./PasswordSettings.tsx";
+import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
+import {
+  canRequestHostAccess,
+  checkProtection,
+  extensionSettingsUrl,
+  getBrowserProtectionApi,
+  requestHostAccess,
+  summarizeProtectionGaps,
+} from "../lib/protectionStatus.ts";
+import type { ProtectionPermission, ProtectionStatus } from "../lib/protectionStatus.ts";
 
 type SettingsSection =
   | "security"
+  | "appearance"
   | "timer"
   | "notifications"
   | "block-page"
@@ -18,6 +29,7 @@ type SettingsSection =
 
 const SETTINGS_TABS = [
   { value: "security", label: "Security" },
+  { value: "appearance", label: "Appearance" },
   { value: "timer", label: "Timer" },
   { value: "notifications", label: "Alerts" },
   { value: "block-page", label: "Block page" },
@@ -38,9 +50,82 @@ function localDateTime(value: number): string {
     : "Not recorded";
 }
 
+function permissionLabel(value: ProtectionPermission): string {
+  if (value === "available") return "Available";
+  if (value === "review") return "Needs review";
+  if (value === "unavailable") return "Check unavailable";
+  return "Checking";
+}
+
+function permissionClass(value: ProtectionPermission): string {
+  return value === "review" ? "fg-field__error" : "fg-muted";
+}
+
+function ageLabel(value: number, now: number): string {
+  if (value <= 0) return "Not recorded";
+  const minutes = Math.max(0, Math.floor((now - value) / 60_000));
+  if (minutes < 1) return "Less than a minute ago";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (hours < 24) return remainder ? `${hours} h ${remainder} min ago` : `${hours} h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function gapDurationLabel(durationMs: number): string {
+  const minutes = Math.ceil(durationMs / 60_000);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder ? `${hours} h ${remainder} min` : `${hours} h`;
+}
+
 export function SettingsView({ state }: { state: AppState }) {
   const [section, setSection] = useState<SettingsSection>("security");
   const showToast = useToast();
+  const [protection, setProtection] = useState<ProtectionStatus>({
+    incognito: "checking",
+    siteAccess: "checking",
+    notifications: "checking",
+  });
+  const [checkingProtection, setCheckingProtection] = useState(false);
+  const browserApi = getBrowserProtectionApi();
+  const browserSettingsUrl = extensionSettingsUrl(
+    browserApi?.userAgent ?? "",
+    browserApi?.id,
+  );
+
+  async function refreshProtection() {
+    setCheckingProtection(true);
+    try {
+      setProtection(await checkProtection(browserApi));
+    } finally {
+      setCheckingProtection(false);
+    }
+  }
+
+  useEffect(() => {
+    if (section === "protection") void refreshProtection();
+  }, [section]);
+
+  async function requestSiteAccess() {
+    const result = await requestHostAccess(browserApi);
+    if (!result.requested) {
+      showToast("Open extension settings to grant site access.", "info");
+    } else if (!result.granted) {
+      showToast("Site access was not granted.", "info");
+    } else {
+      showToast("Site access granted.", "success");
+    }
+    await refreshProtection();
+  }
+
+  const protectionGaps = summarizeProtectionGaps(
+    state.sessionHistory,
+    state.session.gaps,
+    Date.now(),
+  );
   const updateSettings = async (
     updater: (current: Settings) => Settings,
     successMessage: string,
@@ -48,8 +133,8 @@ export function SettingsView({ state }: { state: AppState }) {
     try {
       await uiStorageStore.set("settings", updater);
       showToast(successMessage, "success");
-    } catch {
-      showToast("The setting could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The setting could not be saved."), "error");
     }
   };
 
@@ -75,6 +160,55 @@ export function SettingsView({ state }: { state: AppState }) {
         aria-labelledby={`settings-${section}-tab`}
         className="fg-stack"
       >
+        {section === "appearance" && (
+          <Card title="Appearance">
+            <Field id="appearance-theme" label="Theme">
+              <select
+                id="appearance-theme"
+                value={state.settings.theme}
+                onChange={(event) => {
+                  const theme = event.target.value as Settings["theme"];
+                  void updateSettings(
+                    (current) => ({ ...current, theme }),
+                    "Theme saved.",
+                  );
+                }}
+              >
+                <option value="system">Use system setting</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </Field>
+            <Field
+              id="font-scale"
+              label="Text size"
+              helper="Adjust text from 90% to 120%."
+            >
+              <div className="fg-wrap">
+                <input
+                  id="font-scale"
+                  type="range"
+                  min={9}
+                  max={12}
+                  step={1}
+                  value={Math.round(state.settings.fontScale * 10)}
+                  aria-valuetext={`${Math.round(state.settings.fontScale * 100)}%`}
+                  onChange={(event) => {
+                    const fontScale = Number(event.target.value) / 10;
+                    void updateSettings(
+                      (current) => ({ ...current, fontScale }),
+                      "Text size saved.",
+                    );
+                  }}
+                />
+                <output htmlFor="font-scale">
+                  {Math.round(state.settings.fontScale * 100)}%
+                </output>
+              </div>
+            </Field>
+          </Card>
+        )}
+
         {section === "security" && (
           <PasswordSettings state={state} />
         )}
@@ -299,8 +433,48 @@ export function SettingsView({ state }: { state: AppState }) {
         {section === "protection" && (
           <Card title="Protection status">
             <div className="fg-row">
-              <span>Background check</span>
-              <span>{localDateTime(state.health.lastHeartbeatAt)}</span>
+              <span>Incognito access</span>
+              <strong className={permissionClass(protection.incognito)}>
+                {permissionLabel(protection.incognito)}
+              </strong>
+            </div>
+            {protection.incognito === "review" && (
+              <p className="fg-field__error">
+                Incognito access is off. Enable it from your browser’s extension settings.
+              </p>
+            )}
+            <div className="fg-row">
+              <span>Site access</span>
+              <strong className={permissionClass(protection.siteAccess)}>
+                {permissionLabel(protection.siteAccess)}
+              </strong>
+            </div>
+            {protection.siteAccess === "review" && (
+              <p className="fg-field__error">
+                FocusGate needs access to sites to enforce your rules. Use the
+                browser settings link below to review site access.
+              </p>
+            )}
+            <div className="fg-row">
+              <span>Notifications</span>
+              <strong className={permissionClass(protection.notifications)}>
+                {permissionLabel(protection.notifications)}
+              </strong>
+            </div>
+            {protection.notifications === "review" && (
+              <p className="fg-field__error">
+                Browser notification permission is off. FocusGate cannot show alerts
+                until it is enabled.
+              </p>
+            )}
+            <div className="fg-row">
+              <span>Last background heartbeat</span>
+              <span>
+                {ageLabel(state.health.lastHeartbeatAt, Date.now())}
+                {state.health.lastHeartbeatAt > 0 && (
+                  <> · {localDateTime(state.health.lastHeartbeatAt)}</>
+                )}
+              </span>
             </div>
             <div className="fg-row">
               <span>Last rule update</span>
@@ -310,6 +484,14 @@ export function SettingsView({ state }: { state: AppState }) {
               <span>Blocking rules</span>
               <span>{state.health.ruleCount}</span>
             </div>
+            <div className="fg-row">
+              <span>Protection gaps · last 7 days</span>
+              <span>
+                {protectionGaps.count === 0
+                  ? "None recorded"
+                  : `${protectionGaps.count} · ${gapDurationLabel(protectionGaps.durationMs)}`}
+              </span>
+            </div>
             {state.health.lastError ? (
               <p className="fg-field__error">{state.health.lastError}</p>
             ) : (
@@ -317,8 +499,39 @@ export function SettingsView({ state }: { state: AppState }) {
                 No recent background error is recorded.
               </p>
             )}
+            <div className="fg-wrap">
+              <Button
+                variant="secondary"
+                disabled={checkingProtection}
+                onClick={() => void refreshProtection()}
+              >
+                {checkingProtection ? "Checking…" : "Check again"}
+              </Button>
+              {protection.siteAccess === "review" &&
+                canRequestHostAccess(browserApi) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => void requestSiteAccess()}
+                  >
+                    Grant site access
+                  </Button>
+                )}
+              {browserSettingsUrl && (
+                <a href={browserSettingsUrl} target="_blank" rel="noreferrer">
+                  Open extension settings
+                </a>
+              )}
+            </div>
+            {!browserSettingsUrl && (
+              <p className="fg-muted">
+                Browser settings could not be opened from this browser.
+              </p>
+            )}
             <p className="fg-muted">
-              Incognito and site permissions are checked separately by your browser.
+              Blocking works only while FocusGate is enabled in this browser
+              profile. The browser controls incognito access, site permissions,
+              and notifications. Clearing extension storage or disabling the
+              extension can remove protection.
             </p>
           </Card>
         )}
@@ -327,7 +540,7 @@ export function SettingsView({ state }: { state: AppState }) {
           <Card title="Your data">
             <p className="fg-muted">
               FocusGate stores your focus settings and activity in this browser.
-              Backup and restore are not available yet.
+              Use the dashboard Backup page to export, import, or reset your data.
             </p>
             <dl className="fg-stat-list">
               <div><dt>Tasks</dt><dd>{state.tasks.length}</dd></div>

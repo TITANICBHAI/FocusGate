@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { AppState, LockLevel, SessionState } from "../../shared/types.ts";
 import {
+  MAX_STANDALONE_MINUTES,
+  MIN_STANDALONE_MINUTES,
+} from "../../shared/standalone.ts";
+import {
   Button,
   Card,
   Field,
@@ -10,6 +14,7 @@ import {
 } from "../components/primitives.tsx";
 import { Modal, useToast } from "../components/feedback.tsx";
 import { sendSessionMessage } from "../lib/sessionActions.ts";
+import { sendStandaloneMessage } from "../lib/standaloneActions.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;
 const LOCK_OPTIONS = [
@@ -83,8 +88,38 @@ function SessionClock({
   );
 }
 
+function StandaloneCountdown({ until }: { until: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const seconds = Math.max(0, Math.ceil((until - now) / 1_000));
+  const remaining =
+    seconds >= 86_400
+      ? `${Math.floor(seconds / 86_400)}d ${Math.floor(
+          (seconds % 86_400) / 3_600,
+        )}h`
+      : seconds >= 3_600
+        ? `${Math.floor(seconds / 3_600)}h ${Math.floor(
+            (seconds % 3_600) / 60,
+          )}m`
+        : `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  return (
+    <p className="fg-focus__time" aria-live="off">
+      {seconds > 0 ? `${remaining} remaining` : "Expiry reached; waiting for browser update"}
+    </p>
+  );
+}
+
 export function FocusView({ state }: { state: AppState }) {
   const showToast = useToast();
+  const [standaloneStartOpen, setStandaloneStartOpen] = useState(false);
+  const [standaloneMinutes, setStandaloneMinutes] = useState("60");
+  const [standaloneSitesText, setStandaloneSitesText] = useState("");
+  const [standaloneSiteInput, setStandaloneSiteInput] = useState("");
+  const [standaloneExtendMinutes, setStandaloneExtendMinutes] = useState("15");
+  const [standaloneError, setStandaloneError] = useState("");
   const [durationText, setDurationText] = useState(
     String(state.settings.defaultDurationMin || 25),
   );
@@ -107,6 +142,75 @@ export function FocusView({ state }: { state: AppState }) {
     state.alwaysBlockedSites.length > 0 ||
     state.schedules.some((schedule) => schedule.enabled && schedule.sites.length > 0);
   const hasPassword = state.password !== null;
+
+  async function startStandalone(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const minutes = Number(standaloneMinutes);
+    const sites = standaloneSitesText
+      .split(/[,\n]/)
+      .map((site) => site.trim())
+      .filter(Boolean);
+    if (
+      !Number.isInteger(minutes) ||
+      minutes < MIN_STANDALONE_MINUTES ||
+      minutes > MAX_STANDALONE_MINUTES
+    ) {
+      setStandaloneError("Choose a duration from 5 minutes to 30 days.");
+      return;
+    }
+    if (sites.length === 0) {
+      setStandaloneError("Add at least one website to block.");
+      return;
+    }
+    const reply = await sendStandaloneMessage({
+      type: "standalone/start",
+      minutes,
+      sites,
+    });
+    if (!reply.ok) {
+      setStandaloneError(reply.message ?? "The block could not be started.");
+      return;
+    }
+    setStandaloneError("");
+    setStandaloneStartOpen(false);
+    setStandaloneSitesText("");
+    showToast("Standalone block started.", "success");
+    if (reply.warning) showToast(reply.warning, "error");
+  }
+
+  async function extendStandalone(minutes: number) {
+    const reply = await sendStandaloneMessage({
+      type: "standalone/extend",
+      minutes,
+    });
+    if (!reply.ok) {
+      showToast(reply.message ?? "The block could not be extended.", "error");
+      return;
+    }
+    showToast(`Block extended by ${minutes} minutes.`, "success");
+    if (reply.warning) showToast(reply.warning, "error");
+  }
+
+  async function addStandaloneSite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const site = standaloneSiteInput.trim();
+    if (!site) {
+      setStandaloneError("Enter a website to add.");
+      return;
+    }
+    const reply = await sendStandaloneMessage({
+      type: "standalone/addSites",
+      sites: [site],
+    });
+    if (!reply.ok) {
+      setStandaloneError(reply.message ?? "The site could not be added.");
+      return;
+    }
+    setStandaloneSiteInput("");
+    setStandaloneError("");
+    showToast("Site added to the active block.", "success");
+    if (reply.warning) showToast(reply.warning, "error");
+  }
 
   useEffect(() => {
     setDurationText(String(state.settings.defaultDurationMin || 25));
@@ -209,23 +313,109 @@ export function FocusView({ state }: { state: AppState }) {
         title={standaloneActive ? "Standalone block active" : "Block now"}
         description={
           standaloneActive
-            ? `This block is scheduled to end at ${new Date(
+            ? `Cannot end early. Scheduled to end ${new Date(
                 state.standalone.until,
-              ).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
-            : "Start a timed block without beginning a focus session."
+              ).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}.`
+            : "Block selected sites without starting a focus session. The block ends automatically."
         }
       >
-        <Button
-          variant="secondary"
-          disabled
-          aria-describedby="standalone-block-controls-help"
-          title="Standalone blocking is not available yet."
-        >
-          {standaloneActive ? "Block controls unavailable" : "Start a block"}
-        </Button>
-        <p className="fg-muted" id="standalone-block-controls-help">
-          Standalone blocking is not available yet.
-        </p>
+        {standaloneActive ? (
+          <div className="fg-stack">
+            <p className="fg-focus__time" aria-live="off">
+            <StandaloneCountdown until={state.standalone.until} />
+            <p className="fg-muted">
+              {state.standalone.sites.length} site
+              {state.standalone.sites.length === 1 ? "" : "s"} blocked
+            </p>
+            <ul className="fg-list" aria-label="Standalone blocked sites">
+              {state.standalone.sites.map((site) => (
+                <li className="fg-list-item" key={site}>
+                  <strong>{site}</strong>
+                </li>
+              ))}
+            </ul>
+            <form className="fg-stack" onSubmit={addStandaloneSite}>
+              <Field
+                id="standalone-add-site"
+                label="Add a site"
+                error={standaloneError || undefined}
+              >
+                <input
+                  id="standalone-add-site"
+                  value={standaloneSiteInput}
+                  placeholder="example.com"
+                  onChange={(event) => {
+                    setStandaloneSiteInput(event.target.value);
+                    setStandaloneError("");
+                  }}
+                />
+              </Field>
+              <Button type="submit" variant="secondary">
+                Add site
+              </Button>
+            </form>
+            <div className="fg-wrap" aria-label="Quick extend">
+              {[15, 30, 60, 120].map((minutes) => (
+                <Button
+                  key={minutes}
+                  variant="secondary"
+                  onClick={() => void extendStandalone(minutes)}
+                >
+                  +{minutes < 60 ? `${minutes} min` : `${minutes / 60} h`}
+                </Button>
+              ))}
+            </div>
+            <form
+              className="fg-wrap"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const minutes = Number(standaloneExtendMinutes);
+                if (
+                  !Number.isInteger(minutes) ||
+                  minutes < MIN_STANDALONE_MINUTES ||
+                  minutes > MAX_STANDALONE_MINUTES
+                ) {
+                  setStandaloneError("Choose an extension from 5 minutes to 30 days.");
+                  return;
+                }
+                void extendStandalone(minutes);
+              }}
+            >
+              <Field
+                id="standalone-extend-minutes"
+                label="Custom extension in minutes"
+              >
+                <input
+                  id="standalone-extend-minutes"
+                  type="number"
+            min={MIN_STANDALONE_MINUTES}
+            max={MAX_STANDALONE_MINUTES}
+                  step={1}
+                  value={standaloneExtendMinutes}
+                  onChange={(event) => setStandaloneExtendMinutes(event.target.value)}
+                />
+              </Field>
+              <Button type="submit" variant="secondary">
+                Extend
+              </Button>
+            </form>
+            {standaloneError && (
+              <p className="fg-field__error" role="alert">
+                {standaloneError}
+              </p>
+            )}
+          </div>
+        ) : (
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setStandaloneError("");
+              setStandaloneStartOpen(true);
+            }}
+          >
+            Start a timed block
+          </Button>
+        )}
       </Card>
 
       {!isRunning ? (
@@ -358,6 +548,74 @@ export function FocusView({ state }: { state: AppState }) {
           )}
         </Card>
       )}
+
+      <Modal
+        open={standaloneStartOpen}
+        title="Confirm standalone block"
+        description="This block cannot be ended early. It will stop at the expiry you choose. You can add sites or extend it while active."
+        onClose={() => {
+          setStandaloneStartOpen(false);
+          setStandaloneError("");
+        }}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setStandaloneStartOpen(false);
+                setStandaloneError("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="standalone-start-form">
+              Confirm and start
+            </Button>
+          </>
+        }
+      >
+        <form
+          id="standalone-start-form"
+          className="fg-stack"
+          onSubmit={startStandalone}
+        >
+          <Field
+            id="standalone-minutes"
+            label="Duration in minutes"
+            helper={`Choose ${MIN_STANDALONE_MINUTES} minutes to 30 days. There is no unlimited option.`}
+            error={standaloneError || undefined}
+          >
+            <input
+              id="standalone-minutes"
+              type="number"
+              min={MIN_STANDALONE_MINUTES}
+              max={MAX_STANDALONE_MINUTES}
+              step={1}
+              value={standaloneMinutes}
+              onChange={(event) => {
+                setStandaloneMinutes(event.target.value);
+                setStandaloneError("");
+              }}
+            />
+          </Field>
+          <Field
+            id="standalone-sites"
+            label="Sites to block"
+            helper="Enter one domain or URL per line. This list is separate from your rules."
+          >
+            <textarea
+              id="standalone-sites"
+              rows={4}
+              value={standaloneSitesText}
+              onChange={(event) => {
+                setStandaloneSitesText(event.target.value);
+                setStandaloneError("");
+              }}
+              placeholder={"example.com\nreddit.com"}
+            />
+          </Field>
+        </form>
+      </Modal>
 
       <Modal
         open={stopOpen}

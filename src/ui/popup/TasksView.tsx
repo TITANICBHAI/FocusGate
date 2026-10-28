@@ -5,6 +5,7 @@ import { Button, Card, EmptyState, Field, Chip } from "../components/primitives.
 import { ConfirmDialog, Modal, useToast } from "../components/feedback.tsx";
 import { sendSessionMessage } from "../lib/sessionActions.ts";
 import { uiStorageStore } from "../hooks/storageStore.ts";
+import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 
 export function TasksView({ state }: { state: AppState }) {
   const showToast = useToast();
@@ -52,8 +53,8 @@ export function TasksView({ state }: { state: AppState }) {
       setScheduledTime("");
       setAddOpen(false);
       showToast("Task added.", "success");
-    } catch {
-      showToast("The task could not be saved.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The task could not be saved."), "error");
     }
   }
 
@@ -75,8 +76,8 @@ export function TasksView({ state }: { state: AppState }) {
             : item,
         ),
       );
-    } catch {
-      showToast("The task could not be updated.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The task could not be updated."), "error");
     }
   }
 
@@ -115,8 +116,8 @@ export function TasksView({ state }: { state: AppState }) {
         return;
       }
       showToast("Task session started.", "success");
-    } catch {
-      showToast("This task could not be started.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "This task could not be started."), "error");
     }
   }
 
@@ -132,8 +133,8 @@ export function TasksView({ state }: { state: AppState }) {
         latest.filter((task) => task.id !== deleteTarget.id),
       );
       showToast("Task removed.", "success");
-    } catch {
-      showToast("The task could not be removed.", "error");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The task could not be removed."), "error");
     }
     setDeleteTarget(null);
   }

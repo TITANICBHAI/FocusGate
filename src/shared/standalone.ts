@@ -1,0 +1,3 @@
+export const MIN_STANDALONE_MINUTES = 5;
+export const MAX_STANDALONE_MINUTES = 30 * 24 * 60;
+export const MAX_STANDALONE_SITES = 500;

@@ -204,4 +204,15 @@ describe("staged UI storage store", () => {
     ).rejects.toThrow("extension storage exists without local area");
     expect(brokenRuntime.getLocalStorage).not.toHaveBeenCalled();
   });
+
+  it("routes user-editable writes through the guarded background adapter", async () => {
+    const { backend } = createBackend({ blockedSites: ["example.com"] });
+    backend.writeGuarded = vi.fn(async () => undefined);
+    const store = new StorageStore(backend);
+
+    await store.set("blockedSites", (sites) => sites.filter((site) => site !== "example.com"));
+
+    expect(backend.writeGuarded).toHaveBeenCalledWith("blockedSites", []);
+    expect(backend.write).not.toHaveBeenCalled();
+  });
 });

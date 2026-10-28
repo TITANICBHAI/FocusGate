@@ -83,7 +83,7 @@ body {
   color: var(--text);
   font-family:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.45;
 }
 
@@ -155,7 +155,7 @@ html:has(.popup-page) {
 .fg-eyebrow {
   margin: 0 0 2px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -163,7 +163,7 @@ html:has(.popup-page) {
 
 .fg-block-page h1 {
   margin: 0;
-  font-size: clamp(24px, 5vw, 34px);
+  font-size: clamp(1.5rem, 5vw, 2.125rem);
   line-height: 1.15;
 }
 
@@ -175,12 +175,12 @@ html:has(.popup-page) {
 
 .fg-block-page__message {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .fg-block-page__countdown {
   margin: 0;
-  font-size: 28px;
+  font-size: 1.75rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
@@ -190,7 +190,7 @@ html:has(.popup-page) {
   max-width: 100%;
   gap: 4px;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-block-page__actions {
@@ -223,7 +223,7 @@ html:has(.popup-page) {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 650;
 }
 
@@ -235,7 +235,7 @@ html:has(.popup-page) {
 
 .fg-onboarding h1 {
   margin: 0;
-  font-size: clamp(26px, 5vw, 34px);
+  font-size: clamp(1.625rem, 5vw, 2.125rem);
   line-height: 1.15;
 }
 
@@ -318,7 +318,7 @@ html:has(.popup-page) {
 }
 
 .fg-dashboard__brand .fg-muted {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
 }
 
@@ -330,7 +330,7 @@ html:has(.popup-page) {
 
 .fg-dashboard__setup {
   color: var(--accent);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .fg-dashboard__tabs {
@@ -349,7 +349,7 @@ html:has(.popup-page) {
 
 .fg-report-sites h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .fg-schedule-lists {
@@ -380,7 +380,7 @@ html:has(.popup-page) {
   background: transparent;
   color: inherit;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -431,7 +431,7 @@ html:has(.popup-page) {
   min-width: 0;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -472,7 +472,7 @@ html:has(.popup-page) {
   background: var(--surface);
   padding: 4px 9px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -520,7 +520,7 @@ html:has(.popup-page) {
   background: transparent;
   color: var(--text-subtle);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-popup__nav button[aria-selected="true"] {
@@ -556,7 +556,7 @@ html:has(.popup-page) {
 
 .fg-page__heading h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
@@ -566,7 +566,7 @@ html:has(.popup-page) {
 
 .fg-muted {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -609,7 +609,7 @@ html:has(.popup-page) {
 
 .fg-card__title {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -627,7 +627,7 @@ html:has(.popup-page) {
   border-radius: 8px;
   padding: 0 12px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   transition:
     background-color 160ms ease-out,
@@ -691,7 +691,7 @@ html:has(.popup-page) {
 
 .fg-field__label {
   color: var(--text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -706,7 +706,7 @@ html:has(.popup-page) {
   background: var(--bg);
   color: var(--text);
   padding: 7px 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .fg-field textarea {
@@ -717,7 +717,7 @@ html:has(.popup-page) {
 .fg-field__helper,
 .fg-field__error {
   margin: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-field__helper {
@@ -742,7 +742,7 @@ html:has(.popup-page) {
 }
 
 .fg-toggle-row__label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -805,7 +805,7 @@ html:has(.popup-page) {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-segmented button.is-selected {
@@ -822,7 +822,7 @@ html:has(.popup-page) {
   background: var(--surface-2);
   padding: 2px 8px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.2;
 }
 
@@ -919,7 +919,7 @@ html:has(.popup-page) {
   padding: 0 12px;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .fg-tabs button[aria-selected="true"] {
@@ -930,7 +930,7 @@ html:has(.popup-page) {
 .fg-tabs--compact button {
   min-height: 32px;
   padding: 0 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-modal-backdrop {
@@ -964,13 +964,13 @@ html:has(.popup-page) {
 
 .fg-modal__header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .fg-modal__header p {
   margin: 4px 0 0;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .fg-modal__body {
@@ -1002,7 +1002,7 @@ html:has(.popup-page) {
   background: var(--surface-2);
   padding: 10px 12px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
 }
 
@@ -1019,7 +1019,7 @@ html:has(.popup-page) {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
   text-decoration: underline;
 }
 
@@ -1038,7 +1038,7 @@ html:has(.popup-page) {
 
 .storage-gate-error h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .storage-gate-error p {
@@ -1072,7 +1072,7 @@ html:has(.popup-page) {
 }
 
 .full-page__header .fg-brand {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .fg-note {
@@ -1080,7 +1080,7 @@ html:has(.popup-page) {
   background: var(--surface);
   padding: 10px 12px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .fg-divider {
@@ -1118,7 +1118,7 @@ html:has(.popup-page) {
 
 .fg-list-item__copy strong {
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
@@ -1141,12 +1141,12 @@ html:has(.popup-page) {
 
 .fg-onboarding__step {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .fg-onboarding h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 1.75rem;
   line-height: 1.15;
 }
 

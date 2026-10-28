@@ -8,6 +8,14 @@ import type {
   GuardedStateWriteService,
 } from "./guardedStateWrites.ts";
 import type { GuardedStateKey } from "../shared/guardMutations.ts";
+import type {
+  StandaloneActionResult,
+  StandaloneActionService,
+} from "./standaloneActions.ts";
+import type {
+  DataActionResult,
+  DataActionService,
+} from "./dataActions.ts";
 
 export type SessionMessage =
   | {
@@ -93,6 +101,153 @@ export function createSessionMessageHandler(
       };
     }
   };
+}
+
+export type StandaloneMessage =
+  | { type: "standalone/start"; minutes: number; sites: string[] }
+  | { type: "standalone/extend"; minutes: number }
+  | { type: "standalone/addSites"; sites: string[] };
+
+export type DataActionMessage =
+  | { type: "backup/import"; json: string }
+  | { type: "data/reset"; confirm: string; password?: string };
+
+/**
+ * Staged standalone handler. It intentionally has no stop/end message.
+ */
+export function createStandaloneMessageHandler(
+  service: StandaloneActionService,
+): (message: unknown) => Promise<StandaloneActionResult> {
+  return async (message) => {
+    if (!isKnownStandaloneMessageType(message)) {
+      return {
+        ok: false,
+        code: "UNKNOWN_MESSAGE",
+        message: "This standalone action is not supported.",
+      };
+    }
+    if (!isStandaloneMessage(message)) {
+      return {
+        ok: false,
+        code: "INVALID_MESSAGE",
+        message: "Invalid standalone block action.",
+      };
+    }
+    try {
+      switch (message.type) {
+        case "standalone/start":
+          return await service.start({
+            minutes: message.minutes,
+            sites: message.sites,
+          });
+        case "standalone/extend":
+          return await service.extend(message.minutes);
+        case "standalone/addSites":
+          return await service.addSites(message.sites);
+      }
+    } catch {
+      return {
+        ok: false,
+        code: "STANDALONE_ACTION_FAILED",
+        message: "The standalone block could not be updated. Try again.",
+      };
+    }
+  };
+}
+
+function isStandaloneMessage(message: unknown): message is StandaloneMessage {
+  if (!message || typeof message !== "object") return false;
+  const candidate = message as Record<string, unknown>;
+  if (candidate.type === "standalone/start") {
+    return (
+      Number.isInteger(candidate.minutes) &&
+      Array.isArray(candidate.sites) &&
+      candidate.sites.every((site) => typeof site === "string")
+    );
+  }
+  if (candidate.type === "standalone/extend") {
+    return Number.isInteger(candidate.minutes);
+  }
+  if (candidate.type === "standalone/addSites") {
+    return (
+      Array.isArray(candidate.sites) &&
+      candidate.sites.every((site) => typeof site === "string")
+    );
+  }
+  return false;
+}
+
+function isKnownStandaloneMessageType(message: unknown): boolean {
+  if (!message || typeof message !== "object") return false;
+  const type = (message as Record<string, unknown>).type;
+  return (
+    type === "standalone/start" ||
+    type === "standalone/extend" ||
+    type === "standalone/addSites"
+  );
+}
+
+/**
+ * Staged backup/reset handler. It remains unregistered until WP5 cutover.
+ */
+export function createDataActionMessageHandler(
+  service: DataActionService,
+): (message: unknown) => Promise<DataActionResult> {
+  return async (message) => {
+    if (!isKnownDataActionMessageType(message)) {
+      return {
+        ok: false,
+        code: "UNKNOWN_MESSAGE",
+        message: "This data action is not supported.",
+      };
+    }
+    if (!isDataActionMessage(message)) {
+      return {
+        ok: false,
+        code: "INVALID_MESSAGE",
+        message: "Invalid data action.",
+      };
+    }
+    try {
+      if (message.type === "backup/import") {
+        return await service.importBackup(message.json);
+      }
+      return await service.resetData({
+        confirm: message.confirm,
+        ...(message.password !== undefined
+          ? { password: message.password }
+          : {}),
+      });
+    } catch {
+      return {
+        ok: false,
+        code: "DATA_ACTION_FAILED",
+        message: "The data action could not be completed. Try again.",
+      };
+    }
+  };
+}
+
+function isDataActionMessage(message: unknown): message is DataActionMessage {
+  if (!message || typeof message !== "object") return false;
+  const candidate = message as Record<string, unknown>;
+  if (candidate.type === "backup/import") {
+    return typeof candidate.json === "string";
+  }
+  if (candidate.type === "data/reset") {
+    return (
+      typeof candidate.confirm === "string" &&
+      (candidate.password === undefined ||
+        typeof candidate.password === "string")
+    );
+  }
+  return false;
+}
+
+function isKnownDataActionMessageType(message: unknown): boolean {
+  if (!message || typeof message !== "object") return false;
+  const type = (message as Record<string, unknown>).type;
+  return type === "backup/import" || type === "data/reset";
 }
 
 /**

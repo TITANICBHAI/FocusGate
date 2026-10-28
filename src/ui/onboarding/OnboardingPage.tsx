@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { BUILT_IN_PRESETS, getPresetDomains } from "../../shared/presets.ts";
 import { hashPassword } from "../../shared/password.ts";
 import { normalizeDomain } from "../../shared/domains.ts";
+import {
+  checkProtection as checkBrowserProtection,
+  getBrowserProtectionApi,
+} from "../lib/protectionStatus.ts";
 import { Button, Card, Field } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
@@ -65,44 +69,7 @@ function permissionLabel(value: PermissionState): string {
 }
 
 async function checkProtection(): Promise<ProtectionCheck> {
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime?.id ||
-    !chrome.permissions
-  ) {
-    return {
-      incognito: "unavailable",
-      siteAccess: "unavailable",
-      notifications: "unavailable",
-    };
-  }
-
-  const [incognito, siteAccess, notifications] = await Promise.allSettled([
-    chrome.extension?.isAllowedIncognitoAccess(),
-    chrome.permissions.contains({ origins: ["<all_urls>"] }),
-    chrome.permissions.contains({ permissions: ["notifications"] }),
-  ]);
-
-  return {
-    incognito:
-      incognito.status === "fulfilled"
-        ? incognito.value
-          ? "available"
-          : "review"
-        : "review",
-    siteAccess:
-      siteAccess.status === "fulfilled"
-        ? siteAccess.value
-          ? "available"
-          : "review"
-        : "review",
-    notifications:
-      notifications.status === "fulfilled"
-        ? notifications.value
-          ? "available"
-          : "review"
-        : "review",
-  };
+  return checkBrowserProtection(getBrowserProtectionApi());
 }
 
 export function OnboardingPage() {
