@@ -1,1 +1,2 @@
 - [Browser-spike validation limits](browser-spike-validation.md) — a CLI browser timeout is a harness failure, not evidence about extension APIs; keep gates blocked until page output is observed.
+- [WP3 cutover sequence](wp3-cutover-sequence.md) — owner confirmed WP5/WP7 UI and atomic-cutover work stays in sequence.
