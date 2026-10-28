@@ -3,6 +3,7 @@ import { createDefaultState } from "../../src/shared/defaults.ts";
 import {
   computeBlockPlan,
   explainBlock,
+  isBlockContextActive,
   isBlockingActive,
   isFilteringActive,
 } from "../../src/shared/plan.ts";
@@ -209,6 +210,62 @@ describe("block planning", () => {
     });
     expect(computeBlockPlan(state, 1_000).hideWords).toEqual(["gaming"]);
     expect(isFilteringActive(state, 1_000)).toBe(false);
+  });
+
+  it("activates content filtering for work, standalone, and active schedule contexts", () => {
+    const state = createDefaultState();
+    expect(isBlockContextActive(state, 1_000)).toBe(false);
+    expect(isFilteringActive(state, 1_000, "www.youtube.com")).toBe(false);
+
+    state.session.status = "work";
+    expect(isBlockContextActive(state, 1_000)).toBe(true);
+    expect(isFilteringActive(state, 1_000, "www.youtube.com")).toBe(true);
+
+    state.session.status = "shortBreak";
+    state.standalone = {
+      ...state.standalone,
+      active: true,
+      startsAt: 0,
+      until: 2_000,
+    };
+    expect(isBlockContextActive(state, 1_000)).toBe(true);
+
+    state.standalone.active = false;
+    state.schedules = [
+      {
+        id: "all-day",
+        name: "All day",
+        enabled: true,
+        days: [0, 1, 2, 3, 4, 5, 6],
+        start: "00:00",
+        end: "24:00",
+        sites: [],
+        keywords: [],
+        useGlobalLists: false,
+      },
+    ];
+    expect(isBlockContextActive(state, 1_000)).toBe(true);
+    expect(isFilteringActive(state, 1_000, "www.youtube.com")).toBe(true);
+
+    state.schedules[0]!.enabled = false;
+    expect(isBlockContextActive(state, 1_000)).toBe(false);
+  });
+
+  it("keeps an always-hide keyword active without enabling a block context", () => {
+    const state = stateWith({
+      keywords: [{ text: "gaming", mode: "hide", when: "always" }],
+      settings: {
+        ...createDefaultState().settings,
+        keywords: {
+          scope: { searchQuery: true, url: true, title: true },
+          match: "substring",
+        },
+      },
+    });
+
+    expect(isBlockContextActive(state, 1_000)).toBe(false);
+    expect(isFilteringActive(state, 1_000, "youtube.com")).toBe(true);
+    expect(isFilteringActive(state, 1_000, "not a host")).toBe(false);
   });
 
   it("respects the configured query and URL keyword scopes", () => {

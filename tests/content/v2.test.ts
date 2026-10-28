@@ -112,6 +112,7 @@ function makeDependencies(initialState: AppState) {
     disconnect: vi.fn(),
   } as unknown as MutationObserver;
   let currentState = initialState;
+  let currentNow = NOW;
   let stateListener: (() => void) | undefined;
   const eventListeners = new Map<string, EventListenerOrEventListenerObject>();
   vi.mocked(documentRef.addEventListener).mockImplementation(
@@ -136,7 +137,7 @@ function makeDependencies(initialState: AppState) {
       stateListener = listener;
       return vi.fn();
     }),
-    now: () => NOW,
+    now: () => currentNow,
     schedule: vi.fn((callback: () => void, delay: number) => {
       const timer = { callback, delay, cancelled: false };
       scheduled.push(timer);
@@ -166,6 +167,9 @@ function makeDependencies(initialState: AppState) {
     setState(state: AppState) {
       currentState = state;
       stateListener?.();
+    },
+    setNow(now: number) {
+      currentNow = now;
     },
     styles,
     documentQuerySelectorAll: documentRef.querySelectorAll,
@@ -291,6 +295,72 @@ describe("staged v2 content script", () => {
     expect(fixture.container.getAttribute("data-fg-hidden")).toBeNull();
     expect(fixture.styles.size).toBe(0);
     expect(fixture.dependencies.createObserver).not.toHaveBeenCalled();
+    controller.stop();
+  });
+
+  it("runs toggled filters during a work context even when no site is blocked", async () => {
+    const state = makeState(false);
+    state.blockedSites = [];
+    const fixture = makeDependencies(state);
+    const controller = new ContentScriptController(fixture.dependencies);
+    await controller.start();
+
+    expect(fixture.styles.get("focusgate-filters")?.textContent).toContain(
+      "ytd-reel-shelf-renderer",
+    );
+    controller.stop();
+  });
+
+  it("limits non-keyword filters when an always-hide keyword is active", async () => {
+    const state = makeState();
+    state.session.status = "idle";
+    state.session.phaseEndsAt = 0;
+    state.blockedSites = [];
+    state.keywords = [{ text: "gambling", mode: "hide", when: "always" }];
+    const fixture = makeDependencies(state);
+    const controller = new ContentScriptController(fixture.dependencies);
+    await controller.start();
+
+    const css = fixture.styles.get("focusgate-filters")?.textContent ?? "";
+    expect(fixture.container.getAttribute("data-fg-hidden")).toBe("1");
+    expect(css).toContain('[data-fg-hidden="1"]');
+    expect(css).not.toContain("ytd-reel-shelf-renderer");
+    controller.stop();
+  });
+
+  it("turns filters off when the active schedule reaches its boundary", async () => {
+    const state = makeState(false);
+    state.session.status = "idle";
+    state.blockedSites = [];
+    state.schedules = [
+      {
+        id: "today",
+        name: "Today",
+        enabled: true,
+        days: [new Date(NOW).getDay()],
+        start: "00:00",
+        end: "24:00",
+        sites: [],
+        keywords: [],
+        useGlobalLists: false,
+      },
+    ];
+    const fixture = makeDependencies(state);
+    const controller = new ContentScriptController(fixture.dependencies);
+    await controller.start();
+    expect(fixture.styles.get("focusgate-filters")?.textContent).toContain(
+      "ytd-reel-shelf-renderer",
+    );
+
+    const boundaryTimer = fixture.scheduled.find(
+      (timer) => timer.delay > 200 && !timer.cancelled,
+    );
+    expect(boundaryTimer).toBeDefined();
+    fixture.setNow(NOW + boundaryTimer!.delay);
+    boundaryTimer!.callback();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(fixture.styles.get("focusgate-filters")?.removed).toBe(true);
     controller.stop();
   });
 

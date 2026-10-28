@@ -179,6 +179,17 @@ export function isBlockingActive(state: AppState, nowMs: number): boolean {
   return plan.blocked.size > 0 || plan.allowOnly !== null || plan.keywords.length > 0;
 }
 
+export function isBlockContextActive(state: AppState, nowMs: number): boolean {
+  const now = new Date(nowMs);
+  return (
+    state.session.status === "work" ||
+    standaloneActive(state, nowMs) ||
+    validSchedules(state.schedules).some((schedule) =>
+      isScheduleActiveAt(schedule, now),
+    )
+  );
+}
+
 export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   const now = new Date(nowMs);
   const configuredSchedules = validSchedules(state.schedules);
@@ -381,19 +392,10 @@ export function isFilteringActive(
   nowMs: number,
   host?: string,
 ): boolean {
+  if (host !== undefined && !normalizeDomain(host)) return false;
   const plan = computeBlockPlan(state, nowMs);
   if (state.settings.keywords.scope.title && plan.hideWords.length > 0) {
     return true;
   }
-  if (!isBlockingActive(state, nowMs)) return false;
-  if (!host) return true;
-  const normalizedHost = normalizeDomain(host);
-  if (!normalizedHost) return false;
-  return (
-    plan.blocked.has(normalizedHost) ||
-    [...plan.blocked.keys()].some((domain) =>
-      matchesDomain(normalizedHost, domain),
-    ) ||
-    plan.allowOnly !== null
-  );
+  return isBlockContextActive(state, nowMs);
 }

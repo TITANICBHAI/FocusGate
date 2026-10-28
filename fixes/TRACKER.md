@@ -490,16 +490,36 @@
 - 2026-10-28 — Owner authorized staged WP4 work while WP3 remains 8/22. The active manifest and `src/content/index.ts` remain on v1; the v2 entry builds separately and is not registered.
 - 2026-10-28 — WP4.2–WP4.7 are freshly verified at module/unit level. WP4.1 remains open because Appendix B requires live selector verification; all selector `verified` fields remain null.
 - 2026-10-28 — WP4.8 and all WP4 acceptance criteria remain open until the WP5 atomic cutover and controlled browser verification. The old public scripts were not deleted.
+- 2026-10-28 — Owner authorized continuing WP4 while deferring browser verification. Re-inspected the clean worktree and staged content controller; continue deterministic implementation/tests only, keep live selector/runtime checks open, and preserve v1 scripts until WP5.
+- 2026-10-28 — Shared filter activity now follows work/standalone/active-schedule contexts independent of the blocked-site list; always-hide keywords remain active without turning on unrelated feed filters. Added deterministic planner/controller coverage; checks pending.
+- 2026-10-28 — Restored dependencies with `npm ci` from the existing lockfile (125 packages); npm reported 4 vulnerabilities (2 moderate, 2 high). No package manifest/lockfile edits were made.
+- 2026-10-28 — Focused verification passed: `npm test -- tests/shared/plan.test.ts tests/content/v2.test.ts` — exit 0, 2 files / 25 tests. Full suite, typecheck, and build remain pending.
+- 2026-10-28 — `npm run typecheck` passed after the filter-context change; `tsc --noEmit` exited 0 with no diagnostics. Full suite and build remain pending.
+- 2026-10-28 — Full unit suite passed: `npm test` — exit 0, 25 files / 145 tests. Build and staged-output checks remain pending.
+- 2026-10-28 — `npm run build` exited 0 after transforming 2,079 modules. Output smoke check confirmed `dist/content-v2.js` exists while the manifest still activates `index.html` and `content.js`; the active v1 path is preserved.
+- 2026-10-28 — Restarted the existing `FocusGate Extension Preview` after dependency restoration; logs show Vite 6.4.3 ready on port 3000. This confirms preview-server startup only, not extension/browser behavior.
+- 2026-10-28 — Final scope audit passed: `git diff --check`; both v1 public scripts still exist; `package.json`, `package-lock.json`, the active manifest, and build script have no diff. Only the WP4 source/tests and tracker are modified.
+- 2026-10-28 — Post-tracker-edit check passed: `git diff --check && git status --short --branch && git diff --stat` — exit 0; the same five expected files remain modified.
 
 **Evidence:**
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
 | 2026-10-28 | WP4 staged content-script verification | `src/content/sites.ts`, `src/content/filterDom.ts`, `src/content/v2.ts`, `src/content/v2-entry.ts`, `src/shared/contentFilterDefaults.ts`, `src/shared/migrate.ts`, `src/shared/plan.ts`, `scripts/build-extension.mjs`, content/migration/planner tests. | `npm run typecheck` — exit 0; `npm test` — exit 0, 25 files / 140 tests; `npm run build` — exit 0; output check confirms `dist/content-v2.js` exists while `dist/manifest.json` still references `content.js`; `git diff --check` — exit 0. | PASS — staged implementation and migration defaults compile and pass deterministic tests. No live selector or browser behavior was verified. |
+| 2026-10-28 | WP4 filter-context regression coverage | `src/shared/plan.ts`, `src/content/v2.ts`, `tests/shared/plan.test.ts`, `tests/content/v2.test.ts`, `fixes/TRACKER.md`. | `npm test -- tests/shared/plan.test.ts tests/content/v2.test.ts` — exit 0; 2 files / 25 tests passed. | PASS — covers focus/standalone/schedule activation independent of site-list membership, schedule-boundary deactivation, and always-hide keywords without unrelated CSS filters. Browser selectors/runtime remain unverified. |
+| 2026-10-28 | WP4 strict typecheck | `src/shared/plan.ts`, `src/content/v2.ts`, `tests/shared/plan.test.ts`, `tests/content/v2.test.ts`. | `npm run typecheck` — exit 0; `tsc --noEmit` reported no diagnostics. | PASS — the shared context logic, staged controller, and added tests compile. |
+| 2026-10-28 | WP4 full unit suite | All current test files; `fixes/TRACKER.md`. | `npm test` — exit 0; 25 files / 145 tests passed. | PASS — complete deterministic test suite passes; no browser behavior was exercised. |
+| 2026-10-28 | WP4 staged build | Generated output under ignored `dist/`; `fixes/TRACKER.md`. | `npm run build` — exit 0; Node smoke assertion confirmed `dist/background.js`, `dist/content.js`, and `dist/content-v2.js` exist; `dist/manifest.json` routes to `index.html` and `content.js`. | PASS — v2 is built separately; active v1 worker/popup/content remain in place. |
+| 2026-10-28 | WP4 extension preview startup | Existing preview workflow; `fixes/TRACKER.md`. | Restarted `FocusGate Extension Preview`; logs show `VITE v6.4.3 ready in 867 ms` and port 3000. | PASS — preview server is running; browser extension APIs/selectors were not exercised. |
+| 2026-10-28 | WP4 final scope and worktree audit | `fixes/TRACKER.md`, WP4 implementation/test files. | `git diff --check && test -e public/content.js && test -e public/background.js && test -z "$(git diff -- package.json package-lock.json public/manifest.json scripts/build-extension.mjs)" && git status --short --branch && git diff --stat` — exit 0. | PASS — v1 scripts remain; no manifest/build/dependency files changed; five expected files are modified. |
 
 **Failures / blockers:**
 - 2026-10-28 — Appendix B selectors are not live-verified; keep `verified: null` until a controllable browser is available.
 - 2026-10-28 — Runtime acceptance and old-script removal remain gated until WP5's atomic cutover.
+- 2026-10-28 — First verification attempt after the owner-authorized WP4 continuation: `npm test -- tests/shared/plan.test.ts tests/content/v2.test.ts` exited 127 (`vitest: command not found`); `npm run typecheck` exited 127 (`tsc: command not found`). `git diff --check` exited 0. Restore dependencies from the existing lockfile before rerunning; no dependency declaration changes are authorized.
+- 2026-10-28 — The package-install auto-restart of `FocusGate Extension Preview` failed with `sh: 1: vite: command not found`; `npm ci` has since restored dependencies. This is a preview startup failure, not browser-extension verification; restart the existing extension preview once and check its logs.
+- 2026-10-28 — Resolved the preview startup failure: after `npm ci`, restarting `FocusGate Extension Preview` succeeded and Vite reported ready on port 3000. `FocusGate Docs Preview` remains failed but is unrelated to WP4; it was not restarted.
+- 2026-10-28 — Resolved the missing-dependency check failures: `npm ci` restored dependencies; the focused tests, full suite, typecheck, and build then all passed. The original command failures are retained above.
 
 **Decisions / deferred work:**
 - Keep `public/content.js`, `public/background.js`, and the active v1 manifest unchanged until WP5.

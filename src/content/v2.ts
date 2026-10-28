@@ -1,5 +1,9 @@
 import { matchKeyword } from "../shared/keywords.ts";
-import { computeBlockPlan, isFilteringActive } from "../shared/plan.ts";
+import {
+  computeBlockPlan,
+  isBlockContextActive,
+  isFilteringActive,
+} from "../shared/plan.ts";
 import { getState, onStateChanged } from "../shared/storage.ts";
 import type { AppState } from "../shared/types.ts";
 import {
@@ -166,6 +170,7 @@ export class ContentScriptController {
 
     const now = this.dependencies.now();
     const plan = computeBlockPlan(this.state, now);
+    const blockContextActive = isBlockContextActive(this.state, now);
     const filteringActive = isFilteringActive(
       this.state,
       now,
@@ -185,10 +190,10 @@ export class ContentScriptController {
     );
 
     this.setStyles(
-      filteringActive
+      blockContextActive || enabledTargets.length > 0
         ? buildFilterCss(
             nextSite,
-            this.state.settings.contentFilters,
+            blockContextActive ? this.state.settings.contentFilters : {},
             enabledTargets.length > 0,
           )
         : "",
