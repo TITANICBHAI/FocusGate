@@ -94,6 +94,70 @@ describe("staged UI storage store", () => {
     unsubscribe();
   });
 
+  it("does not let a delayed initial read overwrite a newer write", async () => {
+    const { backend, values } = createBackend();
+    let resolveInitialRead!: (value: unknown) => void;
+    const initialRead = new Promise<unknown>((resolve) => {
+      resolveInitialRead = resolve;
+    });
+    let blockedSitesReads = 0;
+    backend.read = vi.fn(async (key) => {
+      if (key === "blockedSites" && blockedSitesReads++ === 0) {
+        return initialRead;
+      }
+      return values.get(key);
+    });
+
+    const store = new StorageStore(backend);
+    const unsubscribe = store.subscribe("blockedSites", vi.fn());
+    await store.set("blockedSites", ["reddit.com"]);
+
+    expect(store.getSnapshot("blockedSites")).toMatchObject({
+      value: ["reddit.com"],
+      ready: true,
+      error: null,
+    });
+
+    resolveInitialRead(["stale.example"]);
+    await flushMicrotasks();
+
+    expect(store.getSnapshot("blockedSites")).toMatchObject({
+      value: ["reddit.com"],
+      ready: true,
+      error: null,
+    });
+    unsubscribe();
+  });
+
+  it("does not let a delayed initial read error replace a newer write", async () => {
+    const { backend, values } = createBackend();
+    let rejectInitialRead!: (error: Error) => void;
+    const initialRead = new Promise<unknown>((_resolve, reject) => {
+      rejectInitialRead = reject;
+    });
+    let blockedSitesReads = 0;
+    backend.read = vi.fn(async (key) => {
+      if (key === "blockedSites" && blockedSitesReads++ === 0) {
+        return initialRead;
+      }
+      return values.get(key);
+    });
+
+    const store = new StorageStore(backend);
+    const unsubscribe = store.subscribe("blockedSites", vi.fn());
+    await store.set("blockedSites", ["reddit.com"]);
+
+    rejectInitialRead(new Error("late storage read failure"));
+    await flushMicrotasks();
+
+    expect(store.getSnapshot("blockedSites")).toMatchObject({
+      value: ["reddit.com"],
+      ready: true,
+      error: null,
+    });
+    unsubscribe();
+  });
+
   it("updates subscribers when browser storage changes externally", async () => {
     const { backend, emit } = createBackend();
     const store = new StorageStore(backend);

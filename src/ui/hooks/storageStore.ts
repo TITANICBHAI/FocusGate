@@ -266,15 +266,18 @@ export class StorageStore {
     if (current.ready || current.error) return Promise.resolve();
     const existing = this.loads.get(key);
     if (existing) return existing;
+    const versionAtStart = current.version;
 
     const load = this.backend
       .read(key)
       .then((value) => {
+        if (this.getSnapshot(key).version !== versionAtStart) return;
         const resolved =
           value === undefined ? clone(DEFAULT_STATE[key]) : clone(value);
         this.publish(key, resolved, true, null);
       })
       .catch((error: unknown) => {
+        if (this.getSnapshot(key).version !== versionAtStart) return;
         this.publish(key, current.value, false, describeError(error));
       })
       .finally(() => {

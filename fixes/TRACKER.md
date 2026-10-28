@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 9.0% (14/156 required checklist items freshly verified)
-- **Current work package:** WP4 — Content script
+- **Progress:** 0% (0/156 required checklist items credited after reset)
+- **Current work package:** WP5 — UI foundation and screen fixes
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 (module/unit work; conservative fallbacks) → WP3 (staged; no redirect activation before S1) → WP4 → WP1b (complete before WP5 cutover) → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** The owner reset progress to 0/156 after prior completion claims proved inaccurate. All historical checkmarks are unchecked; history is retained, and no prior pass is credited without fresh evidence.
@@ -35,15 +35,15 @@
 | WP1 — Foundation, build, storage, migration | NOT STARTED | 0/16 | — | — | Fresh verification required |
 | WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | Fresh verification required; runtime AC after WP5 cutover |
-| WP3 — Blocking engine | IN PROGRESS | 8/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
-| WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | WP3 residual gates; owner authorized staged work |
-| WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
+| WP3 — Blocking engine | IN PROGRESS | 0/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
+| WP4 — Content script | IN PROGRESS | 0/15 | 2026-10-28 | — | WP3 residual gates; owner authorized staged work |
+| WP5 — UI foundation and screen fixes | IN PROGRESS | 0/18 | 2026-10-28 | — | WP4 browser/runtime gates; staged UI work only |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **14/156** | — | — | |
+| **Total** | **IN PROGRESS** | **0/156** | — | — | |
 
 **Implementation gates:** The owner deferred WP1b, so it does not block WP2/WP3 code or unit tests. Use the documented attention/alarm fallbacks; S1 still gates navigation enforcement, and WP1b must be complete before WP5 cutover/M1 green. WP2–WP4 must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until M1 is green. Prior checklist results remain unchecked until freshly verified after the reset.
 
@@ -308,22 +308,22 @@
 
 ## WP3 — Blocking engine
 
-**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 8/22
+**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/22
 
 ### Tasks
 
 - [ ] WP3.1 Implement pure `computeBlockPlan(state, now)` and `explainBlock(url, state, now)`; worker, fallback listeners, block page, and Check-a-URL use the same decision function.
-- [x] WP3.2 Implement serialized `reconcile(reason)` with `try/catch`, health fields, one `updateDynamicRules` call, one `boundary` alarm, transition-only tab audits, and one-minute safety tick while blocking.
-- [x] WP3.3 Implement one DNR redirect using `requestDomains`, `regexFilter`, and `regexSubstitution`; use priority-2 `allow` rules for exceptions.
+- [ ] WP3.2 Implement serialized `reconcile(reason)` with `try/catch`, health fields, one `updateDynamicRules` call, one `boundary` alarm, transition-only tab audits, and one-minute safety tick while blocking.
+- [ ] WP3.3 Implement one DNR redirect using `requestDomains`, `regexFilter`, and `regexSubstitution`; use priority-2 `allow` rules for exceptions.
 - [ ] WP3.4 Normalize/validate inputs at entry using URL hostname parsing and punycode; reject malformed values, show inline UI errors, and report invalid stored values through health state.
 - [ ] WP3.5 Implement alias groups (including `x.com`/`twitter.com`/`t.co`); adding one blocks the group and UI shows group chips.
-- [x] WP3.6 Implement named schedules with own lists or `useGlobalLists`; cover overnight, `24:00`, end-exclusive and previous-day rules; calculate boundaries for schedules, standalone, allowance windows, and local midnight.
-- [x] WP3.7 Implement `time_budget`, `count`, and `interval` allowances with attention ledger; count focused active-tab/non-idle or audible use; enforce per-entry caps, `duringBlocks`, and always-blocked precedence.
-- [x] WP3.8 Implement normalized boundary-checked exceptions and DNR allow rule from the same entry; exceptions override other rules.
-- [x] WP3.9 Implement keyword scope/match and host parameter table (`yahoo p`, `yandex text`, `baidu wd`, `youtube search_query`, `amazon k`, generic `q`/`query` only); never generic `p`; retain last 50 matches.
+- [ ] WP3.6 Implement named schedules with own lists or `useGlobalLists`; cover overnight, `24:00`, end-exclusive and previous-day rules; calculate boundaries for schedules, standalone, allowance windows, and local midnight.
+- [ ] WP3.7 Implement `time_budget`, `count`, and `interval` allowances with attention ledger; count focused active-tab/non-idle or audible use; enforce per-entry caps, `duringBlocks`, and always-blocked precedence.
+- [ ] WP3.8 Implement normalized boundary-checked exceptions and DNR allow rule from the same entry; exceptions override other rules.
+- [ ] WP3.9 Implement keyword scope/match and host parameter table (`yahoo p`, `yandex text`, `baidu wd`, `youtube search_query`, `amazon k`, generic `q`/`query` only); never generic `p`; retain last 50 matches.
 - [ ] WP3.10 Add filtered `webNavigation` fallback listeners for HTTP(S) using `explainBlock`, `recordBlock`, and `tabs.update`; delete `tabs.onUpdated` fallback and repeated audit loop.
-- [x] WP3.11 Deduplicate `recordBlock` for three seconds by tab/domain; cap `recentBlocks` at 200 and update daily/domain/session counters.
-- [x] WP3.12 Route `tick`, `boundary`, `session_phase_end`, `weekly_report`, and `midnight` alarms through `ensureAlarms()`.
+- [ ] WP3.11 Deduplicate `recordBlock` for three seconds by tab/domain; cap `recentBlocks` at 200 and update daily/domain/session counters.
+- [ ] WP3.12 Route `tick`, `boundary`, `session_phase_end`, `weekly_report`, and `midnight` alarms through `ensureAlarms()`.
 
 ### Acceptance criteria
 
@@ -463,17 +463,17 @@
 
 ## WP4 — Content script
 
-**Plan:** §6 WP4, Appendix B · **Blocked by:** WP3 residual UI/cutover/browser gates; owner authorized staged work · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 6/15
+**Plan:** §6 WP4, Appendix B · **Blocked by:** WP3 residual UI/cutover/browser gates; owner authorized staged work · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/15
 
 ### Tasks
 
 - [ ] WP4.1 Add the Appendix B site table; load session, standalone, schedules, content filters, and hidden keywords; use shared `isFilteringActive`; react to storage changes, schedule boundaries, and `visibilitychange`.
-- [x] WP4.2 Use one CSS style element for enabled filters; hide keywords with `data-fg-hidden="1"` and restore by removing the attribute.
-- [x] WP4.3 Observe `document.documentElement` (never `document.body`), debounce by 200 ms, and attach only when filtering and keywords are active; assign the observer only after successful `observe()`.
-- [x] WP4.4 Match exact hosts or dot-prefixed suffixes; never use substring matching.
-- [x] WP4.5 Generate `manifest.content_scripts[0].matches` from the site table (no `<all_urls>`); test manifest/table equality.
-- [x] WP4.6 Re-run YouTube filtering on `yt-navigate-finish`.
-- [x] WP4.7 Replace unconditional Shorts/Reels/TikTok hiding with `settings.contentFilters` toggles; existing users default ON for the three previously unconditional filters.
+- [ ] WP4.2 Use one CSS style element for enabled filters; hide keywords with `data-fg-hidden="1"` and restore by removing the attribute.
+- [ ] WP4.3 Observe `document.documentElement` (never `document.body`), debounce by 200 ms, and attach only when filtering and keywords are active; assign the observer only after successful `observe()`.
+- [ ] WP4.4 Match exact hosts or dot-prefixed suffixes; never use substring matching.
+- [ ] WP4.5 Generate `manifest.content_scripts[0].matches` from the site table (no `<all_urls>`); test manifest/table equality.
+- [ ] WP4.6 Re-run YouTube filtering on `yt-navigate-finish`.
+- [ ] WP4.7 Replace unconditional Shorts/Reels/TikTok hiding with `settings.contentFilters` toggles; existing users default ON for the three previously unconditional filters.
 - [ ] WP4.8 Delete old `public/content.js` and `public/background.js` after WP3/WP4 replace them.
 
 ### Acceptance criteria
@@ -556,6 +556,9 @@
 - [ ] WP5.AC5 All WP5 UI claims assigned from plan §4.7 pass.
 
 **Notes / progress:**
+- 2026-10-28 — Owner authorized continuing WP5. Per `AGENT_PROMPT.md`, fresh-verification progress is reset to 0/156; WP3/WP4 checkmarks are now unchecked and retained only as historical evidence. Work is limited to staged UI modules and deterministic tests; WP1b/WP4 browser gates still block v2 activation, migration startup, cutover, and legacy-consumer removal.
+- 2026-10-28 — Fixed the storage hydration race: late initial-read success and failure results are ignored after a newer snapshot is published. Verification: focused storage tests 6/6, full suite 151/151 across 26 files, typecheck, and production extension build all passed.
+- 2026-10-28 — Popup preview rendered at its 380×580 layout. Browser console reported one 404 resource; this preview smoke check does not satisfy the extension browser gates.
 - 2026-10-28 — Owner authorized beginning WP5 staged UI work while WP1b and WP4 browser verification remain unavailable. This defers gates for implementation only; it does not authorize cutover, v2 activation, migration startup, or v1 removal.
 - 2026-10-28 — Inspected the existing UI/build entrypoints and staged timer. Keep the active v1 `index.html`, `src/App.tsx`, manifest, worker, and content path in place until WP1b plus WP2–WP4 browser/runtime evidence permits the atomic cutover.
 - 2026-10-28 — Added the first staged `useStorage`/`StorageGate` implementation with a per-page external store, latest-value serialized updates, storage change subscriptions, and localStorage fallback only when the extension storage API is absent. Typecheck and store tests pending.
