@@ -741,6 +741,8 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 
 ### WP5 — UI foundation and screen fixes · 4–5 d · fixes B16, B17, B22, B25, B28, B29, U01–U14, H09/H10/H16 (UI part); most ❌ UI rows in §4.7
 
+**Owner-authorized gate deferral (2026-10-28):** The owner authorized beginning WP5 UI implementation while WP1b browser spikes and WP4 live-selector/runtime acceptance remain incomplete. This permits staged UI code and deterministic checks only; it does not establish browser behavior or authorize v2 activation. Keep the active v1 manifest, popup, background, and content entrypoints unchanged, do not call `ready()` from a runtime entrypoint, and do not remove legacy consumers. WP1b remains required before M1 is green and before the WP5 atomic cutover; WP2–WP4 browser/runtime acceptance must still be run on the cutover build. Keep those gates open until observed evidence is recorded.
+
 **Tasks**
 
 1. **Split the pages and fix the size (U01, U02).** `popup.html` (fixed **380 × 580** via CSS on `html, body` — `width:380px; height:580px; margin:0; overflow:hidden`; root = flex column: header 48 px / `main` `flex:1; min-height:0; overflow-y:auto` / nav 56 px), `blocked.html` (full viewport, responsive), `onboarding.html` (full tab, centred column max 480 px), `dashboard.html` (full tab: Stats, Reports, advanced Rules, Settings, Backup). Delete the `?blocked` / `?onboarding` role flags and the `sm:w-[400px]` classes. The block page and onboarding must render their final screen on first paint.

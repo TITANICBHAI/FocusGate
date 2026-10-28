@@ -529,7 +529,7 @@
 
 ## WP5 — UI foundation and screen fixes
 
-**Plan:** §6 WP5, Appendix C · **Blocked by:** WP4 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/18
+**Plan:** §6 WP5, Appendix C · **Blocked by:** WP4 browser/runtime gates (owner authorized staged UI work only) · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/18
 
 ### Tasks
 
@@ -555,13 +555,28 @@
 - [ ] WP5.AC4 Typing “25” works naturally; `funny shorts, #gaming` creates two keywords; pasted Reddit URL stores `reddit.com`.
 - [ ] WP5.AC5 All WP5 UI claims assigned from plan §4.7 pass.
 
-**Notes / progress:** Not started. Follow Appendix C and the replacement-copy table in plan §6 WP5.
+**Notes / progress:**
+- 2026-10-28 — Owner authorized beginning WP5 staged UI work while WP1b and WP4 browser verification remain unavailable. This defers gates for implementation only; it does not authorize cutover, v2 activation, migration startup, or v1 removal.
+- 2026-10-28 — Inspected the existing UI/build entrypoints and staged timer. Keep the active v1 `index.html`, `src/App.tsx`, manifest, worker, and content path in place until WP1b plus WP2–WP4 browser/runtime evidence permits the atomic cutover.
+- 2026-10-28 — Added the first staged `useStorage`/`StorageGate` implementation with a per-page external store, latest-value serialized updates, storage change subscriptions, and localStorage fallback only when the extension storage API is absent. Typecheck and store tests pending.
+- 2026-10-28 — `npm run typecheck` passed for the staged storage hook and gate with `tsc --noEmit` exit 0. Behavior tests and page integration remain pending.
+- 2026-10-28 — Added storage-store tests for hydration gating, latest-value updaters, cross-context changes, and the localStorage fallback boundary. The focused UI-storage suite is pending.
+- 2026-10-28 — `npm test -- tests/ui/storageStore.test.ts` passed (1 file / 4 tests). Storage primitives behave as expected in deterministic tests; the WP5.2 checklist remains open until page integration and timer-render isolation are complete.
+- Follow Appendix C and the replacement-copy table in plan §6 WP5.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-28 | Staged storage primitive tests | `src/ui/hooks/storageStore.ts`, `src/ui/hooks/useStorage.ts`, `src/ui/components/StorageGate.tsx`, `tests/ui/storageStore.test.ts`. | `npm run typecheck` — exit 0; `npm test -- tests/ui/storageStore.test.ts` — exit 0, 1 file / 4 tests. | PASS — per-page storage store/gate, latest-value updater, external changes, and fallback boundary covered. Page integration and timer-render isolation remain pending; no WP5 task checkbox closed. |
 
-**Decisions / deferred work:** None recorded.
+**Failures / blockers:**
+- WP1b browser spikes and WP4 live-selector/runtime acceptance remain unverified; these block the WP5 atomic cutover and M1 green.
+- Keep all affected browser acceptance criteria open until evidence from the controlled browser is recorded.
+
+**Decisions / deferred work:**
+- Stage UI pages/components and deterministic checks without changing the active v1 popup/manifest/worker/content entrypoints.
+- Defer v2 activation, `ready()` migration on runtime entrypoints, legacy consumer deletion, and atomic cutover until the browser gates pass.
 
 ---
 
