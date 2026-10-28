@@ -22,6 +22,28 @@ describe("v1 storage migration", () => {
     expect(result.remove).toContain("app_password_hash");
   });
 
+  it("preserves explicit content-filter choices while defaulting legacy filters on", () => {
+    const result = migrateV1(
+      {
+        settings: {
+          contentFilters: {
+            ytShorts: false,
+            igReels: true,
+            ytHomeFeed: true,
+          },
+        },
+      },
+      NOW,
+    );
+
+    expect(result.set.settings.contentFilters).toEqual({
+      ytShorts: false,
+      igReels: true,
+      tiktokFeed: true,
+      ytHomeFeed: true,
+    });
+  });
+
   it("converts an unlimited legacy standalone block into always-blocked sites", () => {
     const result = migrateV1(
       {

@@ -1,4 +1,5 @@
 import { createDefaultState } from "./defaults.ts";
+import { EXISTING_USER_CONTENT_FILTER_DEFAULTS } from "./contentFilterDefaults.ts";
 import type {
   Allowance,
   AppState,
@@ -558,11 +559,14 @@ function mergeSettings(value: unknown): AppState["settings"] {
     notifications: { ...defaults.notifications, ...notifications },
     reminders: { ...defaults.reminders, ...reminders },
     blockPage: { ...defaults.blockPage, ...blockPage },
-    contentFilters: Object.fromEntries(
-      Object.entries(contentFilters).filter(
-        (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+    contentFilters: {
+      ...EXISTING_USER_CONTENT_FILTER_DEFAULTS,
+      ...Object.fromEntries(
+        Object.entries(contentFilters).filter(
+          (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+        ),
       ),
-    ),
+    },
     keywords: {
       ...defaults.keywords,
       ...keywords,

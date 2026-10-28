@@ -723,6 +723,8 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 
 **Pre-cutover staging rule:** implement the v2 content script as a staged entry; keep the current manifest and v1 content script active until WP5. Do not replace `dist/content.js` or delete the old public scripts during WP4. Run browser acceptance criteria after the WP5 atomic cutover.
 
+**Owner-authorized WP4 staging scope (2026-10-28):** Begin staged WP4 implementation while WP3 remains in progress; this does not close WP3's deferred UI, cutover, or browser gates. Keep the active manifest and v1 content entry unchanged; build v2 separately as `content-v2.js`. Site selectors remain unverified until live browser inspection, so no verification dates or runtime acceptance claims are made.
+
 **Tasks**
 1. `src/content/sites.ts`: data table of supported sites and filters (Appendix B). Implement the v2 content entry as a staged module; it loads `session`, `standalone`, `schedules`, `settings.contentFilters`, and `keywords` from storage; computes `isFilteringActive(state, now, host)` with the **same** function as the worker; subscribes to `storage.onChanged`; sets a `setTimeout` for the next schedule boundary and re-evaluates on `visibilitychange`. Keep `src/content/index.ts` on the v1 bridge until WP5 promotes the staged entry.
 2. **CSS-first**: inject one `<style id="focusgate-filters">` containing the CSS for every enabled filter (instant, reversible, no observer needed). **Keyword hiding** adds `data-fg-hidden="1"` to matching containers, with `[data-fg-hidden]{display:none!important}` in the style block; restoring = removing the attribute.

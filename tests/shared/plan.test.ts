@@ -177,6 +177,16 @@ describe("block planning", () => {
         status: "work",
         phaseEndsAt: 1_000_000,
       },
+      settings: {
+        ...createDefaultState().settings,
+        keywords: {
+          ...createDefaultState().settings.keywords,
+          scope: {
+            ...createDefaultState().settings.keywords.scope,
+            title: true,
+          },
+        },
+      },
     });
     expect(
       explainBlock("https://www.youtube.com/results?search_query=gaming", state, 1_000),
@@ -184,6 +194,21 @@ describe("block planning", () => {
     expect(computeBlockPlan(state, 1_000).hideWords).toEqual(["gaming"]);
     expect(isFilteringActive(state, 1_000)).toBe(true);
     expect(isBlockingActive(state, 1_000)).toBe(true);
+  });
+
+  it("does not activate title filtering when the title scope is off", () => {
+    const state = stateWith({
+      keywords: [{ text: "gaming", mode: "hide", when: "always" }],
+      settings: {
+        ...createDefaultState().settings,
+        keywords: {
+          scope: { searchQuery: true, url: true, title: false },
+          match: "substring",
+        },
+      },
+    });
+    expect(computeBlockPlan(state, 1_000).hideWords).toEqual(["gaming"]);
+    expect(isFilteringActive(state, 1_000)).toBe(false);
   });
 
   it("respects the configured query and URL keyword scopes", () => {

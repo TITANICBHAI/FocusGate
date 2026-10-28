@@ -5,6 +5,8 @@ description: Owner-confirmed boundary between WP3 staged checks and later UI/cut
 
 Keep WP3 focused on the staged engine and deterministic module/unit verification. The owner confirmed on 2026-10-28 to preserve the WP5/WP7 sequence rather than pull those UI and cutover pieces into WP3.
 
+On 2026-10-28, the owner authorized starting WP4 staged content-script work while WP3 remains open. This does not waive the WP5 cutover gate or close WP3's deferred UI/runtime work.
+
 **Why:** The plan assigns Rules/block-page and Check-a-URL/alias UI to later work packages and requires the WP5 atomic cutover before replacing the active v1 path. Activating v2 enforcement before S1 and cutover would bypass those gates.
 
-**How to apply:** Do not integrate WP5/WP7 screens, remove the v1 fallback, or activate v2 enforcement as part of WP3. Keep browser-dependent acceptance criteria open until a controlled browser verification is run after the cutover.
+**How to apply:** Allow staged WP4 content-script implementation without declaring WP3 complete. Do not integrate WP5/WP7 screens, remove the v1 fallback, or activate v2 enforcement before the WP5 atomic cutover. Keep browser-dependent acceptance criteria open until controlled browser verification after cutover.

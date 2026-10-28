@@ -141,7 +141,11 @@
       "showQuotes": false,
       "sound": false
     },
-    "contentFilters": {},
+    "contentFilters": {
+      "ytShorts": true,
+      "igReels": true,
+      "tiktokFeed": true
+    },
     "keywords": {
       "scope": { "searchQuery": true, "url": true, "title": false },
       "match": "substring"

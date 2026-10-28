@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 5.1% (8/156 required checklist items freshly verified)
-- **Current work package:** WP3 — Blocking engine
+- **Progress:** 9.0% (14/156 required checklist items freshly verified)
+- **Current work package:** WP4 — Content script
 - **Last updated:** 2026-10-28
 - **Run order:** WP0 → WP1 → WP2 (module/unit work; conservative fallbacks) → WP3 (staged; no redirect activation before S1) → WP4 → WP1b (complete before WP5 cutover) → WP5 (atomic v1→v2 consumer cutover and migration activation) → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reset:** The owner reset progress to 0/156 after prior completion claims proved inaccurate. All historical checkmarks are unchecked; history is retained, and no prior pass is credited without fresh evidence.
@@ -36,14 +36,14 @@
 | WP1b — De-risking spikes | BLOCKED — Deferred by owner; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | NOT STARTED | 0/14 | — | — | Fresh verification required; runtime AC after WP5 cutover |
 | WP3 — Blocking engine | IN PROGRESS | 8/22 | 2026-10-28 | — | WP2; S1 before runtime enforcement |
-| WP4 — Content script | NOT STARTED | 0/15 | — | — | WP3 |
+| WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | WP3 residual gates; owner authorized staged work |
 | WP5 — UI foundation and screen fixes | NOT STARTED | 0/18 | — | — | WP4 |
 | WP6 — Security, standalone, protection, backup | NOT STARTED | 0/17 | — | — | WP5 |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **8/156** | — | — | |
+| **Total** | **IN PROGRESS** | **14/156** | — | — | |
 
 **Implementation gates:** The owner deferred WP1b, so it does not block WP2/WP3 code or unit tests. Use the documented attention/alarm fallbacks; S1 still gates navigation enforcement, and WP1b must be complete before WP5 cutover/M1 green. WP2–WP4 must keep v1 consumers active; activate no migration or v2 runtime entrypoint before the WP5 atomic cutover. Do not start WP7 until M1 is green. Prior checklist results remain unchecked until freshly verified after the reset.
 
@@ -463,17 +463,17 @@
 
 ## WP4 — Content script
 
-**Plan:** §6 WP4, Appendix B · **Blocked by:** WP3 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/15
+**Plan:** §6 WP4, Appendix B · **Blocked by:** WP3 residual UI/cutover/browser gates; owner authorized staged work · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 6/15
 
 ### Tasks
 
 - [ ] WP4.1 Add the Appendix B site table; load session, standalone, schedules, content filters, and hidden keywords; use shared `isFilteringActive`; react to storage changes, schedule boundaries, and `visibilitychange`.
-- [ ] WP4.2 Use one CSS style element for enabled filters; hide keywords with `data-fg-hidden="1"` and restore by removing the attribute.
-- [ ] WP4.3 Observe `document.documentElement` (never `document.body`), debounce by 200 ms, and attach only when filtering and keywords are active; assign the observer only after successful `observe()`.
-- [ ] WP4.4 Match exact hosts or dot-prefixed suffixes; never use substring matching.
-- [ ] WP4.5 Generate `manifest.content_scripts[0].matches` from the site table (no `<all_urls>`); test manifest/table equality.
-- [ ] WP4.6 Re-run YouTube filtering on `yt-navigate-finish`.
-- [ ] WP4.7 Replace unconditional Shorts/Reels/TikTok hiding with `settings.contentFilters` toggles; existing users default ON for the three previously unconditional filters.
+- [x] WP4.2 Use one CSS style element for enabled filters; hide keywords with `data-fg-hidden="1"` and restore by removing the attribute.
+- [x] WP4.3 Observe `document.documentElement` (never `document.body`), debounce by 200 ms, and attach only when filtering and keywords are active; assign the observer only after successful `observe()`.
+- [x] WP4.4 Match exact hosts or dot-prefixed suffixes; never use substring matching.
+- [x] WP4.5 Generate `manifest.content_scripts[0].matches` from the site table (no `<all_urls>`); test manifest/table equality.
+- [x] WP4.6 Re-run YouTube filtering on `yt-navigate-finish`.
+- [x] WP4.7 Replace unconditional Shorts/Reels/TikTok hiding with `settings.contentFilters` toggles; existing users default ON for the three previously unconditional filters.
 - [ ] WP4.8 Delete old `public/content.js` and `public/background.js` after WP3/WP4 replace them.
 
 ### Acceptance criteria
@@ -486,13 +486,24 @@
 - [ ] WP4.AC6 A YouTube home-feed mutation batch takes under 5 ms in the Performance panel.
 - [ ] WP4.AC7 Claim C23 passes.
 
-**Notes / progress:** Not started. Use Appendix B as the source of supported-site data.
+**Notes / progress:**
+- 2026-10-28 — Owner authorized staged WP4 work while WP3 remains 8/22. The active manifest and `src/content/index.ts` remain on v1; the v2 entry builds separately and is not registered.
+- 2026-10-28 — WP4.2–WP4.7 are freshly verified at module/unit level. WP4.1 remains open because Appendix B requires live selector verification; all selector `verified` fields remain null.
+- 2026-10-28 — WP4.8 and all WP4 acceptance criteria remain open until the WP5 atomic cutover and controlled browser verification. The old public scripts were not deleted.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-28 | WP4 staged content-script verification | `src/content/sites.ts`, `src/content/filterDom.ts`, `src/content/v2.ts`, `src/content/v2-entry.ts`, `src/shared/contentFilterDefaults.ts`, `src/shared/migrate.ts`, `src/shared/plan.ts`, `scripts/build-extension.mjs`, content/migration/planner tests. | `npm run typecheck` — exit 0; `npm test` — exit 0, 25 files / 140 tests; `npm run build` — exit 0; output check confirms `dist/content-v2.js` exists while `dist/manifest.json` still references `content.js`; `git diff --check` — exit 0. | PASS — staged implementation and migration defaults compile and pass deterministic tests. No live selector or browser behavior was verified. |
 
-**Decisions / deferred work:** None recorded.
+**Failures / blockers:**
+- 2026-10-28 — Appendix B selectors are not live-verified; keep `verified: null` until a controllable browser is available.
+- 2026-10-28 — Runtime acceptance and old-script removal remain gated until WP5's atomic cutover.
+
+**Decisions / deferred work:**
+- Keep `public/content.js`, `public/background.js`, and the active v1 manifest unchanged until WP5.
+- Run WP4 browser acceptance after WP5 cutover; do not claim C23 or performance results from unit tests.
 
 ---
 
@@ -757,6 +768,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-28 | WP4 staged content script | Added the Appendix B data table, v2 content controller, reversible CSS/keyword hiding, observer lifecycle, migration defaults, and separate staged build while preserving the active v1 entry. | `npm run typecheck`, `npm test` (25 files / 140 tests), `npm run build`, active-manifest bundle check, and `git diff --check` passed. WP4 remains 6/15; live selector and runtime acceptance are open. |
 | 2026-10-28 | WP3 owner-authorized verification scope | Completed fresh deterministic checks while deferring browser verification. Kept S1/atomic-cutover gate closed and left UI/cutover task items open. | `npm ci`, `npm run typecheck`, `npm test` (23 files / 123 tests), `npm run build`, and `git diff --check` passed. No browser behavior was tested. |
 | 2026-10-28 | WP3.5 planner alias-group coverage | Added an end-to-end pure-plan assertion that one alias-group member blocks the other members. | `npm test -- tests/shared/plan.test.ts` — exit 0; 1 file / 12 tests passed. WP3.5 remains incomplete due to deferred UI chip integration. |
 | 2026-10-28 | WP3.4 scheduled-domain validation gap | Reconcile checked schedule shape but did not report invalid `sites[]` values within an otherwise valid schedule; added validation that reports malformed entries without discarding good ones. | `npm test -- tests/background/reconcile.test.ts` — exit 0; 1 file / 7 tests passed. WP3.4 remains unchecked pending its user-facing inline validation portion. |

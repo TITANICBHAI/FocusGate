@@ -38,3 +38,18 @@ await esbuild({
   target: "chrome110",
   sourcemap: false,
 });
+
+// Stage the v2 content script without referencing it from the active manifest.
+await esbuild({
+  absWorkingDir: root,
+  entryPoints: ["src/content/v2-entry.ts"],
+  outfile: resolve(dist, "content-v2.js"),
+  bundle: true,
+  platform: "browser",
+  format: "iife",
+  target: "chrome110",
+  sourcemap: false,
+  define: {
+    "import.meta.env.DEV": "false",
+  },
+});

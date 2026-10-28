@@ -382,7 +382,9 @@ export function isFilteringActive(
   host?: string,
 ): boolean {
   const plan = computeBlockPlan(state, nowMs);
-  if (plan.hideWords.length > 0) return true;
+  if (state.settings.keywords.scope.title && plan.hideWords.length > 0) {
+    return true;
+  }
   if (!isBlockingActive(state, nowMs)) return false;
   if (!host) return true;
   const normalizedHost = normalizeDomain(host);
