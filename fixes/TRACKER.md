@@ -789,11 +789,13 @@
 
 - [ ] WP7.AC Every Tier A item works end-to-end in Chrome/Edge and supported Firefox APIs; reminders fire at the right time after restart; a 14:00 task shows 13:50/13:55/13:59 and at-start notifications; recurring tasks create one instance per day; presets require confirmation; C01 and C13/C14 pass.
 
-**Notes / progress:** Not started. Do not begin before M1 is green.
+**Notes / progress:**
+- 2026-10-29 — Owner authorized staged WP7 Tier A implementation despite M1 remaining blocked by the unavailable browser-testing matrix. Keep v1 runtime consumers active; do not register v2 listeners, activate v2 behavior, migrate live storage, or perform the WP5 cutover. Browser/runtime acceptance remains open. Tier B waits for the Tier A boundary; Tier C requires a separate owner request.
+- 2026-10-29 — Started WP7 Tier A from the current staged source after inspecting the project instructions and clean working tree. Reuse existing implementations where they meet the contract; reconcile each checklist item against source and deterministic evidence. No browser/runtime result is inferred.
 
 **Evidence:** No verified evidence recorded.
 
-**Failures / blockers:** None recorded for this reset.
+**Failures / blockers:** M1 remains blocked by unavailable browser-testing/results. This does not block the owner-authorized staged Tier A code/unit work, but it keeps runtime activation and browser acceptance unverified.
 
 **Decisions / deferred work:** None recorded.
 

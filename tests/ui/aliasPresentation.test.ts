@@ -14,4 +14,8 @@ describe("site alias presentation", () => {
     expect(aliasesForSiteDisplay("example.com")).toEqual([]);
     expect(aliasesForSiteDisplay("not a domain")).toEqual([]);
   });
+
+  it("omits aliases the user chose to remove", () => {
+    expect(aliasesForSiteDisplay("x.com", ["twitter.com"])).toEqual(["t.co"]);
+  });
 });

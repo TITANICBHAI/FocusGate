@@ -593,7 +593,7 @@ Background watches `storage.onChanged` for `blockedSites, alwaysBlockedSites, ke
 
 ## 6. Work packages
 
-Effort numbers are rough working days for one agent. **Do not start WP7 until M1 (WP0–WP3) passes its AC.**
+Effort numbers are rough working days for one agent. **WP7 runtime activation and acceptance require M1 (WP0–WP3) to pass its AC.** Owner-authorized staged Tier A implementation may proceed before M1 only as documented under WP7; this does not waive browser verification or the WP5 cutover gate.
 
 ### WP0 — Repo hygiene and tooling · 0.5 d · fixes R01–R03, R05
 
@@ -817,6 +817,8 @@ Run these browser/runtime acceptance criteria after the WP5 atomic cutover; befo
 ### WP7 — Feature ports from the Android and PC apps · 5–8 d
 
 Priorities: **Tier A** = ship in this release. **Tier B** = after Tier A is green. **Tier C** = backlog, only on request. Each item lists its source so you can read the original behaviour if you have the repos; the spec here is self-contained.
+
+**Owner-authorized staged-work exception (2026-10-29):** The owner authorized WP7 work despite M1 remaining blocked by unavailable browser testing/results. Proceed with staged Tier A code and deterministic tests only. Keep v1 runtime consumers active; do not register v2 listeners, activate v2 behavior, migrate live storage, or perform the WP5 cutover. Browser/runtime acceptance remains open and must not be claimed from unit tests. Tier B remains gated on Tier A completion and its acceptance boundary; Tier C requires an owner request.
 
 #### Tier A
 

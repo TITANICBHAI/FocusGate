@@ -2,6 +2,9 @@ import type { AppState } from "./types.ts";
 
 export const DEFAULT_STATE: AppState = {
   schemaVersion: 2,
+  customPresets: [],
+  quickBlockMode: "focus",
+  aliasExclusions: {},
   session: {
     status: "idle",
     sessionId: "",
@@ -66,7 +69,7 @@ export const DEFAULT_STATE: AppState = {
       atEnd: true,
     },
     blockPage: {
-      message: "You are supposed to be focusing right now.",
+      message: "Stay focused. You've got this.",
       quotes: [],
       showQuotes: false,
       sound: false,

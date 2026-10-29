@@ -9,6 +9,7 @@ import {
   TICK_ALARM,
   WEEKLY_REPORT_ALARM,
 } from "./alarms.ts";
+import { TASK_REMINDER_ALARM_PREFIX } from "./taskAlarms.ts";
 
 export interface AlarmHandlerDependencies {
   getState(): Promise<AppState>;
@@ -23,6 +24,10 @@ export interface AlarmHandlerDependencies {
   reconcile(reason: string): Promise<void>;
   handleWeeklyReport(): Promise<void>;
   handleMidnight(): Promise<void>;
+  tasks?: {
+    reconcile(): Promise<void>;
+    handleReminderAlarm(name: string): Promise<boolean>;
+  };
   now(): number;
   onEffectError?(effect: string, error: unknown): void;
 }
@@ -55,6 +60,13 @@ export function createAlarmHandler(
   };
 
   return async (name) => {
+    if (name.startsWith(TASK_REMINDER_ALARM_PREFIX)) {
+      if (!dependencies.tasks) return false;
+      await runEffect("task-reminder", () =>
+        dependencies.tasks!.handleReminderAlarm(name),
+      );
+      return true;
+    }
     if (!HANDLED_ALARMS.has(name)) return false;
 
     const now = dependencies.now();
@@ -105,6 +117,11 @@ export function createAlarmHandler(
         break;
       case MIDNIGHT_ALARM:
         await runEffect("midnight", () => dependencies.handleMidnight());
+        if (dependencies.tasks) {
+          await runEffect("task-alarm-reconcile", () =>
+            dependencies.tasks!.reconcile(),
+          );
+        }
         await runEffect("reconcile", () =>
           dependencies.reconcile("midnight"),
         );

@@ -142,8 +142,26 @@ function addDomains(
   target: Map<string, BlockReason>,
   domains: string[],
   reason: BlockReason,
+  aliasExclusions: AppState["aliasExclusions"],
 ): void {
-  for (const domain of expandAliases(domains)) {
+  const explicit = new Set(
+    domains
+      .map(normalizeDomain)
+      .filter((domain): domain is string => domain !== null),
+  );
+  const excluded = new Set(
+    domains.flatMap((domain) => {
+      const normalized = normalizeDomain(domain);
+      return normalized
+        ? (aliasExclusions[normalized] ?? [])
+            .map(normalizeDomain)
+            .filter((value): value is string => value !== null)
+        : [];
+    }),
+  );
+  for (const domain of expandAliases(domains).filter(
+    (value) => explicit.has(value) || !excluded.has(value),
+  )) {
     if (!target.has(domain)) target.set(domain, reason);
   }
 }
@@ -198,7 +216,12 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   );
   const blocked = new Map<string, BlockReason>();
 
-  addDomains(blocked, state.alwaysBlockedSites, { kind: "always" });
+  addDomains(
+    blocked,
+    state.alwaysBlockedSites,
+    { kind: "always" },
+    state.aliasExclusions,
+  );
 
   const contexts: Array<{ sites: string[]; reason: BlockReason }> = [];
   if (standaloneActive(state, nowMs)) {
@@ -229,7 +252,24 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
 
   const contextDomains = new Set<string>();
   for (const context of contexts) {
-    for (const domain of expandAliases(context.sites)) {
+    const explicit = new Set(
+      context.sites
+        .map(normalizeDomain)
+        .filter((domain): domain is string => domain !== null),
+    );
+    const excluded = new Set(
+      context.sites.flatMap((site) => {
+        const normalized = normalizeDomain(site);
+        return normalized
+          ? (state.aliasExclusions[normalized] ?? [])
+              .map(normalizeDomain)
+              .filter((value): value is string => value !== null)
+          : [];
+      }),
+    );
+    for (const domain of expandAliases(context.sites).filter(
+      (value) => explicit.has(value) || !excluded.has(value),
+    )) {
       contextDomains.add(domain);
       if (blocked.has(domain)) continue;
 
@@ -385,6 +425,71 @@ export function explainBlock(
   return urlMatch
     ? { kind: "keyword", keyword: urlMatch, where: "url" }
     : null;
+}
+
+export interface UrlAssessment {
+  valid: boolean;
+  blocked: boolean;
+  reason: BlockReason | null;
+  exception: string | null;
+  nextChangeAt: number | null;
+}
+
+/** Uses the same block decision as navigation enforcement and the block page. */
+export function assessUrl(
+  urlValue: string,
+  state: AppState,
+  nowMs: number,
+): UrlAssessment {
+  let url: URL;
+  try {
+    url = new URL(urlValue);
+  } catch {
+    return {
+      valid: false,
+      blocked: false,
+      reason: null,
+      exception: null,
+      nextChangeAt: null,
+    };
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return {
+      valid: false,
+      blocked: false,
+      reason: null,
+      exception: null,
+      nextChangeAt: null,
+    };
+  }
+
+  const exception =
+    state.exceptions.find((entry) => matchException(url.href, [entry])) ?? null;
+  if (exception) {
+    return {
+      valid: true,
+      blocked: false,
+      reason: null,
+      exception,
+      nextChangeAt: null,
+    };
+  }
+  const reason = explainBlock(url.href, state, nowMs);
+  const nextChangeAt =
+    reason?.kind === "session" ||
+    reason?.kind === "standalone" ||
+    reason?.kind === "schedule"
+      ? reason.until
+      : reason?.kind === "allowance"
+        ? reason.resetsAt
+        : null;
+  return {
+    valid: true,
+    blocked: reason !== null,
+    reason,
+    exception: null,
+    nextChangeAt,
+  };
 }
 
 export function isFilteringActive(

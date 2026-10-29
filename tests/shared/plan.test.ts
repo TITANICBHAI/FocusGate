@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import {
   computeBlockPlan,
+  assessUrl,
   explainBlock,
   isBlockContextActive,
   isBlockingActive,
@@ -35,6 +36,43 @@ describe("block planning", () => {
     expect(explainBlock("https://t.co/short", state, 1_000)).toEqual({
       kind: "always",
     });
+  });
+
+  it("allows an alias to be removed without hiding an explicit site rule", () => {
+    const state = stateWith({
+      alwaysBlockedSites: ["x.com"],
+      aliasExclusions: { "x.com": ["twitter.com"] },
+    });
+    expect(explainBlock("https://x.com", state, 1_000)?.kind).toBe("always");
+    expect(explainBlock("https://twitter.com", state, 1_000)).toBeNull();
+    expect(explainBlock("https://t.co", state, 1_000)?.kind).toBe("always");
+
+    state.alwaysBlockedSites.push("twitter.com");
+    expect(explainBlock("https://twitter.com", state, 1_000)?.kind).toBe("always");
+  });
+
+  it("explains the enforcement reason, exceptions, and next rule change", () => {
+    const state = stateWith({
+      blockedSites: ["example.com"],
+      session: {
+        ...createDefaultState().session,
+        status: "work",
+        phaseEndsAt: 60_000,
+      },
+      exceptions: ["example.com/docs"],
+    });
+    expect(assessUrl("https://example.com/home", state, 1_000)).toMatchObject({
+      valid: true,
+      blocked: true,
+      reason: { kind: "session" },
+      nextChangeAt: 60_000,
+    });
+    expect(assessUrl("https://example.com/docs/page", state, 1_000)).toMatchObject({
+      valid: true,
+      blocked: false,
+      exception: "example.com/docs",
+    });
+    expect(assessUrl("chrome://extensions", state, 1_000).valid).toBe(false);
   });
 
   it("turns session blocking off during breaks and activates it during work", () => {

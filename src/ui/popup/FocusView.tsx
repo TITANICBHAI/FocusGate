@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { normalizeDomain } from "../../shared/domains.ts";
+import { computeBlockPlan, isBlockingActive } from "../../shared/plan.ts";
+import { isScheduleActiveAt } from "../../shared/time.ts";
+import {
+  taskDurationForStart,
+  taskWindowEnd,
+  taskWindowStart,
+} from "../../shared/taskScheduling.ts";
 import type { AppState, LockLevel, SessionState } from "../../shared/types.ts";
 import {
   countMatchingStandaloneTabs,
@@ -142,8 +149,17 @@ function StandaloneCountdown({ until }: { until: number }) {
   );
 }
 
-export function FocusView({ state }: { state: AppState }) {
+export function FocusView({
+  state,
+  onOpenRules,
+  onOpenTasks,
+}: {
+  state: AppState;
+  onOpenRules: () => void;
+  onOpenTasks: () => void;
+}) {
   const showToast = useToast();
+  const [now, setNow] = useState(() => Date.now());
   const [standaloneStartOpen, setStandaloneStartOpen] = useState(false);
   const [standaloneUntilText, setStandaloneUntilText] = useState(() =>
     toLocalDateTimeInput(Date.now() + 60 * 60_000),
@@ -165,6 +181,10 @@ export function FocusView({ state }: { state: AppState }) {
   const [stopCredential, setStopCredential] = useState("");
   const [waitReady, setWaitReady] = useState(true);
   const waitTimer = useRef<number | null>(null);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const isRunning = state.session.status !== "idle";
   const isBreak =
     state.session.status === "shortBreak" ||
@@ -173,10 +193,38 @@ export function FocusView({ state }: { state: AppState }) {
     state.standalone.active &&
     state.standalone.startsAt <= Date.now() &&
     Date.now() < state.standalone.until;
-  const hasConfiguredSites =
-    state.blockedSites.length > 0 ||
-    state.alwaysBlockedSites.length > 0 ||
-    state.schedules.some((schedule) => schedule.enabled && schedule.sites.length > 0);
+  const stateForFocus =
+    state.session.status === "idle"
+      ? {
+          ...state,
+          session: {
+            ...state.session,
+            status: "work" as const,
+            phaseEndsAt: now + (Number(durationText) || 25) * 60_000,
+          },
+        }
+      : state;
+  const plan = computeBlockPlan(stateForFocus, now);
+  const canBlockAnything = isBlockingActive(stateForFocus, now);
+  const todayKey = `${new Date(now).getFullYear()}-${String(
+    new Date(now).getMonth() + 1,
+  ).padStart(2, "0")}-${String(new Date(now).getDate()).padStart(2, "0")}`;
+  const linkedTask =
+    state.session.status !== "idle" && state.session.taskId
+      ? state.tasks.find((task) => task.id === state.session.taskId)
+      : undefined;
+  const nextTodayTask = state.tasks
+    .filter((task) => !task.completed && task.scheduledDate === todayKey)
+    .filter((task) => {
+      const end = taskWindowEnd(task);
+      return end !== null && end > now;
+    })
+    .sort(
+      (left, right) =>
+        (taskWindowStart(left) ?? Number.MAX_SAFE_INTEGER) -
+        (taskWindowStart(right) ?? Number.MAX_SAFE_INTEGER),
+    )[0];
+  const focusTask = linkedTask ?? nextTodayTask;
   const hasPassword = state.password !== null;
   const standaloneUntil = fromLocalDateTimeInput(standaloneUntilText);
   const standaloneEntries = useMemo(
@@ -349,6 +397,11 @@ export function FocusView({ state }: { state: AppState }) {
 
   async function startFocus(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canBlockAnything) {
+      showToast("Nothing is set to block yet. Add sites or rules first.", "info");
+      onOpenRules();
+      return;
+    }
     const durationMin = validDuration();
     if (durationMin === null) return;
     const reply = await sendSessionMessage({
@@ -361,6 +414,24 @@ export function FocusView({ state }: { state: AppState }) {
       return;
     }
     showToast("Focus session started.", "success");
+  }
+
+  async function startScheduledTask(task: NonNullable<typeof focusTask>) {
+    if (state.session.status !== "idle") {
+      showToast("End the current session before starting a task.", "info");
+      return;
+    }
+    const reply = await sendSessionMessage({
+      type: "session/start",
+      durationMin: taskDurationForStart(task, Date.now()),
+      lockLevel: task.lockLevel,
+      taskId: task.id,
+    });
+    if (!reply.ok) {
+      showToast(reply.message ?? "This task could not be started.", "error");
+      return;
+    }
+    showToast("Task session started.", "success");
   }
 
   async function submitStop(event: FormEvent<HTMLFormElement>) {
@@ -407,10 +478,49 @@ export function FocusView({ state }: { state: AppState }) {
         </div>
       </div>
 
+      <Card title={linkedTask ? "Task in progress" : "Up next"}>
+        {focusTask ? (
+          <div className="fg-stack">
+            <strong>{focusTask.title}</strong>
+            <p className="fg-muted">
+              {taskWindowStart(focusTask) !== null && taskWindowEnd(focusTask) !== null
+                ? `${new Date(taskWindowStart(focusTask)!).toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}–${new Date(taskWindowEnd(focusTask)!).toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}`
+                : `${focusTask.durationMin} min`}
+            </p>
+            {!linkedTask && (
+              <Button
+                variant="secondary"
+                onClick={() => void startScheduledTask(focusTask)}
+                disabled={state.session.status !== "idle"}
+              >
+                Start task
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="fg-stack">
+            <p className="fg-muted">Nothing scheduled — add a task.</p>
+            <Button variant="secondary" onClick={onOpenTasks}>Add a task</Button>
+          </div>
+        )}
+      </Card>
+
       <SessionClock
         session={state.session}
         idleDurationMin={Number(durationText) || state.settings.defaultDurationMin}
       />
+      <p className="fg-muted" aria-live="polite">
+        {plan.blocked.size} sites · {plan.keywords.length} keywords ·{" "}
+        {state.schedules.filter((schedule) =>
+          isScheduleActiveAt(schedule, new Date(now)),
+        ).length} schedules
+      </p>
 
       <Card
         title={standaloneActive ? "Standalone block active" : "Block now"}
@@ -595,9 +705,10 @@ export function FocusView({ state }: { state: AppState }) {
               {lockLevel === "none" ? "Start focus" : "Start locked session"}
             </Button>
           </Card>
-          {!hasConfiguredSites && (
-            <p className="fg-note">
-              Add sites in Rules first if you want FocusGate to block pages.
+          {!canBlockAnything && (
+            <p className="fg-note" role="status">
+              Nothing will be blocked during this session until you add rules.
+              <Button variant="quiet" onClick={onOpenRules}>Open Rules</Button>
             </p>
           )}
         </form>
@@ -605,7 +716,7 @@ export function FocusView({ state }: { state: AppState }) {
         <Card title={isBreak ? "Break controls" : "Session controls"}>
           {state.session.status === "work" && (
             <div className="fg-wrap">
-              {[15, 25, 45].map((minutes) => (
+              {[10, 15, 20, 30, 45, 60].map((minutes) => (
                 <Button
                   key={minutes}
                   variant="secondary"

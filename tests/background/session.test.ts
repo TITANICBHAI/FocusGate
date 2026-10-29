@@ -222,6 +222,14 @@ describe("background-owned session service", () => {
     },
   );
 
+  it("records the extension amount in completed session history", async () => {
+    const harness = createHarness();
+    await harness.service.start({ durationMin: 25, lockLevel: "none" });
+    await harness.service.extend(15);
+    expect(await harness.service.stop()).toMatchObject({ ok: true });
+    expect(harness.getState().sessionHistory[0]?.extendedMs).toBe(15 * 60_000);
+  });
+
   it("rejects extensions that would exceed the 24-hour phase cap", async () => {
     const harness = createHarness();
     await harness.service.start({ durationMin: 999, lockLevel: "none" });

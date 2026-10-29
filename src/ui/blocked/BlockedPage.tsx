@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { explainBlock } from "../../shared/plan.ts";
+import { quoteForLocalDate } from "../../shared/blockPage.ts";
 import { localDateKey } from "../../shared/time.ts";
 import { Button, Card, Chip } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
@@ -62,6 +63,39 @@ function BlockedScreen() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!reason || !state.settings.blockPage.sound) return;
+    let audio: AudioContext | undefined;
+    let oscillator: OscillatorNode | undefined;
+    let closeTimer: number | undefined;
+    try {
+      audio = new AudioContext();
+      oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 440;
+      gain.gain.setValueAtTime(0.06, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.18);
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+      oscillator.start();
+      oscillator.stop(audio.currentTime + 0.18);
+      void audio.resume().catch(() => undefined);
+      closeTimer = window.setTimeout(() => void audio?.close().catch(() => undefined), 350);
+    } catch {
+      void audio?.close().catch(() => undefined);
+    }
+    return () => {
+      if (closeTimer !== undefined) window.clearTimeout(closeTimer);
+      try {
+        oscillator?.stop();
+      } catch {
+        // The oscillator may already have stopped.
+      }
+      void audio?.close().catch(() => undefined);
+    };
+  }, [reason?.kind, state.settings.blockPage.sound, target]);
+
   async function closeCurrentTab() {
     if (typeof chrome === "undefined" || !chrome.runtime?.id || !chrome.tabs) {
       setActionMessage("Open this page from FocusGate to close its tab.");
@@ -95,7 +129,7 @@ function BlockedScreen() {
   const customMessage = state.settings.blockPage.message.trim();
   const defaultMessage = "You are supposed to be focusing right now.";
   const quote = state.settings.blockPage.showQuotes
-    ? state.settings.blockPage.quotes.find((item) => item.trim())
+    ? quoteForLocalDate(state.settings.blockPage.quotes, dateKey)
     : undefined;
 
   return (

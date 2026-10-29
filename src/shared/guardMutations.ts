@@ -9,6 +9,8 @@ import type {
 export type GuardedStateKey =
   | "blockedSites"
   | "alwaysBlockedSites"
+  | "aliasExclusions"
+  | "customPresets"
   | "keywords"
   | "exceptions"
   | "schedules"
@@ -236,6 +238,24 @@ function settingsActions(
   }
 }
 
+function aliasExclusionActions(
+  previous: AppState["aliasExclusions"],
+  next: AppState["aliasExclusions"],
+  actions: GuardAction[],
+): void {
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
+  for (const key of keys) {
+    const oldSet = new Set(previous[key] ?? []);
+    const newSet = new Set(next[key] ?? []);
+    if ([...newSet].some((domain) => !oldSet.has(domain))) {
+      actions.push("remove_site");
+    }
+    if ([...oldSet].some((domain) => !newSet.has(domain))) {
+      actions.push("add_site");
+    }
+  }
+}
+
 /**
  * Classify a user-editable state write. Weakening actions are returned before
  * strengthening actions so a mixed batch cannot bypass the stricter policy.
@@ -261,6 +281,17 @@ export function classifyStateMutation(
     "remove_always_site",
     actions,
   );
+  aliasExclusionActions(
+    previous.aliasExclusions,
+    next.aliasExclusions,
+    actions,
+  );
+  if (
+    JSON.stringify(previous.customPresets) !==
+    JSON.stringify(next.customPresets)
+  ) {
+    actions.push("manage_presets");
+  }
   addSetChanges(
     previous.exceptions,
     next.exceptions,

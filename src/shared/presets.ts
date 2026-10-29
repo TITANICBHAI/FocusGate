@@ -1,6 +1,6 @@
 import type { BlockPreset } from "./types.ts";
 
-export const BUILT_IN_PRESETS: readonly BlockPreset[] = [
+const BASE_PRESETS: readonly BlockPreset[] = [
   {
     id: "social",
     name: "Social media",
@@ -83,6 +83,19 @@ export const BUILT_IN_PRESETS: readonly BlockPreset[] = [
   },
 ];
 
+export const DEEP_FOCUS_PRESET: BlockPreset = {
+  id: "deep-focus",
+  name: "Deep focus",
+  emoji: "🎯",
+  domains: [...new Set(BASE_PRESETS.flatMap((preset) => preset.domains))],
+  builtIn: true,
+};
+
+export const BUILT_IN_PRESETS: readonly BlockPreset[] = [
+  ...BASE_PRESETS,
+  DEEP_FOCUS_PRESET,
+];
+
 export function getPresetDomains(presetIds: string[]): string[] {
   const selected = new Set(presetIds);
   return [
@@ -95,5 +108,5 @@ export function getPresetDomains(presetIds: string[]): string[] {
 }
 
 export function deepFocusDomains(): string[] {
-  return getPresetDomains(BUILT_IN_PRESETS.map((preset) => preset.id));
+  return [...DEEP_FOCUS_PRESET.domains];
 }

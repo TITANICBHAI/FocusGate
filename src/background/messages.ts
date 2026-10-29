@@ -16,6 +16,7 @@ import type {
   DataActionResult,
   DataActionService,
 } from "./dataActions.ts";
+import type { TaskService } from "./tasks.ts";
 
 export type SessionMessage =
   | {
@@ -111,6 +112,26 @@ export type StandaloneMessage =
 export type DataActionMessage =
   | { type: "backup/import"; json: string }
   | { type: "data/reset"; confirm: string; password?: string };
+
+export type TaskMessage = { type: "tasks/changed" };
+
+/** Staged notification path for task writes; it does not register a listener. */
+export function createTaskMessageHandler(
+  service: Pick<TaskService, "reconcile">,
+): (message: unknown) => Promise<boolean> {
+  return async (message) => {
+    if (!message || typeof message !== "object") return false;
+    if ((message as Record<string, unknown>).type !== "tasks/changed") {
+      return false;
+    }
+    try {
+      await service.reconcile();
+    } catch {
+      return false;
+    }
+    return true;
+  };
+}
 
 /**
  * Staged standalone handler. It intentionally has no stop/end message.
@@ -424,6 +445,8 @@ function isKnownPasswordMessageType(message: unknown): boolean {
 const GUARDED_STATE_KEYS: readonly GuardedStateKey[] = [
   "blockedSites",
   "alwaysBlockedSites",
+  "aliasExclusions",
+  "customPresets",
   "keywords",
   "exceptions",
   "schedules",

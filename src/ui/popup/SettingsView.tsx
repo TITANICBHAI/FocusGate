@@ -6,6 +6,7 @@ import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { PasswordSettings } from "./PasswordSettings.tsx";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
+import { CONTENT_FILTER_OPTIONS } from "../../content/sites.ts";
 import { weakeningLockReason } from "../lib/guardState.ts";
 import {
   canRequestHostAccess,
@@ -84,6 +85,15 @@ function gapDurationLabel(durationMs: number): string {
 
 export function SettingsView({ state }: { state: AppState }) {
   const [section, setSection] = useState<SettingsSection>("security");
+  const [preStartText, setPreStartText] = useState(
+    state.settings.reminders.preStartMin.join(", "),
+  );
+  const [midSessionText, setMidSessionText] = useState(
+    state.settings.reminders.midSessionMin.join(", "),
+  );
+  const [quotesText, setQuotesText] = useState(
+    state.settings.blockPage.quotes.join("\n"),
+  );
   const showToast = useToast();
   const [protection, setProtection] = useState<ProtectionStatus>({
     incognito: "checking",
@@ -110,6 +120,16 @@ export function SettingsView({ state }: { state: AppState }) {
   useEffect(() => {
     if (section === "protection") void refreshProtection();
   }, [section]);
+
+  useEffect(() => {
+    setPreStartText(state.settings.reminders.preStartMin.join(", "));
+    setMidSessionText(state.settings.reminders.midSessionMin.join(", "));
+    setQuotesText(state.settings.blockPage.quotes.join("\n"));
+  }, [
+    state.settings.blockPage.quotes,
+    state.settings.reminders.midSessionMin,
+    state.settings.reminders.preStartMin,
+  ]);
 
   async function requestSiteAccess() {
     const result = await requestHostAccess(browserApi);
@@ -139,6 +159,56 @@ export function SettingsView({ state }: { state: AppState }) {
       showToast(storageWriteErrorMessage(error, "The setting could not be saved."), "error");
     }
   };
+
+  function saveReminderOffsets(
+    text: string,
+    key: "preStartMin" | "midSessionMin",
+  ) {
+    const parts = text.split(",").map((part) => part.trim()).filter(Boolean);
+    const offsets = parts.map(Number);
+    if (
+      offsets.some((value) => !Number.isInteger(value) || value < 1 || value > 1_440) ||
+      offsets.length > 5
+    ) {
+      showToast("Use up to five whole-minute offsets from 1 to 1440.", "error");
+      setPreStartText(state.settings.reminders.preStartMin.join(", "));
+      setMidSessionText(state.settings.reminders.midSessionMin.join(", "));
+      return;
+    }
+    const normalized = [...new Set(offsets)].sort((left, right) => right - left);
+    void updateSettings(
+      (current) => ({
+        ...current,
+        reminders: { ...current.reminders, [key]: normalized },
+      }),
+      "Reminder times saved.",
+    );
+  }
+
+  async function requestNotificationPermission(): Promise<boolean> {
+    if (
+      typeof chrome === "undefined" ||
+      !chrome.permissions?.contains ||
+      !chrome.permissions.request
+    ) {
+      return true;
+    }
+    try {
+      if (await chrome.permissions.contains({ permissions: ["notifications"] })) {
+        return true;
+      }
+      const granted = await chrome.permissions.request({
+        permissions: ["notifications"],
+      });
+      if (!granted) {
+        showToast("Enable notifications in your browser settings to use alerts.", "info");
+      }
+      return granted;
+    } catch {
+      showToast("Open extension settings to allow notifications.", "info");
+      return false;
+    }
+  }
 
   return (
     <section className="fg-page" aria-labelledby="settings-title">
@@ -352,31 +422,114 @@ export function SettingsView({ state }: { state: AppState }) {
                 />
               )}
             </Card>
+            <Card title="Scheduled tasks">
+              <Toggle
+                label="Automatically start scheduled tasks"
+                description="Start a focus session when a scheduled task begins."
+                checked={state.settings.autoStartTasks}
+                onCheckedChange={(autoStartTasks) =>
+                  void updateSettings(
+                    (current) => ({ ...current, autoStartTasks }),
+                    "Task setting saved.",
+                  )
+                }
+              />
+            </Card>
           </>
         )}
 
         {section === "notifications" && (
-          <Card title="Notifications">
-            {Object.entries(state.settings.notifications).map(([key, enabled]) => (
+          <>
+            <Card title="Notifications">
+              {Object.entries(state.settings.notifications).map(([key, enabled]) => (
+                <Toggle
+                  key={key}
+                  label={notificationLabel(key)}
+                  checked={enabled}
+                  onCheckedChange={(value) => {
+                    void (async () => {
+                      if (value && !(await requestNotificationPermission())) return;
+                      await updateSettings(
+                        (current) => ({
+                          ...current,
+                          notifications: {
+                            ...current.notifications,
+                            [key]: value,
+                          },
+                        }),
+                        "Notification setting saved.",
+                      );
+                    })();
+                  }}
+                />
+              ))}
+            </Card>
+            <Card title="Task reminder timing">
+              <Field
+                id="pre-start-offsets"
+                label="Before a task starts"
+                helper="Minutes before start, separated by commas."
+              >
+                <input
+                  id="pre-start-offsets"
+                  value={preStartText}
+                  onChange={(event) => setPreStartText(event.target.value)}
+                  onBlur={() => saveReminderOffsets(preStartText, "preStartMin")}
+                />
+              </Field>
               <Toggle
-                key={key}
-                label={notificationLabel(key)}
-                checked={enabled}
-                onCheckedChange={(value) =>
+                label="At task start"
+                checked={state.settings.reminders.atStart}
+                onCheckedChange={(atStart) =>
                   void updateSettings(
                     (current) => ({
                       ...current,
-                      notifications: {
-                        ...current.notifications,
-                        [key]: value,
-                      },
+                      reminders: { ...current.reminders, atStart },
                     }),
-                    "Notification setting saved.",
+                    "Reminder setting saved.",
                   )
                 }
               />
-            ))}
-          </Card>
+              <Field
+                id="mid-session-offsets"
+                label="During a task"
+                helper="Minutes after starting; reminders need at least 10 minutes left."
+              >
+                <input
+                  id="mid-session-offsets"
+                  value={midSessionText}
+                  onChange={(event) => setMidSessionText(event.target.value)}
+                  onBlur={() => saveReminderOffsets(midSessionText, "midSessionMin")}
+                />
+              </Field>
+              <Toggle
+                label="Almost done"
+                checked={state.settings.reminders.almostDone}
+                onCheckedChange={(almostDone) =>
+                  void updateSettings(
+                    (current) => ({
+                      ...current,
+                      reminders: { ...current.reminders, almostDone },
+                    }),
+                    "Reminder setting saved.",
+                  )
+                }
+              />
+              <Toggle
+                label="Task window ends"
+                checked={state.settings.reminders.atEnd}
+                onCheckedChange={(atEnd) =>
+                  void updateSettings(
+                    (current) => ({
+                      ...current,
+                      reminders: { ...current.reminders, atEnd },
+                    }),
+                    "Reminder setting saved.",
+                  )
+                }
+              />
+            </Card>
+          </>
         )}
 
         {section === "block-page" && (
@@ -411,11 +564,40 @@ export function SettingsView({ state }: { state: AppState }) {
                 )
               }
             />
+            <Field id="block-quotes" label="Quotes" helper="One quote per line; the block page rotates one each day.">
+              <textarea
+                id="block-quotes"
+                value={quotesText}
+                maxLength={4_000}
+                onChange={(event) => setQuotesText(event.target.value)}
+                onBlur={() => {
+                  const quotes = quotesText
+                    .split("\n")
+                    .map((quote) => quote.trim())
+                    .filter(Boolean)
+                    .slice(0, 20);
+                  void updateSettings(
+                    (current) => ({
+                      ...current,
+                      blockPage: { ...current.blockPage, quotes },
+                    }),
+                    "Block-page quotes saved.",
+                  );
+                }}
+              />
+            </Field>
             <Toggle
-              label="Play a sound"
-              description="Sound playback is not available on the block page yet."
+              label="Play a short sound on the block page"
               checked={state.settings.blockPage.sound}
-              disabled
+              onCheckedChange={(sound) =>
+                void updateSettings(
+                  (current) => ({
+                    ...current,
+                    blockPage: { ...current.blockPage, sound },
+                  }),
+                  "Block-page setting saved.",
+                )
+              }
             />
           </Card>
         )}
@@ -425,10 +607,12 @@ export function SettingsView({ state }: { state: AppState }) {
             title="Content filters"
             description="Choose which feed sections FocusGate hides on supported sites."
           >
-            {Object.entries(state.settings.contentFilters).map(([key, enabled]) => (
+            {CONTENT_FILTER_OPTIONS.map(({ id, label }) => {
+              const enabled = state.settings.contentFilters[id] === true;
+              return (
               <Toggle
-                key={key}
-                label={labelFromKey(key)}
+                key={id}
+                label={label}
                 description={enabled && lockReason ? lockReason : undefined}
                 checked={enabled}
                 disabled={enabled && Boolean(lockReason)}
@@ -438,14 +622,15 @@ export function SettingsView({ state }: { state: AppState }) {
                       ...current,
                       contentFilters: {
                         ...current.contentFilters,
-                        [key]: value,
+                        [id]: value,
                       },
                     }),
                     "Content filter setting saved.",
                   )
                 }
               />
-            ))}
+              );
+            })}
             <p className="fg-muted">
               These filters apply only to sites that FocusGate supports.
             </p>

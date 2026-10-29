@@ -6,7 +6,7 @@ import {
 } from "../../src/shared/presets.ts";
 
 describe("built-in presets", () => {
-  it("provides the six planned categories without applying them implicitly", () => {
+  it("provides the six categories and deep focus without applying them implicitly", () => {
     expect(BUILT_IN_PRESETS.map((preset) => preset.id)).toEqual([
       "social",
       "video",
@@ -14,8 +14,10 @@ describe("built-in presets", () => {
       "shopping",
       "gaming",
       "messaging",
+      "deep-focus",
     ]);
     expect(getPresetDomains(["social"])).toContain("x.com");
+    expect(getPresetDomains(["deep-focus"])).toContain("twitch.tv");
     expect(getPresetDomains(["unknown"])).toEqual([]);
   });
 

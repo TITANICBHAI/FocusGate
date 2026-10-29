@@ -92,6 +92,8 @@ export interface SessionRecord {
   startedAt: number;
   endedAt: number;
   plannedMs: number;
+  /** Minutes added after the original work phase began, in milliseconds. */
+  extendedMs?: number;
   elapsedMs: number;
   status: SessionRecordStatus;
   lockLevel: LockLevel;
@@ -221,6 +223,12 @@ export interface KeywordMatch {
 
 export interface AppState {
   schemaVersion: 2;
+  /** User-created presets are staged state; built-ins remain code-defined. */
+  customPresets: BlockPreset[];
+  /** Destination used by the popup's quick-block action. */
+  quickBlockMode: "focus" | "always";
+  /** Per-site aliases the user has chosen not to block. */
+  aliasExclusions: Record<string, string[]>;
   session: SessionState;
   standalone: StandaloneBlock;
   blockedSites: string[];

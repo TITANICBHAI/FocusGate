@@ -25,7 +25,7 @@ const GOAL_PRESETS: Record<Goal, string[]> = {
   social: ["social", "messaging"],
   gaming: ["gaming", "video"],
   web: ["news", "video"],
-  deep: BUILT_IN_PRESETS.map((preset) => preset.id),
+  deep: ["deep-focus"],
 };
 
 const GOALS: { id: Goal; title: string; copy: string; dailyGoalMin: number }[] = [

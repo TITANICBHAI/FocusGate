@@ -10,7 +10,7 @@ import {
   matchesDomain,
   normalizeDomain,
 } from "../../shared/domains.ts";
-import { computeBlockPlan } from "../../shared/plan.ts";
+import { assessUrl, computeBlockPlan } from "../../shared/plan.ts";
 import {
   Button,
   Card,
@@ -26,6 +26,7 @@ import { uiStorageStore } from "../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 import { weakeningLockReason } from "../lib/guardState.ts";
 import { aliasesForSiteDisplay } from "../lib/aliasPresentation.ts";
+import { PresetManager } from "./PresetManager.tsx";
 
 type RuleSection = "sites" | "exceptions" | "keywords" | "schedules" | "limits";
 type SiteMode = "focus" | "always";
@@ -103,7 +104,9 @@ function SitesPanel({
   const showToast = useToast();
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<SiteMode>("focus");
+  const [listMode, setListMode] = useState<SiteMode>("focus");
   const [error, setError] = useState("");
+  const [whyDomain, setWhyDomain] = useState<string | null>(null);
   const plan = useMemo(() => computeBlockPlan(state, Date.now()), [state]);
 
   const allSites = useMemo(() => {
@@ -152,6 +155,18 @@ function SitesPanel({
       showToast(`${domain} removed.`, "success");
     } catch (error) {
       showToast(storageWriteErrorMessage(error, "The site could not be removed."), "error");
+    }
+  }
+
+  async function removeAlias(domain: string, alias: string) {
+    try {
+      await uiStorageStore.set("aliasExclusions", (current) => ({
+        ...current,
+        [domain]: [...new Set([...(current[domain] ?? []), alias])],
+      }));
+      showToast(`${alias} will no longer be blocked through ${domain}.`, "success");
+    } catch (error) {
+      showToast(storageWriteErrorMessage(error, "The alias could not be removed."), "error");
     }
   }
 
@@ -217,15 +232,35 @@ function SitesPanel({
           <Button type="submit">Add site</Button>
         </form>
       </Card>
-      <Card title="Blocked sites">
-        {allSites.length === 0 ? (
+      <Card
+        title="Blocked sites"
+        description={
+          listMode === "always"
+            ? "Blocked all the time, not only during sessions."
+            : "Blocked during focus sessions and schedules."
+        }
+      >
+        <Segmented
+          label="Site list"
+          options={[
+            { value: "focus", label: "During focus" },
+            { value: "always", label: "Always" },
+          ]}
+          value={listMode}
+          onChange={setListMode}
+        />
+        {allSites.filter(([, modes]) => modes.has(listMode)).length === 0 ? (
           <EmptyState
-            title="No sites added"
-            description="Add a site above to include it in your blocking rules."
+            title={listMode === "always" ? "No always-blocked sites" : "No focus sites"}
+            description={
+              listMode === "always"
+                ? "Choose Always when adding a site to block it 24/7."
+                : "Add a site above to block it during focus and schedules."
+            }
           />
         ) : (
           <ul className="fg-list">
-            {allSites.map(([domain, modes]) => (
+            {allSites.filter(([, modes]) => modes.has(listMode)).map(([domain, modes]) => (
               <li className="fg-list-item" key={domain}>
                 <div className="fg-list-item__copy">
                   <strong>{domain}</strong>
@@ -243,15 +278,31 @@ function SitesPanel({
                         Schedule: {schedule.name}
                       </Chip>
                     ))}
-                    {aliasesForSiteDisplay(domain).map((alias) => (
-                        <Chip key={`alias:${alias}`} tone="neutral">
+                    {aliasesForSiteDisplay(domain, state.aliasExclusions[domain] ?? []).map((alias) => (
+                        <Chip key={`alias:${domain}:${alias}`} tone="neutral">
                           Also blocks: {alias}
+                          <Button
+                            className="fg-chip-remove"
+                            variant="quiet"
+                            aria-label={`Remove ${alias} alias from ${domain}`}
+                            title={`Stop blocking ${alias} through ${domain}`}
+                            onClick={() => void removeAlias(domain, alias)}
+                          >
+                            ×
+                          </Button>
                         </Chip>
                       ))}
                     {isBlockedNow(domain) && <Chip tone="accent">Blocked now</Chip>}
                   </div>
                 </div>
                 <div className="fg-list-item__actions">
+                  <Button
+                    variant="quiet"
+                    aria-label={`Why is ${domain} blocked?`}
+                    onClick={() => setWhyDomain(domain)}
+                  >
+                    Why?
+                  </Button>
                   {[...modes].map((siteMode) => (
                     <Button
                       key={siteMode}
@@ -270,13 +321,21 @@ function SitesPanel({
           </ul>
         )}
       </Card>
+      <PresetManager state={state} destination={mode} />
+      <Modal
+        open={whyDomain !== null}
+        title={whyDomain ? `Why ${whyDomain}?` : "Why is this page blocked?"}
+        onClose={() => setWhyDomain(null)}
+      >
+        {whyDomain && <UrlExplanation state={state} url={`https://${whyDomain}`} />}
+      </Modal>
     </>
   );
 }
 
 function UrlCheck({ state }: { state: AppState }) {
   const [input, setInput] = useState("");
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{ url: string } | null>(null);
   const [error, setError] = useState("");
   return (
     <form
@@ -289,7 +348,6 @@ function UrlCheck({ state }: { state: AppState }) {
           setResult(null);
           return;
         }
-        const reason = computeBlockPlan(state, Date.now());
         let parsed: URL;
         try {
           parsed = new URL(value);
@@ -309,19 +367,8 @@ function UrlCheck({ state }: { state: AppState }) {
           setResult(null);
           return;
         }
-        const blocked =
-          reason.blocked.has(domain) ||
-          [...reason.blocked.keys()].some((blockedDomain) =>
-            matchesDomain(domain, blockedDomain),
-          ) ||
-          (reason.allowOnly !== null &&
-            !reason.allowOnly.some((allowed) => matchesDomain(domain, allowed)));
         setError("");
-        setResult(
-          blocked
-            ? `${domain} is blocked by the current rules.`
-            : `${domain} is not blocked by the current rules.`,
-        );
+        setResult({ url: parsed.href });
       }}
     >
       <div className="fg-inline-form">
@@ -336,8 +383,64 @@ function UrlCheck({ state }: { state: AppState }) {
         </Button>
       </div>
       {error && <p className="fg-field__error">{error}</p>}
-      {result && <p className="fg-muted" role="status">{result}</p>}
+      {result && <UrlExplanation state={state} url={result.url} />}
     </form>
+  );
+}
+
+function UrlExplanation({ state, url }: { state: AppState; url: string }) {
+  const assessment = assessUrl(url, state, Date.now());
+  if (!assessment.valid) {
+    return (
+      <p className="fg-field__error" role="status">
+        Enter a complete HTTP or HTTPS URL.
+      </p>
+    );
+  }
+  let reasonCopy = "No active rule blocks this URL.";
+  if (assessment.exception) {
+    reasonCopy = `Allowed by exception: ${assessment.exception}.`;
+  } else if (assessment.reason) {
+    switch (assessment.reason.kind) {
+      case "always":
+        reasonCopy = "Always-blocked site list.";
+        break;
+      case "session":
+        reasonCopy = "Focus site list.";
+        break;
+      case "standalone":
+        reasonCopy = "Standalone block list.";
+        break;
+      case "schedule":
+        reasonCopy = `Schedule: ${assessment.reason.name}.`;
+        break;
+      case "allowance":
+        reasonCopy = "Daily limit reached.";
+        break;
+      case "allowOnly":
+        reasonCopy = "This domain is not on the focus allowlist.";
+        break;
+      case "keyword":
+        reasonCopy = `Keyword “${assessment.reason.keyword}” matched the ${assessment.reason.where}.`;
+        break;
+    }
+  }
+  const nextChange =
+    assessment.nextChangeAt === null
+      ? "No scheduled change."
+      : `Next change at ${new Date(assessment.nextChangeAt).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        })}.`;
+  return (
+    <div className="fg-stack" role="status">
+      <p>
+        <strong>{assessment.blocked ? "Blocked" : "Allowed"}</strong>
+        {" — "}
+        {reasonCopy}
+      </p>
+      <p className="fg-muted">{nextChange}</p>
+    </div>
   );
 }
 

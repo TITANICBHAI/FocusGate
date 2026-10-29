@@ -112,6 +112,11 @@ export function StatsView({ state }: { state: AppState }) {
                 <div className="fg-list-item__copy">
                   <strong>{formatDuration(record.elapsedMs)} focus</strong>
                   <span className="fg-muted">{recordLabel(record)}</span>
+                  {(record.extendedMs ?? 0) > 0 && (
+                    <span className="fg-muted">
+                      Extended by {Math.round((record.extendedMs ?? 0) / 60_000)} min
+                    </span>
+                  )}
                 </div>
                 <Chip
                   tone={

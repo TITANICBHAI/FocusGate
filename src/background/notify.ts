@@ -13,6 +13,7 @@ export interface NotificationOptions {
   iconUrl: string;
   title: string;
   message: string;
+  buttons?: Array<{ title: string }>;
 }
 
 export interface NotificationApi {

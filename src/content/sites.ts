@@ -225,6 +225,26 @@ export const CONTENT_SITES: readonly ContentSiteDefinition[] = [
   },
 ];
 
+const CONTENT_FILTER_LABELS: Record<string, string> = {
+  ytShorts: "YouTube Shorts",
+  ytHomeFeed: "YouTube home feed",
+  ytRecommendations: "YouTube recommendations",
+  ytComments: "YouTube comments",
+  igReels: "Instagram Reels",
+  igExplore: "Instagram Explore",
+  xTrends: "X trends",
+  tiktokFeed: "TikTok feed",
+  linkedinFeed: "LinkedIn feed",
+  keywordHide: "Keyword hiding",
+};
+
+export const CONTENT_FILTER_OPTIONS = [
+  ...new Set(CONTENT_SITES.flatMap((site) => site.filters.map((filter) => filter.id))),
+].map((id) => ({
+  id,
+  label: CONTENT_FILTER_LABELS[id] ?? id,
+}));
+
 export const CONTENT_SCRIPT_MATCHES = CONTENT_SITES.flatMap((site) => [
   ...site.matches,
 ]);

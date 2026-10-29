@@ -110,6 +110,8 @@ export function createBrowserStorageBackend(
   const guardedKeys: readonly GuardedStateKey[] = [
     "blockedSites",
     "alwaysBlockedSites",
+    "aliasExclusions",
+    "customPresets",
     "keywords",
     "exceptions",
     "schedules",

@@ -50,7 +50,9 @@ function validValue(key: GuardedStateKey, value: unknown): boolean {
     case "keywords":
     case "schedules":
     case "tasks":
+    case "customPresets":
       return Array.isArray(value);
+    case "aliasExclusions":
     case "allowances":
     case "settings":
       return isRecord(value);

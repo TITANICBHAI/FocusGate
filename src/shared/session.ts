@@ -241,6 +241,7 @@ function createWorkRecord(
     startedAt: session.phaseStartedAt,
     endedAt: safeEnd,
     plannedMs: session.phasePlannedMs,
+    extendedMs: Math.max(0, session.extendedMs),
     elapsedMs,
     status: requestedStatus,
     lockLevel: session.lockLevel,
