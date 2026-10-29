@@ -1,3 +1,3 @@
-- [Browser-spike validation limits](browser-spike-validation.md) — a CLI browser timeout is a harness failure, not evidence about extension APIs; keep gates blocked until page output is observed.
+- [Browser-spike validation limits](browser-spike-validation.md) — headless Chromium 152 can verify selected DNR paths; timeouts prove nothing, and interactive/Firefox behavior remains untested.
 - [Staged work vs cutover gates](wp3-cutover-sequence.md) — WP4/WP6 staged work may proceed before acceptance gates; runtime activation and cutover stay blocked.
 - [Lockfile-based dependency recovery](npm-ci-recovery.md) — if npm's package installer crashes while resolving this project, restoring from `package-lock.json` with `npm ci` worked without changing manifests.

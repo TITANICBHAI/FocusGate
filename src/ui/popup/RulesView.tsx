@@ -6,7 +6,10 @@ import type {
   KeywordRule,
   Schedule,
 } from "../../shared/types.ts";
-import { matchesDomain, normalizeDomain } from "../../shared/domains.ts";
+import {
+  matchesDomain,
+  normalizeDomain,
+} from "../../shared/domains.ts";
 import { computeBlockPlan } from "../../shared/plan.ts";
 import {
   Button,
@@ -22,6 +25,7 @@ import { Tabs } from "../components/Tabs.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 import { weakeningLockReason } from "../lib/guardState.ts";
+import { aliasesForSiteDisplay } from "../lib/aliasPresentation.ts";
 
 type RuleSection = "sites" | "exceptions" | "keywords" | "schedules" | "limits";
 type SiteMode = "focus" | "always";
@@ -239,6 +243,11 @@ function SitesPanel({
                         Schedule: {schedule.name}
                       </Chip>
                     ))}
+                    {aliasesForSiteDisplay(domain).map((alias) => (
+                        <Chip key={`alias:${alias}`} tone="neutral">
+                          Also blocks: {alias}
+                        </Chip>
+                      ))}
                     {isBlockedNow(domain) && <Chip tone="accent">Blocked now</Chip>}
                   </div>
                 </div>

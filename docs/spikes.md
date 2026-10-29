@@ -1,35 +1,34 @@
 # WP1b browser de-risking spikes
 
 **Initial run date:** 2026-10-19
-**Latest environment recheck:** 2026-10-28
-**Status:** blocked; the browser-dependent claims below are not verified.  
-**Scope:** WP1b browser validation. On 2026-10-28, the owner deferred these tests so WP2/WP3 module and unit work can proceed under the fallbacks below; WP1b remains a gate before WP5 cutover and M1 green.
+**Latest environment recheck:** 2026-10-29
+**Status:** blocked; S1 has partial Chromium-only evidence, and S2–S4 remain unverified.
+**Scope:** WP1b browser validation. On 2026-10-29, the owner chose to complete M1 before starting WP7. Chromium-only results below do not satisfy the full browser matrix or close WP1b.
 
 ## Test environment
 
 - Host: Replit Linux, kernel `6.18.57`, x86_64.
-- Chromium available: `152.0.7977.64`.
+- Chromium available: `152.0.7977.64`; a throwaway Manifest V3 extension can be loaded in headless mode.
 - Firefox and Microsoft Edge binaries unavailable.
 - `DISPLAY=:0` reported an 800×600 display and `xdotool` was present; Xvfb and browser automation packages were unavailable.
 - No external site was used. The S1 harness mapped `example.com` and `source.test` to loopback and ran a local HTTP server.
 
 ## S1 — DNR redirect preserves the original URL
 
-**Result: BLOCKED / no behavioral conclusion.** No test case reached a readable result page. The intended case set was not passed.
+**Result: PARTIAL — Chromium 152 only.** Tested a throwaway MV3 extension with a DNR regex redirect and a local HTTP server. With `web_accessible_resources`, the tested direct navigation, synthetic link click, `window.open(..., "_self")`, and HTTP 302 chain displayed the full original URL, including `?a=1&b=2#frag`. The same direct navigation and 302 chain passed without `web_accessible_resources`; the link and `_self` cases without it ended on Chromium's `ERR_BLOCKED_BY_CLIENT` page.
 
 The throwaway harness attempted a dynamic MV3 DNR rule using `requestDomains: ["example.com"]`, `regexFilter: "^(https?://.+)$"`, and `regexSubstitution` to `blocked.html#\\1`. It included a local page to represent a link source and a local HTTP redirect route. Variants with and without `web_accessible_resources` were prepared.
 
-| Case | Chromium 152 | Edge | Firefox |
-|---|---|---|---|
-| Typed URL with `?`, `&`, and `#` | Not verified; harness produced no page output | Not available | Not available |
-| Link click from another site | Not run | Not available | Not available |
-| `window.open` | Not run | Not available | Not available |
-| HTTP redirect chain | Not run | Not available | Not available |
-| Repeat cases with and without `web_accessible_resources` | Not run | Not available | Not available |
+| Case | Chromium 152 with WAR | Chromium 152 without WAR | Edge | Firefox |
+|---|---|---|---|---|
+| Direct top-level URL with `?`, `&`, and `#` | Pass; full URL shown | Pass; full URL shown | Not available | Not available |
+| Link click from another site | Pass; synthetic anchor click | `ERR_BLOCKED_BY_CLIENT` | Not available | Not available |
+| `window.open` | Pass using `_self`, not a new window | `ERR_BLOCKED_BY_CLIENT` | Not available | Not available |
+| HTTP 302 redirect chain | Pass; full URL shown | Pass; full URL shown | Not available | Not available |
 
-Harness attempts: the first DevTools WebSocket connection received HTTP 403; a retry with Chromium's local remote-origin allowance hit a harness client error, and its corrected retry timed out without output. Separate headless `--dump-dom` runs for dynamic and static DNR variants also timed out without output. A headful app-mode launch did not create a window/profile that `xdotool` could inspect. These are test-harness failures, not evidence that the redirect works or fails.
+The direct navigation was opened by Chromium's command line, not typed into an interactive address bar. The link case used a scripted anchor click, and `window.open` used `_self`; neither proves a trusted user click or a separate popup tab. The cases ran only in Chromium and do not establish Chrome Stable, Edge, or Firefox behavior.
 
-**Redirect design decision:** Plan B (`webNavigation.onBeforeNavigate` stores the original URL in `storage.session`, then DNR redirects to `/blocked.html`) is the provisional choice because Plan A has not been demonstrated to preserve fragments and all navigation paths. Plan B is also unverified. Do not treat either design as proven or start WP3 enforcement until S1 is repeated in a controllable Chrome, Edge, and Firefox environment.
+**Redirect design decision:** Plan A remains provisional. The tested Chromium cases preserved the full URL with WAR, while two no-WAR cases were blocked. This is not the full S1 matrix: repeat it in Chrome, Edge, and Firefox with an interactive address bar, a real link click, and a new `window.open` tab before selecting a design or activating WP3 enforcement. Plan B remains unverified.
 
 ## S2 — Attention sampling
 
@@ -65,8 +64,8 @@ The Firefox binary was absent, so none of these were exercised in Firefox: MV3 `
 
 ## Environment recheck — 2026-10-28
 
-- Chromium is still available at `152.0.7977.64`; no Firefox or Microsoft Edge executable is available.
-- No Playwright, Puppeteer, WebSocket, or Chrome DevTools Protocol client package is installed. The X display and `xdotool` command exist, but prior headful Chromium attempts did not yield an inspectable browser window.
-- A generic headless control page did render `PAGE_OUTPUT_OK` using `chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`. D-Bus warnings appeared, but the command exited successfully.
-- This control page does **not** exercise an extension, DNR, alarms, focus/idle sampling, or Firefox APIs. No new S1–S4 behavior result was obtained; the prior blocked outcomes and provisional decisions above remain unchanged.
-- To complete WP1b, use a controllable environment with Chrome, Edge, and Firefox extension loading and readable test-page output. Do not infer browser support from packaging or a generic Chromium page render.
+- Chromium is available at `152.0.7977.64`; no Firefox or Microsoft Edge executable is available.
+- No Playwright, Puppeteer, WebSocket, or Chrome DevTools Protocol client package is installed. The X display and `xdotool` command exist, but no controllable headful browser window was obtained.
+- A throwaway MV3 extension loaded in headless Chromium and returned readable `blocked.html` output for the partial S1 matrix above. The extension fixture and loopback server were created under `/tmp` and removed after the run; no project runtime was activated.
+- This partial S1 result does **not** exercise an interactive address bar, a separate `window.open` tab, worker restart, alarms, attention sampling, or Firefox APIs.
+- To complete WP1b, use a controllable environment with Chrome, Edge, and Firefox extension loading, readable output, and interactive controls. Do not infer support from packaging or a generic Chromium page render.

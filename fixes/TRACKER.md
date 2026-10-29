@@ -5,9 +5,9 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 42% (65/156 required checklist items currently verified)
-- **Current work package:** WP6 — staged security, standalone, protection, and backup work
-- **Last updated:** 2026-10-28
+- **Progress:** 42% (66/156 required checklist items currently verified)
+- **Current work package:** M1 — finish WP1b/WP2/WP3 before starting WP7
+- **Last updated:** 2026-10-29
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
 
@@ -35,25 +35,25 @@
 |---|---|---:|---|---|---|
 | WP0 — Repo hygiene and tooling | DONE — evidence recorded | 6/6 | 2026-10-27 | 2026-10-28 | — |
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
-| WP1b — De-risking spikes | BLOCKED — not verified; browser environment unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
+| WP1b — De-risking spikes | BLOCKED — partial Chromium S1 only; full browser matrix unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
-| WP3 — Blocking engine | IN PROGRESS | 10/22 | 2026-10-28 | — | WP3.5 alias UI; WP3.10 active v1 fallback removal; browser AC/S1 |
+| WP3 — Blocking engine | IN PROGRESS | 11/22 | 2026-10-28 | — | WP3.10 active-v1 fallback removal at cutover; browser AC/S1 |
 | WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
 | WP5 — UI foundation and screen fixes | BLOCKED — owner authorized WP6 staged work; verification/cutover remain open | 11/18 | 2026-10-28 | — | WP1b/WP4 browser evidence, active-v1 copy audit, accessibility and atomic cutover |
-| WP6 — Security, standalone, protection, backup | IN PROGRESS | 0/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
+| WP6 — Security, standalone, protection, backup | IN PROGRESS | 15/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
 | WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
-| **Total** | **IN PROGRESS** | **53/156** | — | — | |
+| **Total** | **IN PROGRESS** | **66/156** | — | — | |
 
-**Implementation gates:** WP1b is still incomplete (0/5); it does not block staged WP2/WP3/WP4 module work or WP5 UI work, but its browser spikes and runtime evidence remain required before WP5 cutover and M1 green. Keep v1 consumers active and do not activate migration or v2 runtime entrypoints before the atomic cutover. Do not start WP7 until M1 is green. Re-credited items have current source/test/build evidence; browser-dependent criteria remain unchecked.
+**Implementation gates:** WP1b remains incomplete (0/5); the partial Chromium S1 observations do not satisfy its full matrix. Its browser spikes remain required before WP5 cutover and M1 green. Keep v1 consumers active and do not activate migration or v2 runtime entrypoints before the atomic cutover. Do not start WP7 until M1 is green. Re-credited items have current source/test/build evidence; browser-dependent criteria remain unchecked.
 
 ## Milestones
 
 | Milestone | Includes | Exit criteria | Status |
 |---|---|---|---|
-| M1 — Correct core | WP0–WP3, including WP1b | WP2/WP3 module and unit criteria plus browser spikes pass; the v1 runtime stays active and migration is not activated | NOT STARTED |
+| M1 — Correct core | WP0–WP3, including WP1b | WP2/WP3 module and unit criteria plus browser spikes pass; the v1 runtime stays active and migration is not activated | IN PROGRESS |
 | M2 — Trustworthy UI | WP4–WP6 | WP4–WP6 acceptance criteria pass; WP5 switches all consumers together, migrates v1 data with backup, and passes the WP2–WP4 runtime checks | NOT STARTED |
 | M3 — Features | WP7 Tier A and WP8 | Tier A and WP8 acceptance criteria pass | NOT STARTED |
 | M4 — Release | WP9 and WP10 | Plan §8.2–§8.4 gates and upgrade test pass | NOT STARTED |
@@ -216,7 +216,7 @@
 
 ## WP1b — De-risking spikes
 
-**Plan:** §6 WP1b · **Blocked by:** Browser test environment unavailable · **Status:** BLOCKED — not verified · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/5
+**Plan:** §6 WP1b · **Blocked by:** Full Chrome/Edge/Firefox extension test matrix unavailable · **Status:** BLOCKED — partial Chromium S1 only · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 0/5
 
 - [ ] WP1b.S1 Test DNR URL preservation through typed URL, link, `window.open`, and redirect-chain paths; include `&`/`?`/`#`, test with/without web-accessible resources in Chrome, Edge, Firefox; choose among plan designs A/B/C.
 - [ ] WP1b.S2 Sample attention using focused window, active tab, `idle.queryState(60)`, and `tab.audible` at five-second intervals; test switching/minimizing/locking/video/second monitor. Never credit unfocused/minimized time; do credit audible time.
@@ -229,15 +229,18 @@
 - 2026-10-28 — Existing `docs/spikes.md` records prior harness failures and no browser API conclusions. A plain control run, `timeout 12s chromium --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/focusgate-wp1b-headless-baseline --dump-dom 'data:text/html,<title>wp1b-baseline</title><p>PAGE_OUTPUT_OK</p>'`, exited 0 and emitted `PAGE_OUTPUT_OK` despite D-Bus warnings. This confirms only generic headless page output, not extension behavior.
 - 2026-10-28 — Updated `docs/spikes.md` with this environment recheck. S1–S4 remain blocked: no extension behavior was tested, and no pass/fail browser API conclusion is claimed. A controllable Chrome/Edge/Firefox test environment is required before these gates can continue.
 - 2026-10-28 — Owner directed that WP1b be done later and not block further work. WP1b remains incomplete at 0/5 and is a gate before WP5 cutover/M1 green, but WP2/WP3 module and unit work may proceed under the plan's conservative fallbacks.
+- 2026-10-29 — Owner chose to complete M1 before starting WP7. Rechecked the browser gate using a throwaway MV3 extension in Chromium 152: direct navigation and HTTP 302 passed with and without WAR; synthetic link and `window.open(..., "_self")` passed with WAR but returned `ERR_BLOCKED_BY_CLIENT` without it. S1 remains incomplete because address-bar input, a real popup tab, Chrome/Edge/Firefox coverage are not established; S2–S4 remain unverified.
 
-**Evidence:** `docs/spikes.md` records prior harness outcomes and the 2026-10-28 environment recheck. Generic Chromium page output is verified; no spike behavior is verified.
+**Evidence:** `docs/spikes.md` records the Chromium 152 partial S1 matrix and remaining browser gaps. Full S1 is not verified; S2–S4 remain unverified.
 
 **Failures / blockers:**
-- No controllable Chrome/Edge/Firefox extension environment is available in this workspace. The generic Chromium control page does not satisfy any S1–S4 behavior criterion.
+- No controllable Chrome Stable/Edge/Firefox extension environment or interactive browser window is available. Headless Chromium provides only the partial S1 observations documented in `docs/spikes.md`.
 - 2026-10-28 — `git diff --check` exited 2 because the two new date lines in `docs/spikes.md` had trailing spaces. Remove those new spaces and rerun; this is a formatting issue, not a browser behavior result.
 - 2026-10-28 — Resolved: removed the new trailing spaces; reran `git diff --check`, which exited 0 with no output.
+- 2026-10-29 — Initial throwaway extension probe used an inline page script, which did not run under extension-page CSP; moved the probe logic to an external script and reran. Do not count the empty initial capture as a redirect result.
 
-**Decisions / deferred work:** None recorded.
+**Decisions / deferred work:**
+- Plan A remains provisional; see `docs/spikes.md` for the observed Chromium-only cases. Do not activate navigation enforcement until S1 passes the required browser matrix.
 
 ---
 
@@ -316,7 +319,7 @@
 
 ## WP3 — Blocking engine
 
-**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 10/22
+**Plan:** §5.3–§5.4, §6 WP3, Appendix A · **Blocked by:** WP2; S1 before runtime enforcement · **Status:** IN PROGRESS · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 11/22
 
 ### Tasks
 
@@ -324,7 +327,7 @@
 - [x] WP3.2 Implement serialized `reconcile(reason)` with `try/catch`, health fields, one `updateDynamicRules` call, one `boundary` alarm, transition-only tab audits, and one-minute safety tick while blocking.
 - [x] WP3.3 Implement one DNR redirect using `requestDomains`, `regexFilter`, and `regexSubstitution`; use priority-2 `allow` rules for exceptions.
 - [x] WP3.4 Normalize/validate inputs at entry using URL hostname parsing and punycode; reject malformed values, show inline UI errors, and report invalid stored values through health state.
-- [ ] WP3.5 Implement alias groups (including `x.com`/`twitter.com`/`t.co`); adding one blocks the group and UI shows group chips.
+- [x] WP3.5 Implement alias groups (including `x.com`/`twitter.com`/`t.co`); adding one blocks the group and UI shows group chips.
 - [x] WP3.6 Implement named schedules with own lists or `useGlobalLists`; cover overnight, `24:00`, end-exclusive and previous-day rules; calculate boundaries for schedules, standalone, allowance windows, and local midnight.
 - [x] WP3.7 Implement `time_budget`, `count`, and `interval` allowances with attention ledger; count focused active-tab/non-idle or audible use; enforce per-entry caps, `duringBlocks`, and always-blocked precedence.
 - [x] WP3.8 Implement normalized boundary-checked exceptions and DNR allow rule from the same entry; exceptions override other rules.
@@ -365,7 +368,8 @@
 - 2026-10-28 — Restarted `FocusGate Docs Preview` after dependency restoration; Vite became ready on port 5000. Both web previews are running; GitHub Sync remains stopped and was not started.
 - 2026-10-28 — Historical final-scope checkpoint at 8/22, superseded by the current re-credit above. The blocked-page/Check-a-URL and validation UI integrations are now present; WP3.5 alias chips and WP3.10 cutover remain open. Browser/runtime acceptance and S1 remain unverified.
 - 2026-10-28 — Historical WP3.4 note: per-site health reporting and inline validation were incomplete at that checkpoint. Current source review confirms both are now wired; WP3.4 is re-credited above.
-- 2026-10-28 — Added planner-level alias coverage: a single `twitter.com` always-block entry must block `x.com` and `t.co` through the shared decision function. `npm test -- tests/shared/plan.test.ts` exited 0; 1 file / 12 tests passed. WP3.5 remains unchecked because the UI alias chips are deferred.
+- 2026-10-28 — Added planner-level alias coverage: a single `twitter.com` always-block entry must block `x.com` and `t.co` through the shared decision function. `npm test -- tests/shared/plan.test.ts` exited 0; 1 file / 12 tests passed. WP3.5 remained unchecked because the UI alias chips were deferred.
+- 2026-10-29 — Added alias chips to the staged Rules › Sites rows, showing the other domains covered by each known alias group. `tests/ui/aliasPresentation.test.ts` verifies normalized canonical/alias input and ungrouped domains; `npm test`, typecheck, build, and the corrected `git diff --check` pass. WP3.10's staged navigation module and tests are already present; removing the active-v1 fallback remains deferred to the atomic WP5 cutover.
 - 2026-10-28 — Owner authorized continuation of WP3 and supplied a WP3-specific checklist. Reset all prior completion marks to 0/156; revalidate dependencies and current WP3 code from the checkout. Keep navigation enforcement and DNR activation gated on WP1b.S1.
 - 2026-10-28 — Fresh source review found the pure plan, DNR builder, reconciler, block recorder, and staged navigation listener present. Attention sampling, keyword-match persistence, and boundary/weekly-report/midnight alarm scheduling are still missing. The active worker remains the v1 bridge; do not activate v2.
 - 2026-10-28 — Added a dependency-injected attention sampler and fake-event-source tests for focused/idle/audible attribution, alias/domain matching, cap reconciliation, and listener cleanup. Usage checkpoints advance before durable writes to avoid double-credit after recovery; the sampler remains unregistered and verification is pending.
@@ -450,7 +454,7 @@
 | 2026-10-28 | WP3 strict typecheck | `src/shared/plan.ts`, `src/background/reconcile.ts`, `fixes/TRACKER.md`. | `npm run typecheck` — exit 0; no TypeScript diagnostics. | PASS — staged plan and reconcile modules compile strictly. |
 
 **Failures / blockers:**
-- 2026-10-28 — Current boundary: WP3.5 is still an implementation gap because alias chips are absent from the UI; WP3.10 must wait for the gated WP5 cutover. Remaining WP3 acceptance criteria require observed browser/runtime evidence.
+- 2026-10-28 — Historical boundary, superseded by the 2026-10-29 alias-chip implementation: WP3.5 was then incomplete. WP3.10's active-v1 fallback removal remains deferred to the gated WP5 cutover; remaining WP3 acceptance criteria require observed browser/runtime evidence.
 - 2026-10-28 — Browser/runtime verification was explicitly deferred by the owner. No DNR redirect, extension navigation, alarm lifecycle, or cross-browser acceptance result is claimed.
 - 2026-10-28 — Resolved: after fixing the sampler to stop at exhausted caps and checking blocking from the computed plan, `npm test -- tests/background/attention.test.ts tests/background/alarmHandler.test.ts` exited 0; 2 files / 11 tests passed.
 - 2026-10-28 — Resolved: after deriving alarm-handler expectations from `computeBlockPlan(state, now)`, the combined command above exited 0; 5 files / 26 tests passed.
@@ -657,7 +661,7 @@
 | 2026-10-28 | WP5 staged copy/accessibility first verification | Same staged UI/test files as above; active v1 untouched. | `npm test` — exit 1, 32/33 files and 176/177 tests passed; one new Segmented markup assertion was too strict about HTML attribute placement. `npm run typecheck` — exit 0. `npm run build` — exit 0; active v1 plus all staged pages emitted. | FAIL — only the new test assertion failed; application typecheck/build pass. Relax assertion to test the semantic state independent of class-attribute order, then rerun. |
 
 **Failures / blockers:**
-- WP1b browser spikes and WP4 live-selector/runtime acceptance remain unverified; these block the WP5 atomic cutover and M1 green.
+- WP1b browser spikes remain unverified and block M1 green and the WP5 atomic cutover. WP2–WP4 browser/runtime acceptance remains open for the post-cutover M2 checks.
 - Keep all affected browser acceptance criteria open until evidence from the controlled browser is recorded.
 
 **Decisions / deferred work:**
