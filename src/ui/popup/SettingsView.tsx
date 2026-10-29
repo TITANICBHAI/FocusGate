@@ -311,6 +311,45 @@ export function SettingsView({ state }: { state: AppState }) {
                     />
                   </Field>
                 </div>
+                <Field id="cycles-before-long-break" label="Focus cycles before a long break">
+                  <input
+                    id="cycles-before-long-break"
+                    type="number"
+                    min={1}
+                    max={20}
+                    step={1}
+                    value={state.settings.breaks.cyclesBeforeLong}
+                    onChange={(event) => {
+                      const cyclesBeforeLong = Number(event.target.value);
+                      if (
+                        !Number.isInteger(cyclesBeforeLong) ||
+                        cyclesBeforeLong < 1 ||
+                        cyclesBeforeLong > 20
+                      ) return;
+                      void updateSettings(
+                        (current) => ({
+                          ...current,
+                          breaks: { ...current.breaks, cyclesBeforeLong },
+                        }),
+                        "Break cycle setting saved.",
+                      );
+                    }}
+                  />
+                </Field>
+                <Toggle
+                  label="Automatically start the next phase"
+                  description="Move straight into the next focus or break phase."
+                  checked={state.settings.breaks.autoStartNext}
+                  onCheckedChange={(autoStartNext) =>
+                    void updateSettings(
+                      (current) => ({
+                        ...current,
+                        breaks: { ...current.breaks, autoStartNext },
+                      }),
+                      "Break setting saved.",
+                    )
+                  }
+                />
               )}
             </Card>
           </>

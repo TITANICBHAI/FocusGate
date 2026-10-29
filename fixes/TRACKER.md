@@ -6,7 +6,7 @@
 
 - **Status:** IN PROGRESS
 - **Progress:** 42% (66/156 required checklist items currently verified)
-- **Current work package:** M1 — finish WP1b/WP2/WP3 before starting WP7
+- **Current work package:** WP7 — staged Tier A ports; M1 remains blocked by WP1b
 - **Last updated:** 2026-10-29
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -41,19 +41,19 @@
 | WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
 | WP5 — UI foundation and screen fixes | BLOCKED — owner authorized WP6 staged work; verification/cutover remain open | 11/18 | 2026-10-28 | — | WP1b/WP4 browser evidence, active-v1 copy audit, accessibility and atomic cutover |
 | WP6 — Security, standalone, protection, backup | IN PROGRESS | 15/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
-| WP7 — Feature ports, Tier A and Tier B | NOT STARTED | 0/20 | — | — | M1 green |
+| WP7 — Feature ports, Tier A and Tier B | IN PROGRESS — staged Tier A authorized while M1 is blocked | 0/20 | 2026-10-29 | — | Browser acceptance and runtime activation remain gated |
 | WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
 | **Total** | **IN PROGRESS** | **66/156** | — | — | |
 
-**Implementation gates:** WP1b remains incomplete (0/5); the partial Chromium S1 observations do not satisfy its full matrix. Its browser spikes remain required before WP5 cutover and M1 green. Keep v1 consumers active and do not activate migration or v2 runtime entrypoints before the atomic cutover. Do not start WP7 until M1 is green. Re-credited items have current source/test/build evidence; browser-dependent criteria remain unchecked.
+**Implementation gates:** WP1b remains incomplete (0/5); the partial Chromium S1 observations do not satisfy its full matrix, so M1 is blocked. On 2026-10-29, the owner authorized staged WP7 Tier A implementation despite the M1 block. This does not mark M1 green or waive browser acceptance, runtime activation, migration, or WP5 cutover gates. Keep v1 consumers active and do not activate v2 runtime entrypoints before atomic cutover. Browser-dependent criteria remain unchecked.
 
 ## Milestones
 
 | Milestone | Includes | Exit criteria | Status |
 |---|---|---|---|
-| M1 — Correct core | WP0–WP3, including WP1b | WP2/WP3 module and unit criteria plus browser spikes pass; the v1 runtime stays active and migration is not activated | IN PROGRESS |
+| M1 — Correct core | WP0–WP3, including WP1b | WP2/WP3 module and unit criteria plus browser spikes pass; the v1 runtime stays active and migration is not activated | BLOCKED — WP1b browser evidence unavailable |
 | M2 — Trustworthy UI | WP4–WP6 | WP4–WP6 acceptance criteria pass; WP5 switches all consumers together, migrates v1 data with backup, and passes the WP2–WP4 runtime checks | NOT STARTED |
 | M3 — Features | WP7 Tier A and WP8 | Tier A and WP8 acceptance criteria pass | NOT STARTED |
 | M4 — Release | WP9 and WP10 | Plan §8.2–§8.4 gates and upgrade test pass | NOT STARTED |
@@ -230,6 +230,7 @@
 - 2026-10-28 — Updated `docs/spikes.md` with this environment recheck. S1–S4 remain blocked: no extension behavior was tested, and no pass/fail browser API conclusion is claimed. A controllable Chrome/Edge/Firefox test environment is required before these gates can continue.
 - 2026-10-28 — Owner directed that WP1b be done later and not block further work. WP1b remains incomplete at 0/5 and is a gate before WP5 cutover/M1 green, but WP2/WP3 module and unit work may proceed under the plan's conservative fallbacks.
 - 2026-10-29 — Owner chose to complete M1 before starting WP7. Rechecked the browser gate using a throwaway MV3 extension in Chromium 152: direct navigation and HTTP 302 passed with and without WAR; synthetic link and `window.open(..., "_self")` passed with WAR but returned `ERR_BLOCKED_BY_CLIENT` without it. S1 remains incomplete because address-bar input, a real popup tab, Chrome/Edge/Firefox coverage are not established; S2–S4 remain unverified.
+- 2026-10-29 — Owner confirmed the remaining browser matrix cannot be run in this environment and authorized continuing staged WP7 Tier A work. Keep WP1b at 0/5 and M1 blocked; this does not waive browser or cutover acceptance.
 
 **Evidence:** `docs/spikes.md` records the Chromium 152 partial S1 matrix and remaining browser gaps. Full S1 is not verified; S2–S4 remain unverified.
 
@@ -755,9 +756,9 @@
 
 ## WP7 — Feature ports from Android and PC
 
-**Plan:** §6 WP7 · **Blocked by:** M1 green · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/20
+**Plan:** §6 WP7 · **Blocked by:** M1 for acceptance/runtime activation; owner authorized staged Tier A code · **Status:** IN PROGRESS — staged only · **Started:** 2026-10-29 · **Completed:** — · **Progress:** 0/20
 
-**Scope note:** Tier C is backlog and requires an owner request. Do not implement anything on the plan's “Do not port” list.
+**Scope note:** Tier C is backlog and requires an owner request. Do not implement anything on the plan's “Do not port” list. The owner authorized staged Tier A implementation on 2026-10-29 while M1 remains blocked; this does not authorize runtime activation or cutover.
 
 ### Tier A
 
@@ -811,13 +812,15 @@
 - [ ] WP8.AC3 Weekly report alarm scheduled time remains unchanged across at least 20 worker restarts.
 - [ ] WP8.AC4 Streak/score match formulas and no chart library is added.
 
-**Notes / progress:** Not started.
+**Notes / progress:**
+- 2026-10-29 — Started staged Tier A implementation under the owner's M1-blocked exception. First inspect existing staged UI/engine work and reuse it; keep WP7.AC and any runtime/browser claims open. Tier B waits until Tier A is green.
 
 **Evidence:** No verified evidence recorded.
 
-**Failures / blockers:** None recorded for this reset.
+**Failures / blockers:** M1 remains blocked because this environment lacks a controllable Chrome/Edge/Firefox browser matrix. WP7 acceptance and runtime activation remain unverified.
 
-**Decisions / deferred work:** None recorded.
+**Decisions / deferred work:**
+- Continue staged Tier A work while M1 is blocked, per owner authorization; do not activate v2 runtime, migration, or cutover. Do not begin Tier B until Tier A acceptance is green.
 
 ---
 
