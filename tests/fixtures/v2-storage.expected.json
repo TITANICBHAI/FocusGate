@@ -1,5 +1,8 @@
 {
   "schemaVersion": 2,
+  "customPresets": [],
+  "quickBlockMode": "focus",
+  "aliasExclusions": {},
   "session": {
     "status": "work",
     "sessionId": "migrated-1792411200000",
@@ -136,7 +139,7 @@
       "atEnd": true
     },
     "blockPage": {
-      "message": "You are supposed to be focusing right now.",
+      "message": "Stay focused. You've got this.",
       "quotes": [],
       "showQuotes": false,
       "sound": false
