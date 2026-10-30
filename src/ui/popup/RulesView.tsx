@@ -11,6 +11,8 @@ import {
   normalizeDomain,
 } from "../../shared/domains.ts";
 import { assessUrl, computeBlockPlan } from "../../shared/plan.ts";
+import { resetUsageOnModeChange } from "../../shared/allowance.ts";
+import { localDateKey } from "../../shared/time.ts";
 import {
   Button,
   Card,
@@ -1555,6 +1557,18 @@ function AllowanceRow({
     setPeriodDraft(next.mode === "interval" ? String(next.everyMin) : "30");
     setError("");
     onChange(next);
+    // WP9 EC37: a mode change resets this entry's usage for the window.
+    void uiStorageStore
+      .set("usage", (latest) =>
+        resetUsageOnModeChange(
+          latest,
+          domain,
+          allowance,
+          next,
+          Date.now(),
+        ).usage,
+      )
+      .catch(() => undefined);
   }
 
   function saveValues() {

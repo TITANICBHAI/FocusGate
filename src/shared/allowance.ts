@@ -9,6 +9,26 @@ export function freshUsage(dateKey: string): UsageRecord {
   return { dateKey, usedMs: 0, opens: 0, windowStartMs: 0, lastActiveAt: 0 };
 }
 
+/**
+ * WP9 EC37: switching a domain to a different allowance mode resets its
+ * usage for the current window; the same mode keeps what was accrued.
+ */
+export function resetUsageOnModeChange(
+  usage: Record<string, UsageRecord>,
+  domain: string,
+  previous: Allowance | undefined,
+  next: Allowance,
+  now: number,
+): { usage: Record<string, UsageRecord>; changed: boolean } {
+  if (previous && previous.mode === next.mode) {
+    return { usage, changed: false };
+  }
+  return {
+    usage: { ...usage, [domain]: freshUsage(localDateKey(new Date(now))) },
+    changed: true,
+  };
+}
+
 export function normalizeRecord(
   record: UsageRecord | undefined,
   allowance: Allowance,
