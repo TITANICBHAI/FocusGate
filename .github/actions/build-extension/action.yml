@@ -58,8 +58,12 @@ runs:
       run: |
         set -o pipefail
         npm run build 2>&1 | tee /tmp/build.log || {
-          echo "::error::BUILD STEP FAILED — last log lines, reverse order:"
-          tail -8 /tmp/build.log | tac | while IFS= read -r line; do
+          echo "::error::BUILD STEP FAILED — error lines:"
+          grep -aE "Error|ERR_|Cannot|✘|error during build|Failed to" /tmp/build.log | tail -10 | tac | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::${line//%/%25}"
+          done
+          echo "::error::— raw tail:"
+          tail -4 /tmp/build.log | tac | while IFS= read -r line; do
             [ -n "$line" ] && echo "::error::${line//%/%25}"
           done
           exit 1
