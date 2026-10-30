@@ -9,10 +9,8 @@ import type { AppState, StateChanges, StateKey } from "./types.ts";
 type StateListener = (changes: StateChanges, areaName: string) => void;
 
 interface StorageAreaLike {
-  get(
-    keys: string | string[] | Record<string, unknown> | null,
-  ): Promise<Record<string, unknown>>;
-  set(items: Record<string, unknown>): Promise<void>;
+  get(keys: string | string[] | object | null): Promise<Record<string, unknown>>;
+  set(items: object): Promise<void>;
   remove(keys: string | string[]): Promise<void>;
 }
 
@@ -83,7 +81,7 @@ async function initializeState(): Promise<void> {
     if (migration.set.backup_v1) {
       await area.set({ backup_v1: migration.set.backup_v1 });
     }
-    await area.set(migration.set as Record<string, unknown>);
+    await area.set(migration.set);
     if (migration.remove.length > 0) await area.remove([...migration.remove]);
     return;
   }
@@ -113,9 +111,7 @@ export function ready(): Promise<void> {
  */
 export async function getState(): Promise<AppState> {
   await ready();
-  const stored = (await localStorageArea().get(
-    DEFAULT_STATE as Record<string, unknown>,
-  )) as Partial<AppState>;
+  const stored = (await localStorageArea().get(DEFAULT_STATE)) as Partial<AppState>;
   return {
     ...createDefaultState(),
     ...stored,
