@@ -32,6 +32,8 @@ export interface AlarmHandlerDependencies {
   reflection?: { notifyEndOfDay(now: number): Promise<void> };
   /** WP7-B2: achievement evaluation, run after sessions and at midnight. */
   achievements?: { evaluate(now: number): Promise<void> };
+  /** WP8.4: history/statistics cap enforcement, run at local midnight. */
+  pruning?: { prune(now: number): Promise<void> };
   now(): number;
   onEffectError?(effect: string, error: unknown): void;
 }
@@ -129,6 +131,11 @@ export function createAlarmHandler(
         if (dependencies.achievements) {
           await runEffect("achievements", () =>
             dependencies.achievements!.evaluate(dependencies.now()),
+          );
+        }
+        if (dependencies.pruning) {
+          await runEffect("pruning", () =>
+            dependencies.pruning!.prune(dependencies.now()),
           );
         }
         if (dependencies.tasks) {

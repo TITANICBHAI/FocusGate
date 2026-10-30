@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AppState, SessionRecord } from "../../shared/types.ts";
-import { ACHIEVEMENT_DEFINITIONS } from "../../shared/achievements.ts";
+import { calculateStreaks } from "../../shared/stats.ts";
 import {
   Button,
   Card,
@@ -9,6 +9,7 @@ import {
   Field,
   ProgressRing,
 } from "../components/primitives.tsx";
+import { AchievementsCard } from "../components/AchievementsCard.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
@@ -53,7 +54,8 @@ export function StatsView({ state }: { state: AppState }) {
   const progress = goalMs > 0 ? Math.min(1, focusMs / goalMs) : 0;
   const recent = [...state.sessionHistory]
     .sort((left, right) => right.endedAt - left.endedAt)
-    .slice(0, 6);
+    .slice(0, 5);
+  const streaks = calculateStreaks(state.sessionHistory, new Date());
   const blocksToday =
     today?.blocks ??
     state.recentBlocks.filter((record) => localDateKey(record.at) === todayKey)
@@ -107,6 +109,12 @@ export function StatsView({ state }: { state: AppState }) {
               <dt>Tasks completed</dt>
               <dd>{today?.tasksCompleted ?? 0}</dd>
             </div>
+            <div>
+              <dt>Focus streak</dt>
+              <dd>
+                {streaks.current} day{streaks.current === 1 ? "" : "s"}
+              </dd>
+            </div>
           </dl>
         </Card>
       </div>
@@ -154,35 +162,7 @@ export function StatsView({ state }: { state: AppState }) {
         </p>
       </Card>
 
-      <Card
-        title="Achievements"
-        description="Milestones recorded from your focus history."
-      >
-        <ul className="fg-list">
-          {ACHIEVEMENT_DEFINITIONS.map((definition) => {
-            const unlocked = state.achievements.find(
-              (record) => record.id === definition.id,
-            );
-            return (
-              <li className="fg-list-item" key={definition.id}>
-                <div className="fg-list-item__copy">
-                  <strong>{definition.label}</strong>
-                  <span className="fg-muted">{definition.description}</span>
-                  {unlocked && (
-                    <span className="fg-muted">
-                      Unlocked{" "}
-                      {new Date(unlocked.unlockedAt).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-                <Chip tone={unlocked ? "accent" : "neutral"}>
-                  {unlocked ? "Unlocked" : "Locked"}
-                </Chip>
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
+      <AchievementsCard state={state} />
 
       <ReflectionCard state={state} />
     </section>

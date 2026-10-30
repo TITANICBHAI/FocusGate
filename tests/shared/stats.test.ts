@@ -4,8 +4,14 @@ import {
   buildWeeklyReport,
   calculateFocusScore,
   calculateStreaks,
+  focusMinutesPerDay,
   formatDuration,
   getFocusInsights,
+  lastNDaysRange,
+  pruneDayStats,
+  pruneRecentBlocks,
+  pruneSessionHistory,
+  todayAllowanceUsage,
 } from "../../src/shared/stats.ts";
 import type { DayStats, SessionRecord } from "../../src/shared/types.ts";
 
@@ -146,5 +152,136 @@ describe("focus statistics", () => {
         { domain: "news.example", count: 1 },
       ],
     });
+  });
+
+  it("computes WP8 aggregates from a seeded fixture (hand-calculated)", () => {
+    // WP8.AC2 fixture generator: five deterministic days with known values.
+    const generatedDays: Record<string, DayStats> = {};
+    const generatedRecords: SessionRecord[] = [];
+    for (let index = 1; index <= 5; index += 1) {
+      const dateKey = `2026-10-${String(index).padStart(2, "0")}`;
+      const focusMs = index * 10 * 60_000; // 10..50 minutes
+      generatedDays[dateKey] = dayStats(dateKey, {
+        focusMs,
+        sessionsCompleted: index % 2, // 1,0,1,0,1
+        sessionsAbandoned: index % 2 === 0 ? 1 : 0,
+        blocks: index,
+        blocksByDomain: { "example.com": index },
+        tasksCompleted: index % 2,
+      });
+      if (index % 2 === 1) {
+        generatedRecords.push(record(index, "completed", focusMs));
+      }
+    }
+
+    const totals = aggregateStats(
+      generatedRecords,
+      generatedDays,
+      "2026-10-01",
+      "2026-10-31",
+    );
+    // Hand-calculated: focus 10+30+50 = 90 min from records; blocks 1..5 = 15;
+    // completed tasks 1+3+5 = 3; two abandoned days recorded in dayStats.
+    expect(totals.focusMs).toBe(90 * 60_000);
+    expect(totals.sessionsCompleted).toBe(3);
+    expect(totals.sessionsAbandoned).toBe(2);
+    expect(totals.blocks).toBe(15);
+    expect(totals.tasksCompleted).toBe(3);
+    expect(totals.completionRate).toBeCloseTo(3 / 5, 5);
+    expect(totals.blocksByDomain).toEqual({ "example.com": 15 });
+
+    // The trailing-week range covers exactly the seven days ending on the end key.
+    const range = lastNDaysRange(new Date(2026, 9, 31, 12), 7);
+    expect(range).toEqual({ startDateKey: "2026-10-25", endDateKey: "2026-10-31" });
+
+    // Chart points cover every day in the range, including zero days.
+    const chart = focusMinutesPerDay(generatedDays, "2026-10-04", "2026-10-08");
+    expect(chart.map((point) => point.minutes)).toEqual([40, 0, 20, 0, 50]);
+  });
+
+  it("caps statistics collections during midnight pruning (WP8.4)", () => {
+    const history: SessionRecord[] = Array.from({ length: 520 }, (_, index) => ({
+      id: `session-${index}`,
+      startedAt: index,
+      endedAt: index,
+      plannedMs: 0,
+      elapsedMs: 0,
+      status: "completed",
+      lockLevel: "none",
+      blockedAttempts: 0,
+      gaps: [],
+    }));
+    const prunedHistory = pruneSessionHistory(history);
+    expect(prunedHistory).toHaveLength(500);
+    expect(prunedHistory[0]?.id).toBe("session-20");
+    expect(prunedHistory[499]?.id).toBe("session-519");
+
+    const days: Record<string, DayStats> = {};
+    for (let index = 1; index <= 420; index += 1) {
+      const date = new Date(2026, 0, index);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      days[key] = dayStats(key);
+    }
+    const prunedDays = pruneDayStats(days);
+    expect(Object.keys(prunedDays)).toHaveLength(400);
+
+    const blocks = Array.from({ length: 210 }, (_, index) => ({
+      domain: `domain-${index}.example`,
+      reason: "legacy",
+      at: index,
+    }));
+    const prunedBlocks = pruneRecentBlocks(blocks);
+    expect(prunedBlocks).toHaveLength(200);
+    expect(prunedBlocks[0]?.domain).toBe("domain-10.example");
+  });
+
+  it("builds chart points and today's allowance usage (WP8.1)", () => {
+    const allowances = {
+      "example.com": { mode: "time_budget", limitMin: 60, duringBlocks: true },
+      "news.example": { mode: "count", maxOpens: 5, duringBlocks: true },
+    } as const;
+    const usage = {
+      "example.com": {
+        dateKey: "2026-10-31",
+        usedMs: 21 * 60_000,
+        opens: 1,
+        windowStartMs: 0,
+        lastActiveAt: 0,
+      },
+      "news.example": {
+        dateKey: "2026-10-31",
+        usedMs: 0,
+        opens: 2,
+        windowStartMs: 0,
+        lastActiveAt: 0,
+      },
+      "stale.example": {
+        dateKey: "2026-10-01",
+        usedMs: 500 * 60_000,
+        opens: 1,
+        windowStartMs: 0,
+        lastActiveAt: 0,
+      },
+    };
+    const usageRows = todayAllowanceUsage(
+      allowances,
+      usage,
+      new Date(2026, 9, 31, 12),
+    );
+    expect(usageRows).toEqual([
+      { domain: "example.com", usedMinutes: 21, limitMinutes: 60 },
+      { domain: "news.example", usedMinutes: 0, limitMinutes: null },
+    ]);
+
+    const chart = focusMinutesPerDay(
+      { "2026-10-31": dayStats("2026-10-31", { focusMs: 90 * 60_000 }) },
+      "2026-10-29",
+      "2026-10-31",
+    );
+    expect(chart).toEqual([
+      { dateKey: "2026-10-29", minutes: 0 },
+      { dateKey: "2026-10-30", minutes: 0 },
+      { dateKey: "2026-10-31", minutes: 90 },
+    ]);
   });
 });

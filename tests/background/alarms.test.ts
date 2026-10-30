@@ -157,4 +157,27 @@ describe("session alarm scheduling", () => {
     expect(fake.clears).toContain("boundary");
     expect(fake.alarms.has("weekly_report")).toBe(false);
   });
+
+  it("keeps the weekly-report schedule unchanged across 20 worker restarts (WP8.AC3)", async () => {
+    const now = new Date(2026, 9, 28, 10, 0).getTime();
+    const state = createDefaultState();
+    const first = createFakeAlarms();
+    await ensureAlarms(first.api, state.session, state.standalone, now);
+    const scheduled = first.alarms.get("weekly_report");
+    expect(scheduled).toBeDefined();
+
+    // Each restart creates a fresh alarm API (as a killed worker would) and
+    // must not move the already-correct weekly schedule.
+    for (let restart = 0; restart < 20; restart += 1) {
+      const fake = createFakeAlarms([...first.alarms.values()]);
+      await ensureAlarms(fake.api, state.session, state.standalone, now);
+      expect(fake.alarms.get("weekly_report")?.scheduledTime).toBe(
+        scheduled?.scheduledTime,
+      );
+      expect(
+        fake.creates.some((alarm) => alarm.name === "weekly_report"),
+      ).toBe(false);
+      expect(fake.clears).not.toContain("weekly_report");
+    }
+  });
 });

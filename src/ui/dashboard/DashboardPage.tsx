@@ -17,7 +17,7 @@ import type { DataActionResult } from "../../background/dataActions.ts";
 import { sendDataActionMessage } from "../lib/dataActions.ts";
 import { RulesView } from "../popup/RulesView.tsx";
 import { SettingsView } from "../popup/SettingsView.tsx";
-import { StatsView } from "../popup/StatsView.tsx";
+import { DashboardStats } from "./DashboardStats.tsx";
 import { HabitsCard } from "./HabitsCard.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
@@ -107,7 +107,7 @@ function DashboardShell() {
       >
         {tab === "stats" && (
           <>
-            <StatsView state={state} />
+            <DashboardStats state={state} />
             <HabitsCard state={state} />
           </>
         )}

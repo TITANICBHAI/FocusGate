@@ -15,7 +15,8 @@ export type SessionNotice =
   | { kind: "achievement_unlocked"; label: string }
   | { kind: "end_of_day_reflection" }
   | { kind: "allowance_heads_up"; domain: string; minutesLeft: number }
-  | { kind: "allowance_exhausted"; domain: string; resetsAt: number };
+  | { kind: "allowance_exhausted"; domain: string; resetsAt: number }
+  | { kind: "weekly_report"; focusText: string; sessionsCompleted: number };
 
 export interface NotificationOptions {
   type: "basic";
@@ -136,6 +137,8 @@ function noticeMessage(notice: SessionNotice): string {
       return `${notice.domain}: about ${notice.minutesLeft} min of today's budget left.`;
     case "allowance_exhausted":
       return `${notice.domain}: daily limit reached. It resets at ${clockTime(notice.resetsAt)}.`;
+    case "weekly_report":
+      return `Weekly report: ${notice.focusText} focused across ${notice.sessionsCompleted} completed session${notice.sessionsCompleted === 1 ? "" : "s"}.`;
   }
 }
 

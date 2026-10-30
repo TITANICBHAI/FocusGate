@@ -1,5 +1,12 @@
 import { localDateKey } from "./time.ts";
-import type { DayStats, SessionRecord, WeeklyReport } from "./types.ts";
+import type {
+  Allowance,
+  BlockRecord,
+  DayStats,
+  SessionRecord,
+  UsageRecord,
+  WeeklyReport,
+} from "./types.ts";
 
 export interface StreakSummary {
   current: number;
@@ -278,4 +285,90 @@ export function getFocusInsights(
     ),
     topBlockedDomains,
   };
+}
+
+const DAY_MS = 86_400_000;
+
+export interface DayFocusPoint {
+  dateKey: string;
+  minutes: number;
+}
+
+/** WP8.4: keeps only the most recent `keep` local days of statistics. */
+export function pruneDayStats(
+  days: Record<string, DayStats>,
+  keep = 400,
+): Record<string, DayStats> {
+  const sorted = Object.values(days).sort((left, right) =>
+    right.dateKey.localeCompare(left.dateKey),
+  );
+  return Object.fromEntries(
+    sorted.slice(0, keep).map((day) => [day.dateKey, day]),
+  );
+}
+
+/** WP8.4: keeps only the most recent `keep` session records. */
+export function pruneSessionHistory(
+  records: SessionRecord[],
+  keep = 500,
+): SessionRecord[] {
+  return [...records].slice(-keep);
+}
+
+/** WP8.4: keeps only the most recent `keep` block records. */
+export function pruneRecentBlocks(records: BlockRecord[], keep = 200): BlockRecord[] {
+  return [...records].slice(-keep);
+}
+
+/** Inclusive local-day range covering the `days` days ending today. */
+export function lastNDaysRange(
+  now: Date,
+  days: number,
+): { startDateKey: string; endDateKey: string } {
+  const end = new Date(now);
+  end.setHours(0, 0, 0, 0);
+  const start = new Date(end);
+  start.setDate(start.getDate() - (days - 1));
+  return { startDateKey: localDateKey(start), endDateKey: localDateKey(end) };
+}
+
+/** One entry per local day in the range, including days with no focus. */
+export function focusMinutesPerDay(
+  days: Record<string, DayStats>,
+  startDateKey: string,
+  endDateKey: string,
+): DayFocusPoint[] {
+  const points: DayFocusPoint[] = [];
+  const cursor = new Date(`${startDateKey}T12:00:00`);
+  const end = new Date(`${endDateKey}T12:00:00`);
+  while (cursor.getTime() <= end.getTime()) {
+    const key = localDateKey(cursor);
+    points.push({
+      dateKey: key,
+      minutes: Math.round((days[key]?.focusMs ?? 0) / 60_000),
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return points;
+}
+
+/** Today's allowance spend per configured site, heaviest first. */
+export function todayAllowanceUsage(
+  allowances: Record<string, Allowance>,
+  usage: Record<string, UsageRecord>,
+  now: Date,
+): Array<{ domain: string; usedMinutes: number; limitMinutes: number | null }> {
+  const today = localDateKey(now);
+  return Object.entries(allowances)
+    .map(([domain, allowance]) => {
+      const record = usage[domain];
+      const usedMs = record && record.dateKey === today ? record.usedMs : 0;
+      return {
+        domain,
+        usedMinutes: Math.round(usedMs / 60_000),
+        limitMinutes:
+          allowance.mode === "time_budget" ? allowance.limitMin : null,
+      };
+    })
+    .sort((left, right) => right.usedMinutes - left.usedMinutes);
 }

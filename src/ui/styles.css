@@ -1209,3 +1209,57 @@ html:has(.popup-page) {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Dashboard and popup statistics layouts (WP8) */
+.fg-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.fg-stats-focus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.fg-stats-focus__value {
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.fg-stat-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.fg-stat-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fg-stat-list dt {
+  color: var(--text-muted);
+}
+
+.fg-stat-list dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.fg-stats-chart {
+  width: 100%;
+  height: 130px;
+  color: var(--accent);
+}
+
+.fg-stats-goal-ring {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}

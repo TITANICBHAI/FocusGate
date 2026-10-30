@@ -159,6 +159,26 @@ describe("WP7-B notifications", () => {
     expect(created[1]?.message).toContain("daily limit reached");
     expect(created[1]?.message).toContain("example.com");
   });
+
+  it("announces the weekly report with hours and minutes", async () => {
+    const created: Array<{ id: string; message: string }> = [];
+    await showSessionNotice(
+      {
+        create: (id, options) => {
+          created.push({ id, message: options.message });
+        },
+      },
+      {
+        kind: "weekly_report",
+        focusText: "4 h 30 min",
+        sessionsCompleted: 6,
+      },
+    );
+    expect(created[0]?.id).toBe("focusgate-weekly_report");
+    expect(created[0]?.message).toBe(
+      "Weekly report: 4 h 30 min focused across 6 completed sessions.",
+    );
+  });
 });
 
 describe("WP7-B allowance toolbar badge", () => {
