@@ -446,6 +446,10 @@ function isHabit(value: unknown): value is AppState["habits"][number] {
   );
 }
 
+function isHabitList(value: unknown): boolean {
+  return Array.isArray(value) && value.every((item) => isHabit(item));
+}
+
 function isHabitEntries(
   value: unknown,
 ): value is AppState["habitEntries"] {
@@ -625,7 +629,7 @@ export function parseBackupJson(json: string): BackupParseResult {
     !data.tasks.every(isTask) ||
     !isSettings(data.settings) ||
     !isStats(data.stats) ||
-    (data.habits !== undefined && !data.habits.every(isHabit)) ||
+    (data.habits !== undefined && !isHabitList(data.habits)) ||
     (data.habitEntries !== undefined && !isHabitEntries(data.habitEntries))
   ) {
     return { ok: false, error: "The backup contains invalid or unsupported data." };
