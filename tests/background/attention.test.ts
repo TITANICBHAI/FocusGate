@@ -11,7 +11,10 @@ import type { AppState } from "../../src/shared/types.ts";
 
 function createHarness(
   initialState: AppState = createDefaultState(),
-  options: { countAudible?: boolean } = {},
+  options: {
+    countAudible?: boolean;
+    allowanceAlerts?: { evaluate(): Promise<void> };
+  } = {},
 ) {
   let now = 10_000;
   let state = structuredClone(initialState);
@@ -43,6 +46,7 @@ function createHarness(
       return idleState;
     },
     countAudible: options.countAudible,
+    allowanceAlerts: options.allowanceAlerts,
     writeUsage: async (usage) => {
       writes.push(structuredClone(usage));
       state = { ...state, usage: structuredClone(usage) };
@@ -113,6 +117,42 @@ describe("allowance attention sampler", () => {
       exhaustionChanged: false,
     });
     expect(harness.state().usage["example.com"]?.usedMs).toBe(60_000);
+  });
+
+  it("evaluates allowance alerts only when durable usage changed", async () => {
+    const evaluations: number[] = [];
+    const initial = createDefaultState();
+    initial.allowances["example.com"] = {
+      mode: "time_budget",
+      limitMin: 5,
+      duringBlocks: false,
+    };
+    const harness = createHarness(initial, {
+      allowanceAlerts: {
+        evaluate: async () => {
+          evaluations.push(1);
+        },
+      },
+    });
+
+    await harness.tracker.sample();
+    expect(evaluations).toEqual([]);
+
+    harness.setNow(70_000);
+    await harness.tracker.sample();
+    expect(evaluations).toEqual([1]);
+
+    harness.setNow(75_000);
+    await harness.tracker.sample();
+    expect(evaluations).toEqual([1, 1]);
+
+    harness.setNow(80_000);
+    harness.setWindow({
+      focused: false,
+      tabs: [{ active: true, url: "https://www.example.com/path" }],
+    });
+    await harness.tracker.sample();
+    expect(evaluations).toEqual([1, 1]);
   });
 
   it("does not charge idle or unfocused time, then resumes on an attentive sample", async () => {

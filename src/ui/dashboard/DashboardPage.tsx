@@ -18,6 +18,7 @@ import { sendDataActionMessage } from "../lib/dataActions.ts";
 import { RulesView } from "../popup/RulesView.tsx";
 import { SettingsView } from "../popup/SettingsView.tsx";
 import { StatsView } from "../popup/StatsView.tsx";
+import { HabitsCard } from "./HabitsCard.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
 type DashboardTab = "stats" | "reports" | "rules" | "settings" | "backup";
@@ -104,7 +105,12 @@ function DashboardShell() {
         aria-labelledby={`dashboard-${tab}-tab`}
         tabIndex={0}
       >
-        {tab === "stats" && <StatsView state={state} />}
+        {tab === "stats" && (
+          <>
+            <StatsView state={state} />
+            <HabitsCard state={state} />
+          </>
+        )}
         {tab === "reports" && <ReportsPanel state={state} />}
         {tab === "rules" && <RulesView state={state} />}
         {tab === "settings" && <SettingsView state={state} />}

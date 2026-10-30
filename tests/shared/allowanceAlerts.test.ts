@@ -88,8 +88,8 @@ describe("allowanceAlertUpdates", () => {
     );
     expect(second.alerts).toEqual([]);
 
-    // A fresh day starts with zero usage, so no alert fires and the flags
-    // are gone until the thresholds are crossed again.
+    // A stale record from another day normalizes on read, so no alert fires
+    // and the fresh window can raise its own alerts later.
     const nextDay = allowanceAlertUpdates(
       { "example.com": budget },
       {
@@ -102,8 +102,7 @@ describe("allowanceAlertUpdates", () => {
       NOW,
     );
     expect(nextDay.alerts).toEqual([]);
-    expect(nextDay.usage["example.com"]?.headsUpNotifiedAt).toBeUndefined();
-    expect(nextDay.usage["example.com"]?.exhaustedNotifiedAt).toBeUndefined();
+    expect(nextDay.changed).toBe(false);
   });
 
   it("prefers the exhaustion alert once the budget is spent", () => {

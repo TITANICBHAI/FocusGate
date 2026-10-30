@@ -673,6 +673,56 @@ function KeywordsPanel({
           </ul>
         )}
       </Card>
+      <Card title="Recent keyword matches" description="The last 50 matches recorded while keywords were active.">
+        {state.keywordMatches.length === 0 ? (
+          <EmptyState
+            title="No matches yet"
+            description="Matches appear here when a keyword blocks or hides content."
+          />
+        ) : (
+          <ul className="fg-list">
+            {[...state.keywordMatches].reverse().map((match, index) => (
+              <li
+                className="fg-list-item"
+                key={`${match.at}:${match.keyword}:${index}`}
+              >
+                <div className="fg-list-item__copy">
+                  <strong>{match.keyword}</strong>
+                  <span className="fg-muted">
+                    {match.domain} · matched the {match.where}
+                  </span>
+                  <span className="fg-muted">
+                    {new Date(match.at).toLocaleString([], {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {state.keywordMatches.length > 0 && (
+          <Button
+            variant="quiet"
+            onClick={() => {
+              void uiStorageStore
+                .set("keywordMatches", [])
+                .then(() => showToast("Match log cleared.", "success"))
+                .catch((error) =>
+                  showToast(
+                    storageWriteErrorMessage(error, "The match log could not be cleared."),
+                    "error",
+                  ),
+                );
+            }}
+          >
+            Clear matches
+          </Button>
+        )}
+      </Card>
     </>
   );
 }

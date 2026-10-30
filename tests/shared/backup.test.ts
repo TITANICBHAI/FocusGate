@@ -205,4 +205,38 @@ describe("backup format and merge policy", () => {
       /exceptions|history|exemption|allow-only|scope/,
     );
   });
+
+  it("round-trips habits through export, restore, and merge (WP7-B6)", () => {
+    const state = createDefaultState();
+    state.habits = [
+      { id: "habit-1", name: "Read 20 pages", emoji: "📖", createdAt: 1 },
+    ];
+    state.habitEntries = { "habit-1": ["2026-10-29", "2026-10-30"] };
+
+    const parsed = parseBackupJson(createBackupJson(state, 123));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.backup.data.habits).toEqual(state.habits);
+    expect(parsed.backup.data.habitEntries).toEqual(state.habitEntries);
+
+    // Restore into an empty state keeps the habits and their check-ins.
+    const restored = applyBackup(createDefaultState(), parsed.backup);
+    expect(restored.state.habits).toEqual(state.habits);
+    expect(restored.state.habitEntries).toEqual(state.habitEntries);
+    expect(restored.report.mode).toBe("restore");
+
+    // Merging into a state that already has the habit unions the check-ins.
+    const existing = createDefaultState();
+    existing.habits = [{ ...state.habits[0]! }];
+    existing.habitEntries = { "habit-1": ["2026-10-31"] };
+    const merged = applyBackup(existing, parsed.backup);
+    expect(merged.report.mode).toBe("merge");
+    expect(merged.state.habits).toEqual(state.habits);
+    expect(merged.state.habitEntries?.["habit-1"]).toEqual([
+      "2026-10-29",
+      "2026-10-30",
+      "2026-10-31",
+    ]);
+    expect(merged.report.added.join(" ")).toContain("habit");
+  });
 });

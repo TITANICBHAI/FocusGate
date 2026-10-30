@@ -791,6 +791,8 @@ function notificationLabel(key: string): string {
     taskReminders: "Task reminders",
     weeklyReport: "Weekly report",
     achievements: "Achievements",
+    endOfDay: "End-of-day reflection reminder",
+    allowanceAlerts: "Allowance budget alerts",
   };
   return labels[key] ?? labelFromKey(key);
 }

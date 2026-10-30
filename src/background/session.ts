@@ -1,4 +1,5 @@
 import { guard } from "../shared/gating.ts";
+import { sessionDebrief } from "../shared/debrief.ts";
 import {
   addRecordToDayStats,
   advanceSession,
@@ -42,6 +43,8 @@ export interface SessionServiceDependencies {
     input: string,
     record: PasswordState,
   ): ReturnType<typeof verifyPassword>;
+  /** WP7-B2: optional achievement evaluator, run after recorded transitions. */
+  achievements?: { evaluate(now: number): Promise<void> };
   onEffectError?(effect: string, error: unknown): void;
 }
 
@@ -211,6 +214,11 @@ export function createSessionService(
     const after = { ...before, ...patch };
     await syncEffects(after, now, reason, true);
     await notifyTransition(before, after, records, now);
+    if (dependencies.achievements && records.length > 0) {
+      await runEffect("achievements", () =>
+        dependencies.achievements!.evaluate(now),
+      );
+    }
     return after;
   }
 
@@ -228,6 +236,7 @@ export function createSessionService(
           await notifyIfEnabled(after, {
             kind: "session_completed",
             elapsedMs: latest.elapsedMs,
+            debrief: sessionDebrief(latest),
           });
         } else if (latest.status === "interrupted") {
           await notifyIfEnabled(after, { kind: "session_interrupted" });

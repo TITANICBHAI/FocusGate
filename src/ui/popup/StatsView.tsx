@@ -1,5 +1,17 @@
+import { useEffect, useState } from "react";
 import type { AppState, SessionRecord } from "../../shared/types.ts";
-import { Card, Chip, EmptyState, ProgressRing } from "../components/primitives.tsx";
+import { ACHIEVEMENT_DEFINITIONS } from "../../shared/achievements.ts";
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Field,
+  ProgressRing,
+} from "../components/primitives.tsx";
+import { useToast } from "../components/feedback.tsx";
+import { uiStorageStore } from "../hooks/storageStore.ts";
+import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 
 function localDateKey(value: number): string {
   const date = new Date(value);
@@ -141,6 +153,131 @@ export function StatsView({ state }: { state: AppState }) {
           {daysWithFocus === 1 ? "day" : "days"}.
         </p>
       </Card>
+
+      <Card
+        title="Achievements"
+        description="Milestones recorded from your focus history."
+      >
+        <ul className="fg-list">
+          {ACHIEVEMENT_DEFINITIONS.map((definition) => {
+            const unlocked = state.achievements.find(
+              (record) => record.id === definition.id,
+            );
+            return (
+              <li className="fg-list-item" key={definition.id}>
+                <div className="fg-list-item__copy">
+                  <strong>{definition.label}</strong>
+                  <span className="fg-muted">{definition.description}</span>
+                  {unlocked && (
+                    <span className="fg-muted">
+                      Unlocked{" "}
+                      {new Date(unlocked.unlockedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <Chip tone={unlocked ? "accent" : "neutral"}>
+                  {unlocked ? "Unlocked" : "Locked"}
+                </Chip>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+
+      <ReflectionCard state={state} />
     </section>
+  );
+}
+
+function ReflectionCard({ state }: { state: AppState }) {
+  const showToast = useToast();
+  const todayKey = localDateKey(Date.now());
+  const today = state.dayStats[todayKey];
+  const [noteDraft, setNoteDraft] = useState(today?.note ?? "");
+
+  useEffect(() => {
+    setNoteDraft(today?.note ?? "");
+  }, [today?.note]);
+
+  function saveReflection(changes: { mood?: number | null; note?: string | null }) {
+    void uiStorageStore
+      .set("dayStats", (latest) => {
+        const current =
+          latest[todayKey] ??
+          {
+            dateKey: todayKey,
+            focusMs: 0,
+            sessionsCompleted: 0,
+            sessionsAbandoned: 0,
+            blocks: 0,
+            blocksByDomain: {},
+            tasksCompleted: 0,
+          };
+        return {
+          ...latest,
+          [todayKey]: {
+            ...current,
+            ...(changes.mood !== undefined
+              ? { mood: changes.mood === null ? undefined : changes.mood }
+              : {}),
+            ...(changes.note !== undefined
+              ? { note: changes.note.length > 0 ? changes.note : undefined }
+              : {}),
+          },
+        };
+      })
+      .then(() => showToast("Reflection saved.", "success"))
+      .catch((error) =>
+        showToast(
+          storageWriteErrorMessage(error, "The reflection could not be saved."),
+          "error",
+        ),
+      );
+  }
+
+  return (
+    <Card
+      title="Today's reflection"
+      description="Optional mood and note, stored for the day."
+    >
+      <div className="fg-wrap" role="group" aria-label="Mood">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`fg-duration-chip ${today?.mood === value ? "is-selected" : ""}`}
+            aria-pressed={today?.mood === value}
+            onClick={() => saveReflection({ mood: value })}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+      <Field id="reflection-note" label="Note">
+        <textarea
+          id="reflection-note"
+          value={noteDraft}
+          maxLength={500}
+          placeholder="How did the day go?"
+          onChange={(event) => setNoteDraft(event.target.value)}
+          onBlur={() => {
+            if ((today?.note ?? "") !== noteDraft) {
+              saveReflection({ note: noteDraft });
+            }
+          }}
+        />
+      </Field>
+      {(today?.mood !== undefined || (today?.note ?? "").length > 0) && (
+        <Button
+          variant="quiet"
+          onClick={() => {
+            setNoteDraft("");
+            saveReflection({ mood: null, note: null });
+          }}
+        >
+          Clear today's reflection
+        </Button>
+      )}
+    </Card>
   );
 }

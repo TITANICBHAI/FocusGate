@@ -28,6 +28,10 @@ export interface AlarmHandlerDependencies {
     reconcile(): Promise<void>;
     handleReminderAlarm(name: string): Promise<boolean>;
   };
+  /** WP7-B5: end-of-day reflection reminder, run at local midnight. */
+  reflection?: { notifyEndOfDay(now: number): Promise<void> };
+  /** WP7-B2: achievement evaluation, run after sessions and at midnight. */
+  achievements?: { evaluate(now: number): Promise<void> };
   now(): number;
   onEffectError?(effect: string, error: unknown): void;
 }
@@ -117,6 +121,16 @@ export function createAlarmHandler(
         break;
       case MIDNIGHT_ALARM:
         await runEffect("midnight", () => dependencies.handleMidnight());
+        if (dependencies.reflection) {
+          await runEffect("end-of-day-reflection", () =>
+            dependencies.reflection!.notifyEndOfDay(dependencies.now()),
+          );
+        }
+        if (dependencies.achievements) {
+          await runEffect("achievements", () =>
+            dependencies.achievements!.evaluate(dependencies.now()),
+          );
+        }
         if (dependencies.tasks) {
           await runEffect("task-alarm-reconcile", () =>
             dependencies.tasks!.reconcile(),

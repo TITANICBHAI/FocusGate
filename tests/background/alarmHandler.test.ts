@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { createAlarmHandler } from "../../src/background/alarmHandler.ts";
+import { MIDNIGHT_ALARM } from "../../src/background/alarms.ts";
 import { computeBlockPlan } from "../../src/shared/plan.ts";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import { localDateKey } from "../../src/shared/time.ts";
 import type { AppState } from "../../src/shared/types.ts";
 
-function createHarness(initialState: AppState = createDefaultState()) {
+function createHarness(
+  initialState: AppState = createDefaultState(),
+  extras: {
+    reflection?: { notifyEndOfDay(now: number): Promise<void> };
+    achievements?: { evaluate(now: number): Promise<void> };
+  } = {},
+) {
   let state = structuredClone(initialState);
   let now = 100_000;
   const calls: string[] = [];
@@ -37,6 +44,8 @@ function createHarness(initialState: AppState = createDefaultState()) {
     handleMidnight: async () => {
       calls.push("midnight");
     },
+    ...(extras.reflection ? { reflection: extras.reflection } : {}),
+    ...(extras.achievements ? { achievements: extras.achievements } : {}),
     now: () => now,
     onEffectError: (effect) => errors.push(effect),
   });
@@ -118,6 +127,27 @@ describe("staged alarm handler", () => {
       "reconcile:midnight",
     ]);
     expect(await harness.handler("unknown")).toBe(false);
+  });
+
+  it("runs the reflection and achievement hooks at midnight when present", async () => {
+    const hookCalls: string[] = [];
+    const harness = createHarness(createDefaultState(), {
+      reflection: {
+        notifyEndOfDay: async () => {
+          hookCalls.push("reflection");
+        },
+      },
+      achievements: {
+        evaluate: async () => {
+          hookCalls.push("achievements");
+        },
+      },
+    });
+
+    expect(await harness.handler(MIDNIGHT_ALARM)).toBe(true);
+    expect(harness.calls).toContain("midnight");
+    expect(hookCalls).toEqual(["reflection", "achievements"]);
+    expect(harness.errors).toEqual([]);
   });
 
   it("continues the recognized handler when alarm re-arming fails", async () => {

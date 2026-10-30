@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { normalizeDomain } from "../../shared/domains.ts";
+import { sessionDebrief } from "../../shared/debrief.ts";
 import { computeBlockPlan, isBlockingActive } from "../../shared/plan.ts";
 import { isScheduleActiveAt } from "../../shared/time.ts";
 import {
@@ -226,6 +227,13 @@ export function FocusView({
         (taskWindowStart(right) ?? Number.MAX_SAFE_INTEGER),
     )[0];
   const focusTask = linkedTask ?? nextTodayTask;
+  const latestCompleted = [...state.sessionHistory]
+    .filter((record) => record.status === "completed")
+    .sort((left, right) => right.endedAt - left.endedAt)[0];
+  const debrief =
+    latestCompleted !== undefined && now - latestCompleted.endedAt < 60 * 60_000
+      ? sessionDebrief(latestCompleted)
+      : null;
   const hasPassword = state.password !== null;
   const standaloneUntil = fromLocalDateTimeInput(standaloneUntilText);
   const standaloneEntries = useMemo(
@@ -511,6 +519,16 @@ export function FocusView({
           </div>
         )}
       </Card>
+
+      {debrief && (
+        <Card title="Session debrief">
+          <div className="fg-stack">
+            <p>{debrief.headline}</p>
+            {debrief.pace && <p className="fg-muted">{debrief.pace}</p>}
+            <p className="fg-muted">From your most recent focus session.</p>
+          </div>
+        </Card>
+      )}
 
       <SessionClock
         session={state.session}

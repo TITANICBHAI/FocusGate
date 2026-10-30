@@ -489,10 +489,7 @@ describe("block planning", () => {
         stateWith({
           ...base,
           session: { ...base.session, taskId: "task-2" },
-          tasks: [
-            ...base.tasks,
-            { ...base.tasks[0]!, id: "task-2", allowOnly: ["other.example"] },
-          ],
+          tasks: [...base.tasks, { ...base.tasks[0]!, id: "task-2" }],
         }),
         1_000,
       ).allowOnly,

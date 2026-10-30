@@ -7,6 +7,7 @@ import type {
   TaskPriority,
   TaskRecurrence,
 } from "../../shared/types.ts";
+import { normalizeDomain } from "../../shared/domains.ts";
 import { Button, Card, EmptyState, Field, Chip } from "../components/primitives.tsx";
 import { ConfirmDialog, Modal, useToast } from "../components/feedback.tsx";
 import { sendSessionMessage } from "../lib/sessionActions.ts";
@@ -60,6 +61,10 @@ export function TasksView({ state }: { state: AppState }) {
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [tagsText, setTagsText] = useState("");
   const [recurring, setRecurring] = useState<TaskRecurrence>("none");
+  const [allowOnlyMode, setAllowOnlyMode] = useState<
+    "global" | "never" | "custom"
+  >("global");
+  const [allowOnlyDomainsText, setAllowOnlyDomainsText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const todayKey = localDateKey(new Date(now));
@@ -101,6 +106,15 @@ export function TasksView({ state }: { state: AppState }) {
     setPriority(task?.priority ?? "medium");
     setTagsText(task?.tags.join(", ") ?? "");
     setRecurring(task?.recurring ?? "none");
+    const override = task?.allowOnly ?? null;
+    setAllowOnlyMode(
+      override === null
+        ? "global"
+        : override.length === 0
+          ? "never"
+          : "custom",
+    );
+    setAllowOnlyDomainsText(override?.join(", ") ?? "");
     setAddOpen(true);
   }
 
@@ -119,6 +133,27 @@ export function TasksView({ state }: { state: AppState }) {
     if (recurring !== "none" && !scheduledDate) {
       showToast("Add a date before setting a recurrence.", "error");
       return;
+    }
+    let taskAllowOnly: string[] | null = null;
+    if (allowOnlyMode === "never") {
+      taskAllowOnly = [];
+    } else if (allowOnlyMode === "custom") {
+      const domains = [
+        ...new Set(
+          allowOnlyDomainsText
+            .split(/[,\n]/)
+            .map((entry) => normalizeDomain(entry.trim()))
+            .filter((domain): domain is string => domain !== null),
+        ),
+      ];
+      if (domains.length === 0) {
+        showToast(
+          "Add at least one valid domain for allow-only mode.",
+          "error",
+        );
+        return;
+      }
+      taskAllowOnly = domains;
     }
     const previous = state.tasks.find((item) => item.id === editingTaskId);
     const tags = [...new Set(
@@ -145,6 +180,9 @@ export function TasksView({ state }: { state: AppState }) {
       tags,
       recurring: isRecurringOccurrence ? previous.recurring : recurring,
       lockLevel,
+      ...(allowOnlyMode === "global"
+        ? { allowOnly: undefined }
+        : { allowOnly: taskAllowOnly }),
       completed: previous?.completed ?? false,
       createdAt: previous?.createdAt ?? Date.now(),
     };
@@ -163,6 +201,8 @@ export function TasksView({ state }: { state: AppState }) {
       setPriority("medium");
       setTagsText("");
       setRecurring("none");
+      setAllowOnlyMode("global");
+      setAllowOnlyDomainsText("");
       setEditingTaskId(null);
       setAddOpen(false);
       showToast(previous ? "Task updated." : "Task added.", "success");
@@ -340,6 +380,13 @@ export function TasksView({ state }: { state: AppState }) {
                     )}
                     {linkedAndRunning && <Chip tone="warning">In session</Chip>}
                     {task.recurring !== "none" && <Chip>{task.recurring}</Chip>}
+                    {task.allowOnly !== undefined && task.allowOnly !== null && (
+                      <Chip tone="accent">
+                        {task.allowOnly.length === 0
+                          ? "Allow-only off"
+                          : `Allow-only (${task.allowOnly.length})`}
+                      </Chip>
+                    )}
                     {task.tags.map((tag) => <Chip key={tag}>{tag}</Chip>)}
                   </div>
                   {disabledReason && (
@@ -543,6 +590,40 @@ export function TasksView({ state }: { state: AppState }) {
               <option value="commitment">Commit</option>
             </select>
           </Field>
+          <Field
+            id="task-allow-only"
+            label="Allow-only mode"
+            helper="During this task's session, block everything except the chosen domains. Extension pages are never affected."
+          >
+            <select
+              id="task-allow-only"
+              value={allowOnlyMode}
+              onChange={(event) =>
+                setAllowOnlyMode(
+                  event.target.value as "global" | "never" | "custom",
+                )
+              }
+            >
+              <option value="global">Follow the global allow-only setting</option>
+              <option value="never">Never — keep the normal rules</option>
+              <option value="custom">Only allow specific domains</option>
+            </select>
+          </Field>
+          {allowOnlyMode === "custom" && (
+            <Field
+              id="task-allow-only-domains"
+              label="Allowed domains"
+              helper="At least one domain, comma-separated. Everything else is blocked while this task runs."
+            >
+              <textarea
+                id="task-allow-only-domains"
+                value={allowOnlyDomainsText}
+                maxLength={2_000}
+                placeholder="docs.example.com, mail.example.com"
+                onChange={(event) => setAllowOnlyDomainsText(event.target.value)}
+              />
+            </Field>
+          )}
         </form>
       </Modal>
 

@@ -134,6 +134,8 @@ describe("evaluateAchievements", () => {
   });
 
   it("unlocks THREE_WEEKS at a 21-day focus streak", () => {
+    // 21 consecutive days necessarily span at least one full calendar week,
+    // so PRESENCE_7 unlocks alongside the streak milestone.
     const result = evaluateAchievements({
       sessionHistory: [],
       dayStats: focusedDays(21),
@@ -142,17 +144,20 @@ describe("evaluateAchievements", () => {
     });
     expect(result.map((achievement) => achievement.id)).toEqual([
       "THREE_WEEKS",
+      "PRESENCE_7",
     ]);
   });
 
-  it("withholds THREE_WEEKS when the streak is shorter", () => {
+  it("unlocks only PRESENCE_7 for a 20-day streak spanning a full week", () => {
     const result = evaluateAchievements({
       sessionHistory: [],
       dayStats: focusedDays(20),
       unlockedIds: [],
       now: NOW,
     });
-    expect(result).toEqual([]);
+    expect(result.map((achievement) => achievement.id)).toEqual([
+      "PRESENCE_7",
+    ]);
   });
 
   it("unlocks PRESENCE_7 for a fully focused Monday-through-Sunday week", () => {

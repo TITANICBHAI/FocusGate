@@ -51,6 +51,8 @@ export interface AttentionDependencies {
   /** Background-audio time is opt-in; undefined keeps the conservative default. */
   countAudible?: boolean;
   writeUsage(usage: AppState["usage"]): Promise<void>;
+  /** WP7-B7: evaluated once per sample that changed durable usage. */
+  allowanceAlerts?: { evaluate(): Promise<void> };
   now(): number;
   reconcile(reason: string): Promise<void>;
   onError?(error: unknown): void;
@@ -184,7 +186,16 @@ export function createAttentionTracker(dependencies: AttentionDependencies): {
       lastDomain: domain,
       lastAttentive: attentive,
     });
-    if (usageChanged) await dependencies.writeUsage(usage);
+    if (usageChanged) {
+      await dependencies.writeUsage(usage);
+      if (dependencies.allowanceAlerts) {
+        try {
+          await dependencies.allowanceAlerts.evaluate();
+        } catch (error) {
+          dependencies.onError?.(error);
+        }
+      }
+    }
     if (exhaustionChanged) await dependencies.reconcile("allowance");
 
     return { domain, attentive, creditedMs, exhaustionChanged };

@@ -38,6 +38,9 @@ export interface FocusGateBackup {
     exceptions: string[];
     tasks: Task[];
     settings: Settings;
+    /** WP7-B6; optional so backups exported before habits still parse. */
+    habits?: AppState["habits"];
+    habitEntries?: AppState["habitEntries"];
     stats: {
       sessionHistory: SessionRecord[];
       dayStats: Record<string, DayStats>;
@@ -200,6 +203,7 @@ function isTask(value: unknown): value is Task {
       "scheduledTime",
       "templateId",
       "completedAt",
+      "allowOnly",
     ])
   ) {
     return false;
@@ -226,6 +230,11 @@ function isTask(value: unknown): value is Task {
     (value.lockLevel === "none" ||
       value.lockLevel === "strict" ||
       value.lockLevel === "commitment") &&
+    (value.allowOnly === undefined ||
+      value.allowOnly === null ||
+      (Array.isArray(value.allowOnly) &&
+        value.allowOnly.length > 0 &&
+        value.allowOnly.every((domain) => isString(domain, 255)))) &&
     typeof value.completed === "boolean" &&
     (value.completedAt === undefined || isFiniteNumber(value.completedAt)) &&
     isFiniteNumber(value.createdAt)
@@ -294,6 +303,8 @@ function isSettings(value: unknown): value is Settings {
       "taskReminders",
       "weeklyReport",
       "achievements",
+      "endOfDay",
+      "allowanceAlerts",
     ]) &&
     Object.values(notifications).every((item) => typeof item === "boolean") &&
     isRecord(reminders) &&
@@ -424,6 +435,27 @@ function isJsonSafe(value: unknown, depth = 0): boolean {
   );
 }
 
+function isHabit(value: unknown): value is AppState["habits"][number] {
+  return (
+    isRecord(value) &&
+    hasKeys(value, ["id", "name", "emoji", "createdAt"]) &&
+    isString(value.id, 200) &&
+    isString(value.name, 200) &&
+    isString(value.emoji, 8) &&
+    isFiniteNumber(value.createdAt)
+  );
+}
+
+function isHabitEntries(
+  value: unknown,
+): value is AppState["habitEntries"] {
+  return (
+    isRecord(value) &&
+    Object.keys(value).length <= MAX_ARRAY_ITEMS &&
+    Object.values(value).every((dates) => isStringArray(dates, MAX_ARRAY_ITEMS))
+  );
+}
+
 function isStats(value: unknown): value is FocusGateBackup["data"]["stats"] {
   if (
     !isRecord(value) ||
@@ -516,6 +548,8 @@ export function createBackup(state: AppState, exportedAt = Date.now()): FocusGat
       exceptions: structuredClone(state.exceptions),
       tasks: structuredClone(state.tasks),
       settings: structuredClone(state.settings),
+      habits: structuredClone(state.habits),
+      habitEntries: structuredClone(state.habitEntries),
       stats: {
         sessionHistory: structuredClone(state.sessionHistory),
         dayStats: structuredClone(state.dayStats),
@@ -590,7 +624,9 @@ export function parseBackupJson(json: string): BackupParseResult {
     data.tasks.length > MAX_ARRAY_ITEMS ||
     !data.tasks.every(isTask) ||
     !isSettings(data.settings) ||
-    !isStats(data.stats)
+    !isStats(data.stats) ||
+    (data.habits !== undefined && !data.habits.every(isHabit)) ||
+    (data.habitEntries !== undefined && !isHabitEntries(data.habitEntries))
   ) {
     return { ok: false, error: "The backup contains invalid or unsupported data." };
   }
@@ -608,6 +644,7 @@ function hasUserData(state: AppState): boolean {
     Object.keys(state.allowances).length > 0 ||
     Object.keys(state.usage).length > 0 ||
     state.tasks.length > 0 ||
+    state.habits.length > 0 ||
     state.sessionHistory.length > 0 ||
     Object.keys(state.dayStats).length > 0 ||
     state.recentBlocks.length > 0 ||
@@ -834,6 +871,8 @@ export function applyBackup(
         lastWeeklyReport: structuredClone(data.stats.lastWeeklyReport),
         weeklyReports: structuredClone(data.stats.weeklyReports),
         keywordMatches: structuredClone(data.stats.keywordMatches),
+        habits: structuredClone(data.habits ?? []),
+        habitEntries: structuredClone(data.habitEntries ?? {}),
         password: current.password,
         session: current.session,
         standalone: current.standalone,
@@ -867,6 +906,21 @@ export function applyBackup(
   const taskIds = new Set(current.tasks.map((task) => task.id));
   const newTasks = data.tasks.filter((task) => !taskIds.has(task.id));
   if (newTasks.length > 0) report.added.push(`${newTasks.length} new tasks`);
+
+  // WP7-B6: habits merge additively by id; check-in dates union per habit.
+  const habitIds = new Set(current.habits.map((habit) => habit.id));
+  const newHabits = (data.habits ?? []).filter((habit) => !habitIds.has(habit.id));
+  const habitEntries: AppState["habitEntries"] = { ...current.habitEntries };
+  for (const [habitId, dates] of Object.entries(data.habitEntries ?? {})) {
+    if (current.habits.some((habit) => habit.id === habitId)) {
+      habitEntries[habitId] = [
+        ...new Set([...(current.habitEntries[habitId] ?? []), ...dates]),
+      ].sort();
+    } else if (newHabits.some((habit) => habit.id === habitId)) {
+      habitEntries[habitId] = [...dates].sort();
+    }
+  }
+  if (newHabits.length > 0) report.added.push(`${newHabits.length} new habits`);
 
   const allowances = { ...current.allowances };
   for (const [rawSite, incoming] of Object.entries(data.allowances)) {
@@ -913,6 +967,8 @@ export function applyBackup(
       tasks: [...current.tasks, ...newTasks],
       allowances,
       settings,
+      habits: [...current.habits, ...newHabits],
+      habitEntries,
     },
     report,
   };
