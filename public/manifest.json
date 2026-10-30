@@ -38,6 +38,12 @@
         "default": "Alt+Shift+F"
       },
       "description": "Toggle Focus Session"
+    },
+    "block-current-site": {
+      "suggested_key": {
+        "default": "Alt+Shift+B"
+      },
+      "description": "Block the current site"
     }
   },
   "background": {

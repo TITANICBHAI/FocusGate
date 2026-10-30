@@ -29,6 +29,7 @@ import {
 import { Modal, useToast } from "../components/feedback.tsx";
 import { sendSessionMessage } from "../lib/sessionActions.ts";
 import { sendStandaloneMessage } from "../lib/standaloneActions.ts";
+import { blockScopeSummary } from "../lib/blockSummary.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;
 const STANDALONE_EXPIRY_PRESETS = [
@@ -516,10 +517,13 @@ export function FocusView({
         idleDurationMin={Number(durationText) || state.settings.defaultDurationMin}
       />
       <p className="fg-muted" aria-live="polite">
-        {plan.blocked.size} sites · {plan.keywords.length} keywords ·{" "}
-        {state.schedules.filter((schedule) =>
-          isScheduleActiveAt(schedule, new Date(now)),
-        ).length} schedules
+        {blockScopeSummary(
+          plan.blocked.size,
+          plan.keywords.length,
+          state.schedules.filter((schedule) =>
+            isScheduleActiveAt(schedule, new Date(now)),
+          ).length,
+        )}
       </p>
 
       <Card

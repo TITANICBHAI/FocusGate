@@ -40,4 +40,12 @@ describe("extension manifest smoke test", () => {
     const matches = manifest.content_scripts[0].matches;
     expect(matches).toEqual(CONTENT_SCRIPT_MATCHES);
   });
+
+  it("declares the focus and quick-block commands with their shortcuts", () => {
+    const commands = manifest.commands ?? {};
+    expect(commands["toggle-focus"]?.suggested_key?.default).toBe("Alt+Shift+F");
+    expect(commands["block-current-site"]?.suggested_key?.default).toBe(
+      "Alt+Shift+B",
+    );
+  });
 });
