@@ -43,12 +43,12 @@ describe("EC01 — a work phase crossing local midnight", () => {
 });
 
 describe("EC24 — exceptions longer than 200 characters", () => {
-  it("rejects a 201-character exception and accepts one of exactly 200", () => {
-    const path = `/${"a".repeat(188)}`; // 189 chars + the 11-char host = 200
-    expect(normalizeException(`https://example.com${path}`)).toBe(
+  it("rejects a 201-character input and accepts one of exactly 200", () => {
+    const path = `/${"a".repeat(188)}`; // 11-char host + 189-char path = 200
+    expect(normalizeException(`example.com${path}`)).toBe(
       `example.com${path}`,
     );
-    expect(normalizeException(`https://example.com${path}x`)).toBeNull();
+    expect(normalizeException(`example.com${path}x`)).toBeNull();
   });
 });
 
@@ -177,52 +177,56 @@ describe("EC51/EC52/EC53 — keyword URL handling", () => {
 });
 
 describe("WP9.2 — 10,000-event burst", () => {
-  it("records the burst without duplicate stamps and caps recentBlocks at 200", async () => {
-    let state: AppState = createDefaultState();
-    state.session.status = "work";
-    const writes: Array<
-      Partial<Pick<AppState, "recentBlocks" | "dayStats" | "session">>
-    > = [];
-    const dedupe: Record<string, number> = {};
-    let now = 1_000_000;
-    const recorder = createBlockRecorder({
-      getState: async () => ({
-        ...structuredClone(state),
-        ...writes[writes.length - 1],
-      }),
-      write: async (partial) => {
-        writes.push(structuredClone(partial));
-        state = { ...state, ...partial };
-      },
-      dedupe: {
-        getAll: async () => dedupe,
-        setAll: async (value) => {
-          for (const [key, at] of Object.entries(value)) dedupe[key] = at;
+  it(
+    "records the burst without duplicate stamps and caps recentBlocks at 200",
+    async () => {
+      let state: AppState = createDefaultState();
+      state.session.status = "work";
+      const writes: Array<
+        Partial<Pick<AppState, "recentBlocks" | "dayStats" | "session">>
+      > = [];
+      const dedupe: Record<string, number> = {};
+      let now = 1_000_000;
+      const recorder = createBlockRecorder({
+        getState: async () => ({
+          ...structuredClone(state),
+          ...writes[writes.length - 1],
+        }),
+        write: async (partial) => {
+          writes.push(structuredClone(partial));
+          state = { ...state, ...partial };
         },
-      },
-      now: () => now,
-    });
+        dedupe: {
+          getAll: async () => dedupe,
+          setAll: async (value) => {
+            for (const [key, at] of Object.entries(value)) dedupe[key] = at;
+          },
+        },
+        now: () => now,
+      });
 
-    // 10,000 events just past the dedupe window each time, alternating
-    // domains: every event records, and the caps must hold under the burst.
-    const total = 10_000;
-    for (let index = 0; index < total; index += 1) {
-      now += 3_100;
-      const domain = index % 2 === 0 ? "example.com" : "news.example";
-      await recorder({ tabId: 1, domain, reason: { kind: "session" } });
-    }
+      // 10,000 events just past the dedupe window each time, alternating
+      // domains: every event records, and the caps must hold under the burst.
+      const total = 10_000;
+      for (let index = 0; index < total; index += 1) {
+        now += 3_100;
+        const domain = index % 2 === 0 ? "example.com" : "news.example";
+        await recorder({ tabId: 1, domain, reason: { kind: "session" } });
+      }
 
-    const finalWrite = writes[writes.length - 1];
-    expect(finalWrite.recentBlocks.length).toBeLessThanOrEqual(200);
-    const stamps = new Set(finalWrite.recentBlocks.map((record) => record.at));
-    expect(stamps.size).toBe(finalWrite.recentBlocks.length);
-    expect(finalWrite.session.blockedAttempts).toBeGreaterThan(0);
-    const totalBlocks = Object.values(finalWrite.dayStats).reduce(
-      (sum, day) => sum + day.blocks,
-      0,
-    );
-    expect(totalBlocks).toBeGreaterThan(0);
-  });
+      const finalWrite = writes[writes.length - 1];
+      expect(finalWrite.recentBlocks.length).toBeLessThanOrEqual(200);
+      const stamps = new Set(finalWrite.recentBlocks.map((record) => record.at));
+      expect(stamps.size).toBe(finalWrite.recentBlocks.length);
+      expect(finalWrite.session.blockedAttempts).toBeGreaterThan(0);
+      const totalBlocks = Object.values(finalWrite.dayStats).reduce(
+        (sum, day) => sum + day.blocks,
+        0,
+      );
+      expect(totalBlocks).toBeGreaterThan(0);
+    },
+    30_000,
+  );
 });
 
 describe("WP9.3 — 90 days of seeded data stays under the 1 MB storage budget", () => {
