@@ -71,8 +71,8 @@ export function createWeeklyReportService(
       try {
         await dependencies.notify({
           kind: "weekly_report",
-          focusText: report.focusText,
-          sessionsCompleted: report.sessionsCompleted,
+          focusText: String(report.focusText ?? ""),
+          sessionsCompleted: Number(report.sessionsCompleted ?? 0),
         });
       } catch (error) {
         dependencies.onError?.(error);
