@@ -6,8 +6,23 @@ export interface SkippedDnrEntry {
   reason: string;
 }
 
+/** Minimal structural shape of the MV3 DNR rules this module builds and installs. */
+export interface DnrRule {
+  id: number;
+  priority: number;
+  action:
+    | { type: "redirect"; redirect: { regexSubstitution: string } }
+    | { type: "allow" };
+  condition: {
+    regexFilter?: string;
+    requestDomains?: string[];
+    excludedRequestDomains?: string[];
+    resourceTypes?: string[];
+  };
+}
+
 export interface DnrBuildResult {
-  rules: chrome.declarativeNetRequest.Rule[];
+  rules: DnrRule[];
   skipped: SkippedDnrEntry[];
 }
 
@@ -17,7 +32,7 @@ export function buildDnrRules(
   plan: BlockPlan,
   blockedBase: string,
 ): DnrBuildResult {
-  const rules: chrome.declarativeNetRequest.Rule[] = [];
+  const rules: DnrRule[] = [];
   const skipped: SkippedDnrEntry[] = [];
   const isAscii = (entry: string) => /^[\x00-\x7f]+$/.test(entry);
   const redirectTarget = `${blockedBase}#\\1`;

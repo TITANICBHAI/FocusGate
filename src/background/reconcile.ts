@@ -3,7 +3,7 @@ import { normalizeDomain, normalizeException, matchesDomain } from "../shared/do
 import { computeBlockPlan, explainBlock, isValidSchedule } from "../shared/plan.ts";
 import type { BlockReason, BlockPlan } from "../shared/plan.ts";
 import type { AppState, Health } from "../shared/types.ts";
-import type { SkippedDnrEntry } from "../shared/dnr.ts";
+import type { DnrRule, SkippedDnrEntry } from "../shared/dnr.ts";
 
 export interface ReconcileSnapshot {
   hash: string;
@@ -18,10 +18,10 @@ export interface ReconcileTab {
 export interface ReconcileDependencies {
   getState(): Promise<AppState>;
   updateHealth(patch: Partial<Health>): Promise<void>;
-  getDynamicRules(): Promise<chrome.declarativeNetRequest.Rule[]>;
+  getDynamicRules(): Promise<DnrRule[]>;
   updateDynamicRules(update: {
     removeRuleIds: number[];
-    addRules: chrome.declarativeNetRequest.Rule[];
+    addRules: DnrRule[];
   }): Promise<void>;
   getSnapshot(): Promise<ReconcileSnapshot | null>;
   setSnapshot(snapshot: ReconcileSnapshot): Promise<void>;
@@ -34,7 +34,7 @@ export interface ReconcileDependencies {
 }
 
 interface InstallResult {
-  installedRules: chrome.declarativeNetRequest.Rule[];
+  installedRules: DnrRule[];
   skipped: SkippedDnrEntry[];
   errors: string[];
   complete: boolean;
@@ -145,7 +145,7 @@ function snapshotForPlan(plan: BlockPlan): ReconcileSnapshot {
 }
 
 function ruleEntry(
-  rule: chrome.declarativeNetRequest.Rule,
+  rule: DnrRule,
   plan: BlockPlan,
 ): string {
   if (rule.id === 1) return [...plan.blocked.keys()].join(", ") || "redirect";
@@ -155,7 +155,7 @@ function ruleEntry(
 
 async function installRules(
   dependencies: ReconcileDependencies,
-  rules: chrome.declarativeNetRequest.Rule[],
+  rules: DnrRule[],
   plan: BlockPlan,
 ): Promise<InstallResult> {
   const skipped: SkippedDnrEntry[] = [];
@@ -171,7 +171,7 @@ async function installRules(
     errors.push(`DNR batch update failed: ${errorMessage(error)}`);
   }
 
-  const accepted: chrome.declarativeNetRequest.Rule[] = [];
+  const accepted: DnrRule[] = [];
   for (const rule of rules) {
     try {
       const current = await dependencies.getDynamicRules();

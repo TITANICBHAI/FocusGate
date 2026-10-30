@@ -8,14 +8,54 @@ import type { AppState, StateChanges, StateKey } from "./types.ts";
 
 type StateListener = (changes: StateChanges, areaName: string) => void;
 
+interface StorageAreaLike {
+  get(
+    keys: string | string[] | Record<string, unknown> | null,
+  ): Promise<Record<string, unknown>>;
+  set(items: Record<string, unknown>): Promise<void>;
+  remove(keys: string | string[]): Promise<void>;
+}
+
+interface StorageChangeLike {
+  oldValue?: unknown;
+  newValue?: unknown;
+}
+
+interface StorageOnChangedLike {
+  addListener(
+    listener: (
+      changes: Record<string, StorageChangeLike>,
+      areaName: string,
+    ) => void,
+  ): void;
+  removeListener(
+    listener: (
+      changes: Record<string, StorageChangeLike>,
+      areaName: string,
+    ) => void,
+  ): void;
+}
+
+interface ChromeStorageLike {
+  storage?: {
+    local?: StorageAreaLike;
+    onChanged?: StorageOnChangedLike;
+  };
+}
+
+function browserStorage(): ChromeStorageLike["storage"] {
+  return (globalThis as { chrome?: ChromeStorageLike }).chrome?.storage;
+}
+
 let readiness: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
 
-function localStorageArea(): typeof chrome.storage.local {
-  if (typeof chrome === "undefined" || !chrome.storage?.local) {
+function localStorageArea(): StorageAreaLike {
+  const area = browserStorage()?.local;
+  if (!area) {
     throw new Error("FocusGate requires the browser extension storage API.");
   }
-  return chrome.storage.local;
+  return area;
 }
 
 function runAsSingleWriter<T>(operation: () => Promise<T>): Promise<T> {
@@ -117,13 +157,14 @@ export async function update<K extends StateKey>(
  * callback. Changes in other storage areas and unrelated keys are ignored.
  */
 export function onStateChanged(listener: StateListener): () => void {
-  if (typeof chrome === "undefined" || !chrome.storage?.onChanged) {
+  const onChanged = browserStorage()?.onChanged;
+  if (!onChanged) {
     throw new Error("FocusGate requires the browser extension storage API.");
   }
 
-  const wrapped: Parameters<typeof chrome.storage.onChanged.addListener>[0] = (
-    changes,
-    areaName,
+  const wrapped = (
+    changes: Record<string, StorageChangeLike>,
+    areaName: string,
   ) => {
     if (areaName !== "local") return;
     const stateChanges: StateChanges = {};
@@ -135,6 +176,6 @@ export function onStateChanged(listener: StateListener): () => void {
     if (Object.keys(stateChanges).length > 0) listener(stateChanges, areaName);
   };
 
-  chrome.storage.onChanged.addListener(wrapped);
-  return () => chrome.storage.onChanged.removeListener(wrapped);
+  onChanged.addListener(wrapped);
+  return () => onChanged.removeListener(wrapped);
 }
