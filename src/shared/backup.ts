@@ -610,7 +610,7 @@ export function parseBackupJson(json: string): BackupParseResult {
     "stats",
   ];
   if (
-    !hasKeys(data, dataKeys) ||
+    !hasKeys(data, dataKeys, ["habits", "habitEntries"]) ||
     !isDomainArray(data.sites) ||
     !isDomainArray(data.alwaysBlockedSites) ||
     !Array.isArray(data.keywords) ||

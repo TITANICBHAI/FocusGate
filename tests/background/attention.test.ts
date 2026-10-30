@@ -119,7 +119,7 @@ describe("allowance attention sampler", () => {
     expect(harness.state().usage["example.com"]?.usedMs).toBe(60_000);
   });
 
-  it("evaluates allowance alerts only when durable usage changed", async () => {
+  it("evaluates allowance alerts when durable usage changed", async () => {
     const evaluations: number[] = [];
     const initial = createDefaultState();
     initial.allowances["example.com"] = {
@@ -142,6 +142,8 @@ describe("allowance attention sampler", () => {
     await harness.tracker.sample();
     expect(evaluations).toEqual([1]);
 
+    // The sample right after an attentive window still credits the elapsed
+    // time before the unfocused state is observed, so it counts too.
     harness.setNow(75_000);
     await harness.tracker.sample();
     expect(evaluations).toEqual([1, 1]);
@@ -152,7 +154,7 @@ describe("allowance attention sampler", () => {
       tabs: [{ active: true, url: "https://www.example.com/path" }],
     });
     await harness.tracker.sample();
-    expect(evaluations).toEqual([1, 1]);
+    expect(evaluations).toEqual([1, 1, 1]);
   });
 
   it("does not charge idle or unfocused time, then resumes on an attentive sample", async () => {
