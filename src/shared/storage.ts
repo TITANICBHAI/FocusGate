@@ -113,7 +113,9 @@ export function ready(): Promise<void> {
  */
 export async function getState(): Promise<AppState> {
   await ready();
-  const stored = (await localStorageArea().get(DEFAULT_STATE)) as Partial<AppState>;
+  const stored = (await localStorageArea().get(
+    DEFAULT_STATE as Record<string, unknown>,
+  )) as Partial<AppState>;
   return {
     ...createDefaultState(),
     ...stored,

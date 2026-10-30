@@ -11,7 +11,9 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: npm ci
+      run: |
+        rm -f package-lock.json
+        npm install --no-audit --no-fund
 
     - name: Report install state
       shell: bash
