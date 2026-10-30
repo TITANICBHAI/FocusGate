@@ -871,6 +871,7 @@
 
 **Notes / progress:** Not started. No new features in this work package.
 - 2026-10-31 — Started WP9 with the deterministic subset while the browser matrix remains unavailable. Added `tests/edgeCases.test.ts` (WP9.4): EC01 midnight attribution, EC24 exception length boundary, EC36 alias-group budget sharing, EC37 allowance-mode-change reset (found a real gap — the mode change previously kept stale usage; fixed in `src/shared/allowance.ts` and wired into Rules › Limits), EC51 fragment exclusion, EC52 percent/plus decoding, EC53 Unicode whole-word; plus the WP9.2 10,000-event burst (caps hold, no duplicate stamps) and the WP9.3 90-day storage-size budget (< 1 MB). Existing module suites already covered the remaining deterministic rows; the browser-only rows are listed in WP9.4 for the WP9.1 manual matrix. GitHub Actions run #89 (commit `e394c3f`) green: typecheck + full suite (337 tests) + build + packaging.
+- 2026-10-31 — Prepared the WP9.1 execution artifact: `docs/manual-test-guide.md`, a step-by-step browser checklist covering Phase 0 (build/install), Phase 1 (the WP1b S1–S4 spikes that gate the cutover), Phase 2 (the WP5 atomic cutover + migration checks), and Phase 3 (the full §8.2 matrix with the browser-only §8.5 rows and the WP7/WP8 acceptance checks, mapped to EC tags with per-browser result blanks). The owner runs it in Chrome/Edge/Firefox and returns the filled checklist; each result becomes tracker evidence, and Phase 1 S1 passing is the gate for preparing the WP5 cutover.
 
 ---
 
@@ -900,6 +901,7 @@
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
 | 2026-10-31 | WP9 deterministic subset | `tests/edgeCases.test.ts` (new), `src/shared/allowance.ts` (+`resetUsageOnModeChange`), `src/ui/popup/RulesView.tsx` (mode-change reset wiring). | GitHub Actions run #89 (commit `e394c3f`): typecheck + full suite (337 tests) + build + packaging + ZIP validation green, including the new EC01/EC24/EC36/EC37/EC51–EC53 tests, the 10,000-event burst, and the 90-day storage budget. | PASS — the deterministic subset of WP9.2/9.3/9.4 is verified; WP9.1, the browser-only lifecycle rows, and the runtime budgets stay open. |
+| 2026-10-31 | WP9.1 guide prepared | `docs/manual-test-guide.md` (new). | Committed (`9b198a5`); markdown-only, CI unaffected. | READY — the owner executes it in Chrome/Edge/Firefox; results become tracker evidence, and Phase 1 S1 gates the WP5 cutover. |
 
 **Failures / blockers:** None recorded for this reset. 2026-10-31 — WP9.1 and the browser-only lifecycle/performance rows remain blocked by the unavailable Chrome/Edge/Firefox matrix; everything deterministic is covered and green (run #89).
 
