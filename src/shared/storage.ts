@@ -83,7 +83,7 @@ async function initializeState(): Promise<void> {
     if (migration.set.backup_v1) {
       await area.set({ backup_v1: migration.set.backup_v1 });
     }
-    await area.set(migration.set);
+    await area.set(migration.set as Record<string, unknown>);
     if (migration.remove.length > 0) await area.remove([...migration.remove]);
     return;
   }
