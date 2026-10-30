@@ -1,10 +1,12 @@
 import { ready, getState, patch, update } from "../shared/storage.ts";
 import { computeBlockPlan, explainBlock } from "../shared/plan.ts";
 import { verifyPassword } from "../shared/password.ts";
-import type { AppState, DnrRule, Health } from "../shared/types.ts";
+import type { AppState, Health } from "../shared/types.ts";
+import type { DnrRule } from "../shared/dnr.ts";
 import {
   ensureAlarms,
   type AlarmApi,
+  type AlarmSnapshot,
 } from "./alarms.ts";
 import { createSessionService } from "./session.ts";
 import { auditOpenBlockedTabs, createReconciler } from "./reconcile.ts";
@@ -45,7 +47,7 @@ import type {
   NotificationApi,
   SessionNotice,
 } from "./notify.ts";
-import type { BlockPlan } from "../shared/plan.ts";
+import type { BlockPlan, BlockReason } from "../shared/plan.ts";
 
 /**
  * WP5 cutover composition: assembles every staged v2 service against the
@@ -68,7 +70,10 @@ export interface WorkerMessageEvent {
 export interface WorkerBrowserApi {
   now(): number;
   onError?(effect: string, error: unknown): void;
-  alarms: AlarmApi & { onAlarm: WorkerEventSource<string> };
+  alarms: AlarmApi & {
+    getAll(): Promise<AlarmSnapshot[]>;
+    onAlarm: WorkerEventSource<string>;
+  };
   notifications: NotificationApi & {
     onButtonClicked?: {
       addListener(
@@ -223,7 +228,9 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     ensureAlarms: ensureAlarmsFor,
     listTabs: api.tabs.queryAll,
     updateTab: api.tabs.update,
-    recordBlock: recorder,
+    recordBlock: async (tabId: number, domain: string, reason: BlockReason) => {
+      await recorder({ tabId, domain, reason });
+    },
     blockedBase: api.runtime.getURL("blocked.html"),
     now,
   };
@@ -233,7 +240,7 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     store,
     notify,
     now,
-    onError,
+    onError: (error) => onError("achievements", error),
   });
 
   const session = createSessionService({
@@ -257,7 +264,7 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     store,
     notify,
     now,
-    onError,
+    onError: (error) => onError("allowance-alerts", error),
   });
 
   const attention = createAttentionTracker({
@@ -291,7 +298,7 @@ export function createWorker(api: WorkerBrowserApi): Worker {
   const tasks = createTaskService({
     store,
     alarms: api.alarms,
-    notifications,
+    notifications: api.notifications,
     now,
     session: {
       start: async (input) => {
@@ -306,15 +313,19 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     store,
     notify,
     now,
-    onError,
+    onError: (error) => onError("weekly-report", error),
   });
   const reflection = createDailyReflectionService({
     store,
     notify,
     now,
-    onError,
+    onError: (error) => onError("daily-reflection", error),
   });
-  const pruning = createPruningService({ store, now, onError });
+  const pruning = createPruningService({
+    store,
+    now,
+    onError: (error) => onError("pruning", error),
+  });
 
   const alarmHandler = createAlarmHandler({
     getState: store.readState,
