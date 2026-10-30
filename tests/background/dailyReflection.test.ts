@@ -38,7 +38,7 @@ describe("daily reflection service", () => {
     const state = createDefaultState();
     state.settings.notifications.endOfDay = true;
     state.dayStats[TODAY] = {
-      dateKey: localDateKey(NOW),
+      dateKey: localDateKey(new Date(NOW)),
       focusMs: 0,
       sessionsCompleted: 0,
       sessionsAbandoned: 0,
@@ -56,7 +56,7 @@ describe("daily reflection service", () => {
     const state = createDefaultState();
     state.settings.notifications.endOfDay = true;
     state.dayStats[TODAY] = {
-      dateKey: localDateKey(NOW),
+      dateKey: localDateKey(new Date(NOW)),
       focusMs: 0,
       sessionsCompleted: 0,
       sessionsAbandoned: 0,

@@ -225,7 +225,8 @@ describe("backup format and merge policy", () => {
     expect(restored.state.habitEntries).toEqual(state.habitEntries);
     expect(restored.report.mode).toBe("restore");
 
-    // Merging into a state that already has the habit unions the check-ins.
+    // Merging into a state that already has the habit unions the check-ins
+    // without announcing the habit as new.
     const existing = createDefaultState();
     existing.habits = [{ ...state.habits[0]! }];
     existing.habitEntries = { "habit-1": ["2026-10-31"] };
@@ -237,6 +238,6 @@ describe("backup format and merge policy", () => {
       "2026-10-30",
       "2026-10-31",
     ]);
-    expect(merged.report.added.join(" ")).toContain("habit");
+    expect(merged.report.added.join(" ")).not.toContain("habit");
   });
 });
