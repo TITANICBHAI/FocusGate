@@ -42,6 +42,8 @@ export const DEFAULT_STATE: AppState = {
   sessionHistory: [],
   dayStats: {},
   recentBlocks: [],
+  habits: [],
+  habitEntries: {},
   settings: {
     theme: "system",
     fontScale: 1,
@@ -60,6 +62,8 @@ export const DEFAULT_STATE: AppState = {
       taskReminders: true,
       weeklyReport: true,
       achievements: true,
+      endOfDay: false,
+      allowanceAlerts: true,
     },
     reminders: {
       preStartMin: [10, 5, 1],

@@ -670,12 +670,21 @@ export function migrateV1(v1Bag: Record<string, unknown>, now: number): Migratio
       ...asRecord(v1.health),
     },
     achievements: Array.isArray(v1.achievements)
-      ? (v1.achievements.filter(
-          (achievement): achievement is Record<string, unknown> =>
-            achievement !== null &&
-            typeof achievement === "object" &&
-            !Array.isArray(achievement),
-        ) as Record<string, unknown>[])
+      ? (v1.achievements
+          .filter(
+            (achievement): achievement is Record<string, unknown> =>
+              achievement !== null &&
+              typeof achievement === "object" &&
+              !Array.isArray(achievement) &&
+              typeof (achievement as { id?: unknown }).id === "string",
+          )
+          .map((achievement) => ({
+            id: achievement.id as string,
+            unlockedAt:
+              typeof achievement.unlockedAt === "number"
+                ? achievement.unlockedAt
+                : 0,
+          })) as AppState["achievements"])
       : [],
     lastWeeklyReport:
       v1.lastWeeklyReport !== null &&

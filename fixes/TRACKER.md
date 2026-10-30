@@ -758,7 +758,7 @@
 
 **Plan:** §6 WP7 · **Blocked by:** M1 for acceptance/runtime activation; owner authorized staged Tier A code · **Status:** IN PROGRESS — Tier A implemented and deterministic-verified; browser acceptance open · **Started:** 2026-10-29 · **Completed:** — · **Progress:** 12/20
 
-**Scope note:** Tier C is backlog and requires an owner request. Do not implement anything on the plan's “Do not port” list. The owner authorized staged Tier A implementation on 2026-10-29 while M1 remains blocked; this does not authorize runtime activation or cutover.
+**Scope note:** Tier C is backlog and requires an owner request. Do not implement anything on the plan's “Do not port” list. The owner authorized staged Tier A implementation on 2026-10-29 while M1 remains blocked; the owner authorized staged Tier B (B1–B7) on 2026-10-31 under the same constraints (staged code and deterministic tests only; no runtime activation, migration, or cutover; browser acceptance stays open).
 
 ### Tier A
 

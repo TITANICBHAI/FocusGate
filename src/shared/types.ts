@@ -52,6 +52,10 @@ export interface UsageRecord {
   opens: number;
   windowStartMs: number;
   lastActiveAt: number;
+  /** Set when the WP7-B7 heads-up notification fired for this budget window. */
+  headsUpNotifiedAt?: number;
+  /** Set when the WP7-B7 exhaustion notification fired for this budget window. */
+  exhaustedNotifiedAt?: number;
 }
 
 export interface StandaloneBlock {
@@ -80,6 +84,12 @@ export interface Task {
   recurring: TaskRecurrence;
   templateId?: string;
   lockLevel: LockLevel;
+  /**
+   * Three-way allow-only override for this task (WP7-B4): undefined or null
+   * follows the global setting, an empty array disables allow-only for the
+   * task, and a non-empty list allows only those domains while the task runs.
+   */
+  allowOnly?: string[] | null;
   completed: boolean;
   completedAt?: number;
   createdAt: number;
@@ -159,6 +169,10 @@ export interface Settings {
     taskReminders: boolean;
     weeklyReport: boolean;
     achievements: boolean;
+    /** WP7-B5: remind at local midnight to add the day's reflection. */
+    endOfDay: boolean;
+    /** WP7-B7: heads-up and exhaustion alerts for time-budget allowances. */
+    allowanceAlerts: boolean;
   };
   reminders: {
     preStartMin: number[];
@@ -205,6 +219,19 @@ export interface BlockPreset {
   builtIn: boolean;
 }
 
+export interface Habit {
+  id: string;
+  name: string;
+  emoji: string;
+  createdAt: number;
+}
+
+export interface AchievementRecord {
+  /** One of the achievement ids defined in shared/achievements.ts. */
+  id: string;
+  unlockedAt: number;
+}
+
 export interface BackupV1 {
   createdAt: number;
   values: Record<string, unknown>;
@@ -242,10 +269,13 @@ export interface AppState {
   sessionHistory: SessionRecord[];
   dayStats: Record<string, DayStats>;
   recentBlocks: BlockRecord[];
+  habits: Habit[];
+  /** Checked local date keys per habit id, e.g. habitEntries[habitId] = ["2026-10-31"]. */
+  habitEntries: Record<string, string[]>;
   settings: Settings;
   password: PasswordState;
   health: Health;
-  achievements: Record<string, unknown>[];
+  achievements: AchievementRecord[];
   lastWeeklyReport: WeeklyReport | null;
   weeklyReports: WeeklyReport[];
   keywordMatches: KeywordMatch[];

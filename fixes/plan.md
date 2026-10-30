@@ -820,6 +820,8 @@ Priorities: **Tier A** = ship in this release. **Tier B** = after Tier A is gree
 
 **Owner-authorized staged-work exception (2026-10-29):** The owner authorized WP7 work despite M1 remaining blocked by unavailable browser testing/results. Proceed with staged Tier A code and deterministic tests only. Keep v1 runtime consumers active; do not register v2 listeners, activate v2 behavior, migrate live storage, or perform the WP5 cutover. Browser/runtime acceptance remains open and must not be claimed from unit tests. Tier B remains gated on Tier A completion and its acceptance boundary; Tier C requires an owner request.
 
+**Owner-authorized staged Tier B exception (2026-10-31):** The owner authorized staged Tier B (B1–B7) implementation while browser acceptance for Tier A remains open. The same constraints apply as for Tier A: staged code and deterministic tests only; keep v1 runtime consumers active; do not register v2 listeners, activate v2 behavior, migrate live storage, or perform the WP5 cutover. Browser/runtime acceptance for Tier B remains open and must not be claimed from unit tests.
+
 #### Tier A
 
 | ID | Feature | Spec | Source |

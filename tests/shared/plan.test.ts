@@ -418,4 +418,84 @@ describe("block planning", () => {
     state.settings.allowOnly = { enabled: true, domains: [] };
     expect(computeBlockPlan(state, 1_000).allowOnly).toBeNull();
   });
+
+  it("lets a task override the global allow-only mode (WP7-B4)", () => {
+    const base = {
+      settings: {
+        ...createDefaultState().settings,
+        allowOnly: { enabled: true, domains: ["global.example"] },
+      },
+      session: {
+        ...createDefaultState().session,
+        status: "work" as const,
+        phaseEndsAt: 1_000_000,
+        taskId: "task-1",
+      },
+      tasks: [
+        {
+          id: "task-1",
+          title: "Task",
+          durationMin: 25,
+          priority: "medium" as const,
+          tags: [],
+          recurring: "none" as const,
+          lockLevel: "none" as const,
+          completed: false,
+          createdAt: 0,
+        },
+      ],
+    };
+
+    // Undefined follows the global setting.
+    expect(
+      computeBlockPlan(stateWith(base), 1_000).allowOnly,
+    ).toEqual(["global.example"]);
+
+    // An empty list disables allow-only for this task.
+    expect(
+      computeBlockPlan(
+        stateWith({ ...base, tasks: [{ ...base.tasks[0]!, allowOnly: [] }] }),
+        1_000,
+      ).allowOnly,
+    ).toBeNull();
+
+    // A non-empty task list overrides the global list, even when the global
+    // mode is disabled.
+    expect(
+      computeBlockPlan(
+        stateWith({
+          ...base,
+          settings: {
+            ...base.settings,
+            allowOnly: { enabled: false, domains: ["global.example"] },
+          },
+          tasks: [{ ...base.tasks[0]!, allowOnly: ["task.example"] }],
+        }),
+        1_000,
+      ).allowOnly,
+    ).toEqual(["task.example"]);
+
+    // Null follows the global setting again.
+    expect(
+      computeBlockPlan(
+        stateWith({ ...base, tasks: [{ ...base.tasks[0]!, allowOnly: null }] }),
+        1_000,
+      ).allowOnly,
+    ).toEqual(["global.example"]);
+
+    // A different task with no override still follows the global list.
+    expect(
+      computeBlockPlan(
+        stateWith({
+          ...base,
+          session: { ...base.session, taskId: "task-2" },
+          tasks: [
+            ...base.tasks,
+            { ...base.tasks[0]!, id: "task-2", allowOnly: ["other.example"] },
+          ],
+        }),
+        1_000,
+      ).allowOnly,
+    ).toEqual(["global.example"]);
+  });
 });

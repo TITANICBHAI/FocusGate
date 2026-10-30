@@ -324,12 +324,25 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
     for (const rule of state.keywords) addKeyword(keywords, hideWords, rule);
   }
 
+  const task =
+    state.session.status === "work" && state.session.taskId !== null
+      ? state.tasks.find((candidate) => candidate.id === state.session.taskId)
+      : undefined;
+
+  // WP7-B4: a task may override the global allow-only mode. undefined and
+  // null follow the global setting, an empty array disables allow-only for
+  // the task, and a non-empty list allows only those domains.
+  const taskAllowOnly = task?.allowOnly ?? null;
   const allowOnly =
     state.session.status === "work" &&
-    state.settings.allowOnly.enabled &&
-    state.settings.allowOnly.domains.length > 0
-      ? expandAliases(state.settings.allowOnly.domains)
-      : null;
+    (taskAllowOnly !== null
+      ? taskAllowOnly.length > 0
+        ? expandAliases(taskAllowOnly)
+        : null
+      : state.settings.allowOnly.enabled &&
+          state.settings.allowOnly.domains.length > 0
+        ? expandAliases(state.settings.allowOnly.domains)
+        : null);
 
   const nextBoundaryAt = minBoundary([
     nextScheduleBoundary(configuredSchedules, now),

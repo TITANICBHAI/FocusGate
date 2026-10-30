@@ -112,6 +112,8 @@
     { "domain": "example.com", "reason": "legacy", "at": 1792404000000 },
     { "domain": "news.example.org", "reason": "legacy", "at": 1788256800000 }
   ],
+  "habits": [],
+  "habitEntries": {},
   "settings": {
     "theme": "system",
     "fontScale": 1,
@@ -129,7 +131,9 @@
       "breakEnd": true,
       "taskReminders": true,
       "weeklyReport": true,
-      "achievements": true
+      "achievements": true,
+      "endOfDay": false,
+      "allowanceAlerts": true
     },
     "reminders": {
       "preStartMin": [10, 5, 1],
