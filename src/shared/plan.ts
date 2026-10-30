@@ -333,16 +333,18 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   // null follow the global setting, an empty array disables allow-only for
   // the task, and a non-empty list allows only those domains.
   const taskAllowOnly = task?.allowOnly ?? null;
-  const allowOnly =
-    state.session.status === "work" &&
-    (taskAllowOnly !== null
-      ? taskAllowOnly.length > 0
-        ? expandAliases(taskAllowOnly)
-        : null
-      : state.settings.allowOnly.enabled &&
-          state.settings.allowOnly.domains.length > 0
-        ? expandAliases(state.settings.allowOnly.domains)
-        : null);
+  let allowOnly: string[] | null = null;
+  if (state.session.status === "work") {
+    if (taskAllowOnly !== null) {
+      allowOnly =
+        taskAllowOnly.length > 0 ? expandAliases(taskAllowOnly) : null;
+    } else if (
+      state.settings.allowOnly.enabled &&
+      state.settings.allowOnly.domains.length > 0
+    ) {
+      allowOnly = expandAliases(state.settings.allowOnly.domains);
+    }
+  }
 
   const nextBoundaryAt = minBoundary([
     nextScheduleBoundary(configuredSchedules, now),
