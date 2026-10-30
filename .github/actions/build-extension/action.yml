@@ -13,7 +13,7 @@ runs:
       shell: bash
       run: |
         rm -f package-lock.json
-        npm install --no-audit --no-fund
+        npm install --no-audit --no-fund --save-exact vite@6.4.3 esbuild@0.25.12
 
     - name: Report install state
       shell: bash
