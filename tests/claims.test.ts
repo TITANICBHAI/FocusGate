@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -15,7 +16,7 @@ const root = new URL("../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-const sourceFiles = readdirSync(new URL("../src", root), {
+const sourceFiles = readdirSync(fileURLToPath(new URL("src", root)), {
   recursive: true,
 })
   .filter((file) => /\.(ts|tsx)$/.test(file))
