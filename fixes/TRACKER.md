@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 54% (85/156 required checklist items currently verified)
-- **Current work package:** WP7 — Tier A and Tier B deterministic-verified; browser acceptance open
+- **Progress:** 59% (92/156 required checklist items currently verified)
+- **Current work package:** WP8 — deterministic-verified; AC1 runtime observation open
 - **Last updated:** 2026-10-31
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -42,7 +42,7 @@
 | WP5 — UI foundation and screen fixes | BLOCKED — owner authorized WP6 staged work; verification/cutover remain open | 11/18 | 2026-10-28 | — | WP1b/WP4 browser evidence, active-v1 copy audit, accessibility and atomic cutover |
 | WP6 — Security, standalone, protection, backup | IN PROGRESS | 15/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
 | WP7 — Feature ports, Tier A and Tier B | IN PROGRESS — Tier A and Tier B deterministic-verified; browser acceptance open | 19/20 | 2026-10-29 | — | Browser acceptance and runtime activation remain gated |
-| WP8 — Stats, insights, reports | NOT STARTED | 0/8 | — | — | WP7 Tier A |
+| WP8 — Stats, insights, reports | IN PROGRESS — deterministic-verified; AC1 runtime check open | 7/8 | 2026-10-31 | — | WP8.AC1 browser observation |
 | WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
 | **Total** | **IN PROGRESS** | **66/156** | — | — | |
@@ -828,24 +828,30 @@
 
 ## WP8 — Stats, insights, reports
 
-**Plan:** §6 WP8 · **Blocked by:** WP7 Tier A · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/8
+**Plan:** §6 WP8 · **Blocked by:** WP7 Tier A (deterministic-verified) · **Status:** IN PROGRESS — deterministic-verified; WP8.AC1 runtime observation open · **Started:** 2026-10-31 · **Completed:** — · **Progress:** 7/8
 
-- [ ] WP8.1 Build Dashboard › Stats with Today/Week/Month, actual `elapsedMs`, inline-SVG daily chart, daily goal/ring, focus score, streaks, and specified insights.
-- [ ] WP8.2 Add popup mini stats: today's focus, streak, goal ring, and five latest sessions.
-- [ ] WP8.3 Schedule the next local Monday 09:00 weekly report once through `ensureAlarms()`; use last-seven-day totals and non-floored hours/minutes; store the latest and last eight reports; show them in Dashboard › Reports.
-- [ ] WP8.4 Prune sessionHistory (500), dayStats (400 days), and recentBlocks (200) during midnight alarm.
-- [ ] WP8.AC1 Stats show UI-started sessions immediately.
-- [ ] WP8.AC2 Fixture generator and aggregate tests match hand-calculated seeded values.
-- [ ] WP8.AC3 Weekly report alarm scheduled time remains unchanged across at least 20 worker restarts.
-- [ ] WP8.AC4 Streak/score match formulas and no chart library is added.
+- [x] WP8.1 Build Dashboard › Stats with Today/Week/Month, actual `elapsedMs`, inline-SVG daily chart, daily goal/ring, focus score, streaks, and specified insights. (`src/ui/dashboard/DashboardStats.tsx` on the WP1 formulas in `src/shared/stats.ts`.)
+- [x] WP8.2 Add popup mini stats: today's focus, streak, goal ring, and five latest sessions. (StatsView gained the streak line; the recent list trimmed to five.)
+- [x] WP8.3 Schedule the next local Monday 09:00 weekly report once through `ensureAlarms()`; use last-seven-day totals and non-floored hours/minutes; store the latest and last eight reports; show them in Dashboard › Reports. (`src/background/weeklyReport.ts` service; the alarm itself was already staged in `ensureAlarms()`.)
+- [x] WP8.4 Prune sessionHistory (500), dayStats (400 days), and recentBlocks (200) during midnight alarm. (`src/background/pruning.ts` as an optional midnight hook; the write paths already capped history and blocks.)
+- [ ] WP8.AC1 Stats show UI-started sessions immediately. (The write path and live storage subscription are deterministic-verified; the "immediately" latency is a runtime observation that needs a browser.)
+- [x] WP8.AC2 Fixture generator and aggregate tests match hand-calculated seeded values.
+- [x] WP8.AC3 Weekly report alarm scheduled time remains unchanged across at least 20 worker restarts.
+- [x] WP8.AC4 Streak/score match formulas and no chart library is added.
 
 **Notes / progress:**
 - 2026-10-30 — Correction: the 2026-10-29 note below was misfiled into this WP8 section during the WP7 start; it describes WP7 Tier A work, not WP8. WP8 remains NOT STARTED with no staged work.
 - 2026-10-29 — Started staged Tier A implementation under the owner's M1-blocked exception. First inspect existing staged UI/engine work and reuse it; keep WP7.AC and any runtime/browser claims open. Tier B waits until Tier A is green. (Misfiled from WP7; corrected 2026-10-30.)
+- 2026-10-31 — Implemented WP8 on top of the WP1 formulas (aggregateStats, calculateStreaks, calculateFocusScore, buildWeeklyReport, getFocusInsights, formatDuration) so the AC4 formulas stayed untouched. New pure helpers: `pruneDayStats`/`pruneSessionHistory`/`pruneRecentBlocks` (caps 400/500/200), `lastNDaysRange`, `focusMinutesPerDay`, `todayAllowanceUsage`. New staged services: `src/background/weeklyReport.ts` (previous Monday–Sunday window, deduped per window, stores `lastWeeklyReport` + the last 8 in `weeklyReports`, notifies "X h Y min" via the new `weekly_report` notice kind, gated on the weekly-report toggle) and `src/background/pruning.ts` (optional midnight hook like reflection/achievements). UI: `src/ui/dashboard/DashboardStats.tsx` (Today/Week/Month switch, KPI cards with clean sessions and completion rate, inline-SVG focus-minutes chart with zero days included, goal ring + focus score, current/best streaks, insights, top blocked domains, today's allowance usage, protection gaps, achievements), the popup mini stats (streak line, five latest sessions), and the missing `fg-stats-*` styles (the popup stats had been rendering without them). Dashboard › Reports already rendered the `buildWeeklyReport` shape.
+- 2026-10-31 — Verification: run #83 caught two fixture-authoring mistakes (record-preferred aggregation, all seven seeded days focused) and run #84 one chart arithmetic slip; run #85 (commit `4b400ea`, https://github.com/TITANICBHAI/FocusGate/actions/runs/41137259393) is green: typecheck, 327 tests, build, packaging, ZIP validation. WP8.1–8.4 and AC2–AC4 ticked; WP8.AC1 stays open for a browser run.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
-**Failures / blockers:** M1 remains blocked because this environment lacks a controllable Chrome/Edge/Firefox browser matrix. WP7 acceptance and runtime activation remain unverified. (2026-10-30 correction: misfiled from WP7; WP8 itself has no recorded blockers.)
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-31 | WP8 implementation and deterministic verification | `src/shared/stats.ts`, `src/background/{weeklyReport,pruning}.ts`, `alarmHandler.ts` midnight hook, `notify.ts` weekly kind, `src/ui/dashboard/DashboardStats.tsx`, `AchievementsCard.tsx`, DashboardPage/StatsView/styles, tests (stats, weeklyReport, pruning, alarms, notify). | GitHub Actions run #85 (commit `4b400ea`): install → typecheck → 327 tests (incl. the hand-calculated AC2 fixture, the AC3 20-restart weekly-schedule test, pruning caps, weekly totals/non-floored text) → build → packaging → ZIP validation. | PASS at the deterministic level — WP8.AC1's runtime latency observation stays open. |
+
+**Failures / blockers:** M1 remains blocked because this environment lacks a controllable Chrome/Edge/Firefox browser matrix. (2026-10-30 correction: misfiled from WP7.) 2026-10-31 — WP8's deterministic checks are green (run #85); WP8.AC1 and cross-browser acceptance remain open for a browser run.
 
 **Decisions / deferred work:**
 - Continue staged Tier A work while M1 is blocked, per owner authorization; do not activate v2 runtime, migration, or cutover. Do not begin Tier B until Tier A acceptance is green.
@@ -970,6 +976,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-31 | WP8 deterministic-verified (7/8) | DashboardStats (ranges, KPIs, inline-SVG chart, score, streaks, insights, allowance usage, protection gaps, achievements), popup mini stats (streak, five sessions), weekly report service (previous Monday–Sunday, deduped, last 8 kept, non-floored notification), midnight pruning service, missing stats styles added. Runs #83–#84 caught two fixture mistakes and one chart slip; run #85 green (327 tests). WP8.AC1 stays open for a browser run. | Run #85 (commit `4b400ea`) green; details in the WP8 notes. |
 | 2026-10-31 | WP7 Tier B staged (owner-authorized) | Implemented B1–B7 with deterministic tests; runs #74–#79 caught a type leak, missing backup validators, and three test mistakes; run #80 green (315 tests, build, packaging). B1–B7 ticked (19/20; 85/156 overall). Staging constraints preserved; browser acceptance and runtime activation remain gated. | Run #80 (commit `b2190d1`) green; details in the WP7 notes and evidence table. |
 | 2026-10-31 | CI pipeline fixed and first green run; WP7.A1–A12 ticked | Owner authorized "fix CI first". Composite action rewritten: fresh registry install (Replit-mirror lockfile URLs poisoned `npm ci`), typecheck + full test suite + full build added, failing steps surface log tails as annotations, vite/esbuild pinned to the Replit-verified versions. CI caught and led to fixes for: 10 real typecheck errors (ambient type dependencies), a real JSX syntax error in the staged SettingsView (never built since the WP7 session), and a stale migration fixture. Run #71 (commit `b123c8c`) is the first fully green run in the repository's history; temporary diagnostics removed in `07bad02`. WP7.A1–A12 ticked at the deterministic level (12/20; 78/156 overall); WP7.AC, Tier B, and runtime activation remain gated. Follow-up: regenerate `package-lock.json` on Replit. | Runs 59–70 diagnosis via annotations; run #71 green (install → typecheck → tests → build → package → validate → artifacts); run #72 confirms the cleanup commit. |
 | 2026-10-30 | WP7 push and CI check | Committed and pushed the six WP7 files to `main` (`df8ac8a`) from a scratch clone after verifying remote-vs-local content matched apart from line endings. CI run 56 failed at `bun install --frozen-lockfile` because `bun.lock` predates the vitest/@types/react devDependencies; all runs since 2026-10-27 failed the same way. CI runs build/packaging only — no unit tests or typecheck. The Cloudflare Pages docs deploy passed. Lockfile/CI fixes are owner decisions, outside the WP7 batch. | Push observed (`3e01eed..df8ac8a main -> main`); failure observed via the Actions API annotations; details in the WP7 notes. |
