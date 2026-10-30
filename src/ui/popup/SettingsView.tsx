@@ -339,6 +339,7 @@ export function SettingsView({ state }: { state: AppState }) {
                 }
               />
               {state.settings.breaks.enabled && (
+                <>
                 <div className="fg-grid-two">
                   <Field id="short-break" label="Short break (minutes)">
                     <input
@@ -420,6 +421,7 @@ export function SettingsView({ state }: { state: AppState }) {
                     )
                   }
                 />
+                </>
               )}
             </Card>
             <Card title="Scheduled tasks">
