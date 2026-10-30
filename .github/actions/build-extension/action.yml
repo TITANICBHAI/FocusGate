@@ -31,15 +31,39 @@ runs:
 
     - name: Typecheck
       shell: bash
-      run: npm run typecheck
+      run: |
+        set -o pipefail
+        npm run typecheck 2>&1 | tee /tmp/typecheck.log || {
+          echo "::error::TYPECHECK FAILED — last log lines, reverse order:"
+          tail -6 /tmp/typecheck.log | tac | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::${line//%/%25}"
+          done
+          exit 1
+        }
 
     - name: Test
       shell: bash
-      run: npm test
+      run: |
+        set -o pipefail
+        npm test 2>&1 | tee /tmp/test.log || {
+          echo "::error::TEST STEP FAILED — last log lines, reverse order:"
+          tail -14 /tmp/test.log | tac | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::${line//%/%25}"
+          done
+          exit 1
+        }
 
     - name: Build extension
       shell: bash
-      run: npm run build
+      run: |
+        set -o pipefail
+        npm run build 2>&1 | tee /tmp/build.log || {
+          echo "::error::BUILD STEP FAILED — last log lines, reverse order:"
+          tail -8 /tmp/build.log | tac | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::${line//%/%25}"
+          done
+          exit 1
+        }
 
     - name: Package Chrome extension
       shell: bash
