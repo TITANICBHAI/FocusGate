@@ -9,30 +9,33 @@ runs:
       with:
         node-version: 20
 
-    - name: Set up Bun
-      uses: oven-sh/setup-bun@v2
-      with:
-        bun-version: latest
-
     - name: Install dependencies
       shell: bash
-      run: bun install --frozen-lockfile
+      run: npm ci
+
+    - name: Typecheck
+      shell: bash
+      run: npm run typecheck
+
+    - name: Test
+      shell: bash
+      run: npm test
 
     - name: Build extension
       shell: bash
-      run: bun run build:extension
+      run: npm run build
 
     - name: Package Chrome extension
       shell: bash
-      run: bun run package:chrome
+      run: npm run package:chrome
 
     - name: Package Edge extension
       shell: bash
-      run: bun run package:edge
+      run: npm run package:edge
 
     - name: Package Firefox extension
       shell: bash
-      run: bun run package:firefox
+      run: npm run package:firefox
 
     - name: Validate packaged extensions
       shell: bash
