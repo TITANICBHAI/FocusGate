@@ -62,6 +62,10 @@ runs:
           grep -aE "Error|ERROR|error|ERR_|Cannot|Could not|✘|Failed|failed" /tmp/build.log | tail -12 | tac | while IFS= read -r line; do
             [ -n "$line" ] && echo "::error::${line//%/%25}"
           done
+          echo "::error::— code frame around the first esbuild error:"
+          grep -a -B6 -A10 -m1 "SettingsView.tsx:384" /tmp/build.log | tac | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::${line//%/%25}"
+          done
           echo "::error::— raw tail:"
           tail -4 /tmp/build.log | tac | while IFS= read -r line; do
             [ -n "$line" ] && echo "::error::${line//%/%25}"
