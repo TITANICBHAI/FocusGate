@@ -6,7 +6,7 @@
 
 - **Status:** IN PROGRESS
 - **Progress:** 59% (92/156 required checklist items currently verified)
-- **Current work package:** WP8 — deterministic-verified; AC1 runtime observation open
+- **Current work package:** WP9 — deterministic subset verified; browser matrix open
 - **Last updated:** 2026-10-31
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -43,7 +43,7 @@
 | WP6 — Security, standalone, protection, backup | IN PROGRESS | 15/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
 | WP7 — Feature ports, Tier A and Tier B | IN PROGRESS — Tier A and Tier B deterministic-verified; browser acceptance open | 19/20 | 2026-10-29 | — | Browser acceptance and runtime activation remain gated |
 | WP8 — Stats, insights, reports | IN PROGRESS — deterministic-verified; AC1 runtime check open | 7/8 | 2026-10-31 | — | WP8.AC1 browser observation |
-| WP9 — QA hardening | NOT STARTED | 0/6 | — | — | WP8 |
+| WP9 — QA hardening | IN PROGRESS — deterministic subset verified; browser matrix open | 0/6 | 2026-10-31 | — | Manual matrix and browser-only lifecycle checks |
 | WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
 | **Total** | **IN PROGRESS** | **66/156** | — | — | |
 
@@ -860,22 +860,17 @@
 
 ## WP9 — QA hardening
 
-**Plan:** §6 WP9, §8 · **Blocked by:** WP8 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/6
+**Plan:** §6 WP9, §8 · **Blocked by:** WP8 · **Status:** IN PROGRESS — deterministic subset verified; browser matrix open · **Started:** 2026-10-31 · **Completed:** — · **Progress:** 0/6
 
 - [ ] WP9.1 Run the full manual matrix in plan §8.2 on Chrome, Edge, and Firefox temporary add-on; record failures by browser.
-- [ ] WP9.2 Run plan §8.3 lifecycle checks: worker stop, mid-session stop, browser restart, suspend/resume across session end/schedule boundary, clock moved back ten minutes, 20 restarts with stable alarm times, and 10,000-event burst without duplicate IDs or exceeding recentBlocks cap.
-- [ ] WP9.3 Measure idle worker CPU, content-script batch time, popup open time, and storage after 90 days of seeded data against plan budgets.
-- [ ] WP9.4 Cover all plan §8.5 edge cases EC01–EC54 with test or manual check.
-- [ ] WP9.5 Fix verified issues found; do not add features.
+- [ ] WP9.2 Run plan §8.3 lifecycle checks: worker stop, mid-session stop, browser restart, suspend/resume across session end/schedule boundary, clock moved back ten minutes, 20 restarts with stable alarm times, and 10,000-event burst without duplicate IDs or exceeding recentBlocks cap. (Deterministic parts verified: the 20-restart weekly-alarm test (WP8.AC3), the clock-jump recovery tests, and the 10,000-event burst test in `tests/edgeCases.test.ts`; worker stop/restart and suspend/resume remain browser runs.)
+- [ ] WP9.3 Measure idle worker CPU, content-script batch time, popup open time, and storage after 90 days of seeded data against plan budgets. (The storage-size budget is test-verified — 90 seeded days serialize under 1 MB in `tests/edgeCases.test.ts`; idle CPU, content-script batch time, and popup open time need a live browser.)
+- [ ] WP9.4 Cover all plan §8.5 edge cases EC01–EC54 with test or manual check. (Traceability suite `tests/edgeCases.test.ts` added 2026-10-31 covering the deterministic rows EC01, EC10, EC24, EC36, EC37, EC51–EC53 plus the WP9.2 burst and WP9.3 budget; the remaining rows map to existing module suites (EC02–EC07, EC11–EC12, EC19–EC23, EC25–EC26, EC28–EC31, EC33, EC35, EC38–EC39, EC46–EC50) or are inherently browser/manual checks (EC13–EC18, EC20 UI display, EC27 copy, EC29, EC32, EC34, EC40–EC45, EC48 UI, EC54 selectors) listed for WP9.1.)
+- [ ] WP9.5 Fix verified issues found; do not add features. (One verified issue fixed so far: EC37 — changing an allowance's mode kept the stale usage; now reset via `resetUsageOnModeChange` in `shared/allowance.ts` wired into Rules › Limits, tested in `tests/edgeCases.test.ts`.)
 - [ ] WP9.AC Plan §8.2 and §8.3 pass and every §8.4 claim regression is green.
 
 **Notes / progress:** Not started. No new features in this work package.
-
-**Evidence:** No verified evidence recorded.
-
-**Failures / blockers:** None recorded for this reset.
-
-**Decisions / deferred work:** None recorded.
+- 2026-10-31 — Started WP9 with the deterministic subset while the browser matrix remains unavailable. Added `tests/edgeCases.test.ts` (WP9.4): EC01 midnight attribution, EC24 exception length boundary, EC36 alias-group budget sharing, EC37 allowance-mode-change reset (found a real gap — the mode change previously kept stale usage; fixed in `src/shared/allowance.ts` and wired into Rules › Limits), EC51 fragment exclusion, EC52 percent/plus decoding, EC53 Unicode whole-word; plus the WP9.2 10,000-event burst (caps hold, no duplicate stamps) and the WP9.3 90-day storage-size budget (< 1 MB). Existing module suites already covered the remaining deterministic rows; the browser-only rows are listed in WP9.4 for the WP9.1 manual matrix. GitHub Actions run #89 (commit `e394c3f`) green: typecheck + full suite (337 tests) + build + packaging.
 
 ---
 
@@ -902,9 +897,14 @@
 
 **Evidence:** No verified evidence recorded.
 
-**Failures / blockers:** None recorded for this reset.
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-31 | WP9 deterministic subset | `tests/edgeCases.test.ts` (new), `src/shared/allowance.ts` (+`resetUsageOnModeChange`), `src/ui/popup/RulesView.tsx` (mode-change reset wiring). | GitHub Actions run #89 (commit `e394c3f`): typecheck + full suite (337 tests) + build + packaging + ZIP validation green, including the new EC01/EC24/EC36/EC37/EC51–EC53 tests, the 10,000-event burst, and the 90-day storage budget. | PASS — the deterministic subset of WP9.2/9.3/9.4 is verified; WP9.1, the browser-only lifecycle rows, and the runtime budgets stay open. |
 
-**Decisions / deferred work:** None recorded.
+**Failures / blockers:** None recorded for this reset. 2026-10-31 — WP9.1 and the browser-only lifecycle/performance rows remain blocked by the unavailable Chrome/Edge/Firefox matrix; everything deterministic is covered and green (run #89).
+
+**Decisions / deferred work:**
+- 2026-10-31 — EC43's documented behavior (a DevTools weakening edit is accepted unless the Tier B watchdog exists) is kept as-is: the watchdog stays unbuilt, so the copy and guard behavior match the plan's default. Revisit only if the owner requests E.8.
 
 ---
 
@@ -976,6 +976,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-31 | WP9 started: deterministic subset verified | Added the §8.5 traceability suite (EC01/24/36/37/51–53 + 10k burst + 90-day storage budget) and found+fixed one real bug (EC37: allowance mode change kept stale usage). Manual matrix and browser-only lifecycle/performance rows remain open (0/6 — no checklist item is fully complete without the browser). | Run #89 (commit `e394c3f`) green: typecheck + 337 tests + build + packaging + ZIP validation. |
 | 2026-10-31 | WP8 deterministic-verified (7/8) | DashboardStats (ranges, KPIs, inline-SVG chart, score, streaks, insights, allowance usage, protection gaps, achievements), popup mini stats (streak, five sessions), weekly report service (previous Monday–Sunday, deduped, last 8 kept, non-floored notification), midnight pruning service, missing stats styles added. Runs #83–#84 caught two fixture mistakes and one chart slip; run #85 green (327 tests). WP8.AC1 stays open for a browser run. | Run #85 (commit `4b400ea`) green; details in the WP8 notes. |
 | 2026-10-31 | WP7 Tier B staged (owner-authorized) | Implemented B1–B7 with deterministic tests; runs #74–#79 caught a type leak, missing backup validators, and three test mistakes; run #80 green (315 tests, build, packaging). B1–B7 ticked (19/20; 85/156 overall). Staging constraints preserved; browser acceptance and runtime activation remain gated. | Run #80 (commit `b2190d1`) green; details in the WP7 notes and evidence table. |
 | 2026-10-31 | CI pipeline fixed and first green run; WP7.A1–A12 ticked | Owner authorized "fix CI first". Composite action rewritten: fresh registry install (Replit-mirror lockfile URLs poisoned `npm ci`), typecheck + full test suite + full build added, failing steps surface log tails as annotations, vite/esbuild pinned to the Replit-verified versions. CI caught and led to fixes for: 10 real typecheck errors (ambient type dependencies), a real JSX syntax error in the staged SettingsView (never built since the WP7 session), and a stale migration fixture. Run #71 (commit `b123c8c`) is the first fully green run in the repository's history; temporary diagnostics removed in `07bad02`. WP7.A1–A12 ticked at the deterministic level (12/20; 78/156 overall); WP7.AC, Tier B, and runtime activation remain gated. Follow-up: regenerate `package-lock.json` on Replit. | Runs 59–70 diagnosis via annotations; run #71 green (install → typecheck → tests → build → package → validate → artifacts); run #72 confirms the cleanup commit. |
