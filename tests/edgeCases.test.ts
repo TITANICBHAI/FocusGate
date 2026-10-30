@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addRecordToDayStats } from "../src/shared/session.ts";
-import {
-  normalizeException,
-  resetUsageOnModeChange,
-} from "../src/shared/allowance.ts";
+import { normalizeException } from "../src/shared/domains.ts";
+import { resetUsageOnModeChange } from "../src/shared/allowance.ts";
 import { extractSearchText, matchKeyword } from "../src/shared/keywords.ts";
 import { createBlockRecorder } from "../src/background/recordBlock.ts";
 import { createAttentionTracker } from "../src/background/attention.ts";
@@ -64,10 +62,13 @@ describe("EC36 — x.com and twitter.com share one alias-group budget", () => {
     };
     let usage: Record<string, UsageRecord> = {};
     let now = 10_000;
+    let checkpoint: { lastTickAt: number; lastDomain: string | null; lastAttentive: boolean } | null = null;
     const tracker = createAttentionTracker({
       getState: async () => ({ ...structuredClone(state), usage }),
-      getCheckpoint: async () => null,
-      setCheckpoint: async () => undefined,
+      getCheckpoint: async () => (checkpoint ? { ...checkpoint } : null),
+      setCheckpoint: async (value) => {
+        checkpoint = { ...value };
+      },
       getLastFocusedWindow: async () => ({
         focused: true,
         tabs: [{ active: true, url: "https://x.com/home" }],
@@ -177,7 +178,7 @@ describe("EC51/EC52/EC53 — keyword URL handling", () => {
 
 describe("WP9.2 — 10,000-event burst", () => {
   it("records the burst without duplicate stamps and caps recentBlocks at 200", async () => {
-    const state: AppState = createDefaultState();
+    let state: AppState = createDefaultState();
     state.session.status = "work";
     const writes: Array<
       Partial<Pick<AppState, "recentBlocks" | "dayStats" | "session">>
