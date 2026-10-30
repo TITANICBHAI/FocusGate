@@ -197,9 +197,10 @@ describe("focus statistics", () => {
     const range = lastNDaysRange(new Date(2026, 9, 31, 12), 7);
     expect(range).toEqual({ startDateKey: "2026-10-25", endDateKey: "2026-10-31" });
 
-    // Chart points cover every day in the range, including zero days.
+    // Chart points cover every day in the range, including zero days:
+    // Oct 4 focused 40 min, Oct 5 focused 50 min, then the fixture ends.
     const chart = focusMinutesPerDay(generatedDays, "2026-10-04", "2026-10-08");
-    expect(chart.map((point) => point.minutes)).toEqual([40, 0, 20, 0, 50]);
+    expect(chart.map((point) => point.minutes)).toEqual([40, 50, 0, 0, 0]);
   });
 
   it("caps statistics collections during midnight pruning (WP8.4)", () => {
