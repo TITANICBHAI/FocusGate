@@ -18,16 +18,16 @@ runs:
     - name: Report install state
       shell: bash
       run: |
-        echo "::error::cwd=$(pwd)"
-        echo "::error::node_modules=$(test -d node_modules && echo present || echo MISSING)"
-        echo "::error::types-dir=$(ls node_modules/@types 2>/dev/null | tr '\n' ' ')"
-        echo "::error::react=$(test -d node_modules/react && echo present || echo MISSING)"
-        echo "::error::types-react=$(test -d node_modules/@types/react && echo present || echo MISSING)"
-        echo "::error::vite-client=$(test -f node_modules/vite/client.d.ts && echo present || echo MISSING)"
-        echo "::error::vite-importmeta=$(test -f node_modules/vite/types/importMeta.d.ts && echo present || echo MISSING)"
-        echo "::error::typescript-version=$(node -p "require('./node_modules/typescript/package.json').version" 2>&1 | tail -1)"
-        echo "::error::types-react-version=$(node -p "require('./node_modules/@types/react/package.json').version" 2>&1 | tail -1)"
-        echo "::error::npm-omit=$(npm config get omit 2>/dev/null || echo unknown) node_env=${NODE_ENV:-unset}"
+        echo "::notice::cwd=$(pwd)"
+        echo "::notice::node_modules=$(test -d node_modules && echo present || echo MISSING)"
+        echo "::notice::types-dir=$(ls node_modules/@types 2>/dev/null | tr '\n' ' ')"
+        echo "::notice::react=$(test -d node_modules/react && echo present || echo MISSING)"
+        echo "::notice::types-react=$(test -d node_modules/@types/react && echo present || echo MISSING)"
+        echo "::notice::vite-client=$(test -f node_modules/vite/client.d.ts && echo present || echo MISSING)"
+        echo "::notice::vite-importmeta=$(test -f node_modules/vite/types/importMeta.d.ts && echo present || echo MISSING)"
+        echo "::notice::typescript-version=$(node -p "require('./node_modules/typescript/package.json').version" 2>&1 | tail -1)"
+        echo "::notice::types-react-version=$(node -p "require('./node_modules/@types/react/package.json').version" 2>&1 | tail -1)"
+        echo "::notice::npm-omit=$(npm config get omit 2>/dev/null || echo unknown) node_env=${NODE_ENV:-unset}"
 
     - name: Typecheck
       shell: bash
