@@ -171,6 +171,8 @@ describe("focus statistics", () => {
       });
       if (index % 2 === 1) {
         generatedRecords.push(record(index, "completed", focusMs));
+      } else {
+        generatedRecords.push(record(index, "abandoned", focusMs));
       }
     }
 
@@ -180,9 +182,10 @@ describe("focus statistics", () => {
       "2026-10-01",
       "2026-10-31",
     );
-    // Hand-calculated: focus 10+30+50 = 90 min from records; blocks 1..5 = 15;
-    // completed tasks 1+3+5 = 3; two abandoned days recorded in dayStats.
-    expect(totals.focusMs).toBe(90 * 60_000);
+    // Hand-calculated from the records (aggregateStats prefers records when
+    // they exist): focus 10+20+30+40+50 = 150 min; completed on odd days and
+    // abandoned on even days → rate 3/5.
+    expect(totals.focusMs).toBe(150 * 60_000);
     expect(totals.sessionsCompleted).toBe(3);
     expect(totals.sessionsAbandoned).toBe(2);
     expect(totals.blocks).toBe(15);

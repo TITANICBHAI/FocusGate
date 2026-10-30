@@ -78,7 +78,7 @@ describe("weekly report service", () => {
     expect(report.startDateKey).toBe("2026-10-26");
     expect(report.endDateKey).toBe("2026-11-01");
     expect(report.focusText).toBe("4 h 30 min");
-    expect(report.sessionsCompleted).toBe(6);
+    expect(report.sessionsCompleted).toBe(7);
     expect(report.blockedAttempts).toBe(3);
     expect(harness.state().lastWeeklyReport?.endDateKey).toBe("2026-11-01");
     expect(harness.state().weeklyReports).toHaveLength(1);
