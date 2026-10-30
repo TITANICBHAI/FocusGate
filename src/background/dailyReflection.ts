@@ -32,7 +32,7 @@ export function createDailyReflectionService(
       }
 
       if (!state.settings.notifications.endOfDay) return;
-      const today = state.dayStats[localDateKey(now)];
+      const today = state.dayStats[localDateKey(new Date(now))];
       if (today?.mood !== undefined || (today?.note ?? "").length > 0) return;
 
       try {
