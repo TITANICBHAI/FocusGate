@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 59% (92/156 required checklist items currently verified)
-- **Current work package:** WP9 — deterministic subset verified; browser matrix open
+- **Progress:** 61% (95/156 required checklist items currently verified)
+- **Current work package:** WP9 — deterministic subset verified; browser matrix open; WP5 cutover prepared (worker composition staged)
 - **Last updated:** 2026-10-31
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -548,6 +548,8 @@
 
 **Plan:** §6 WP5, Appendix C · **Blocked by:** WP1b/WP4 browser/runtime gates and atomic cutover · **Status:** BLOCKED — owner authorized WP6 staged work; verification/cutover remain open · **Started:** 2026-10-28 · **Completed:** — · **Progress:** 11/18
 
+**Cutover preparation (2026-10-31):** `src/background/worker.ts` now assembles every staged v2 service (session, reconciler, block recorder, navigation fallback, attention, alarm handler, tasks, achievements, daily reflection, pruning, allowance alerts, weekly report, password/guarded/standalone/data actions, quick-block and toggle-focus commands, notification and badge adapters) against an injected browser API, with full wiring tests in `tests/background/worker.test.ts` (listener registration/detachment, install flow, message dispatch, commands, midnight/weekly effects). The composition is dormant: `src/background/index.ts` still bridges the v1 worker. The WP5 cutover reduces to (1) flipping that import, (2) the manifest route changes, (3) activating `ready()` migration — all gated on the Phase 1 S1 spike results in `docs/manual-test-guide.md`.
+
 ### Tasks
 
 - [x] WP5.1 Split pages: `popup.html` fixed at 380×580; full-viewport `blocked.html`; onboarding full tab with max-480px column; full-tab dashboard. Remove role query flags and old popup sizing classes. Block/onboarding render final screen on first paint.
@@ -980,6 +982,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-31 | WP5 cutover prepared: worker composition staged | `src/background/worker.ts` assembles all staged v2 services against an injected browser API; `tests/background/worker.test.ts` verifies registration/detachment, install flow, message dispatch, commands, and midnight/weekly effects. Dormant: the active entrypoint still bridges v1. Cutover reduces to the index.ts import flip + manifest routes + migration activation, gated on Phase 1 S1. Runs #96–#100 fixed the interim type/harness issues; run #101 green (361 tests). | Run #101 (commit `79f0f54`) green. |
 | 2026-10-31 | §8.4 claims regression started | `tests/claims.test.ts` pins 15 source-verifiable claims (copy, prohibited APIs, required behaviours); one interim run fixed a scan-path bug (readdirSync resolved one directory too high). Remaining C-rows are runtime/browser observations for the Phase 3 matrix. | Run #94 (commit `4d33205`) green: 344 tests. |
 | 2026-10-31 | WP9 started: deterministic subset verified | Added the §8.5 traceability suite (EC01/24/36/37/51–53 + 10k burst + 90-day storage budget) and found+fixed one real bug (EC37: allowance mode change kept stale usage). Manual matrix and browser-only lifecycle/performance rows remain open (0/6 — no checklist item is fully complete without the browser). | Run #89 (commit `e394c3f`) green: typecheck + 337 tests + build + packaging + ZIP validation. |
 | 2026-10-31 | WP8 deterministic-verified (7/8) | DashboardStats (ranges, KPIs, inline-SVG chart, score, streaks, insights, allowance usage, protection gaps, achievements), popup mini stats (streak, five sessions), weekly report service (previous Monday–Sunday, deduped, last 8 kept, non-floored notification), midnight pruning service, missing stats styles added. Runs #83–#84 caught two fixture mistakes and one chart slip; run #85 green (327 tests). WP8.AC1 stays open for a browser run. | Run #85 (commit `4b400ea`) green; details in the WP8 notes. |
