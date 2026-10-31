@@ -199,8 +199,8 @@ function createHarness(seed: Record<string, unknown> = {}) {
     },
     events: {
       tabActivated: signals.tabActivated.source,
-      windowFocusChanged: signals.windowFocus.source,
-      idleStateChanged: signals.idle.source,
+      windowFocusChanged: signals.windowFocusChanged.source,
+      idleStateChanged: signals.idleStateChanged.source,
     },
   };
 
