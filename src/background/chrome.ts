@@ -2,6 +2,7 @@ import {
   createWorker,
   type WorkerBrowserApi,
   type WorkerEventSource,
+  type WorkerMessageEvent,
 } from "./worker.ts";
 import type { TaskReminderButtonEvents } from "./taskAlarms.ts";
 import type { DnrRule } from "../shared/dnr.ts";
