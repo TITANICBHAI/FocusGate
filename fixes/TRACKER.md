@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 64% (100/156 required checklist items currently verified)
-- **Current work package:** WP9 — deterministic subset verified; browser matrix open; WP5 atomic cutover **executed and CI-verified** (v2 runtime active in code; runtime observation pending)
+- **Progress:** 65% (102/156 required checklist items currently verified)
+- **Current work package:** WP10 — 10.1/10.2 done; every remaining item needs the browser pass
 - **Last updated:** 2026-10-31
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -44,7 +44,12 @@
 | WP7 — Feature ports, Tier A and Tier B | IN PROGRESS — Tier A and Tier B deterministic-verified; browser acceptance open | 19/20 | 2026-10-29 | — | Browser acceptance and runtime activation remain gated |
 | WP8 — Stats, insights, reports | IN PROGRESS — deterministic-verified; AC1 runtime check open | 7/8 | 2026-10-31 | — | WP8.AC1 browser observation |
 | WP9 — QA hardening | IN PROGRESS — deterministic subset verified; browser matrix open | 0/6 | 2026-10-31 | — | Manual matrix and browser-only lifecycle checks |
-| WP10 — Release | NOT STARTED | 0/9 | — | — | WP9 |
+| WP10 — Release | IN PROGRESS — 10.1/10.2 done; rest needs a browser | 2/9 | 2026-10-31 | — | Screenshots, install smoke, v1-profile upgrade (browser) |
+
+**Release-prep note (2026-10-31):** with WP10.1/10.2 done, every remaining
+tracker item is blocked on the real-browser pass (Phase 3 of
+`docs/manual-test-guide.md`) or on the owner's Replit lockfile regeneration.
+There is no further non-browser work in the plan.
 | **Total** | **IN PROGRESS** | **66/156** | — | — | |
 
 **Implementation gates:** WP1b remains incomplete (0/5); the partial Chromium S1 observations do not satisfy its full matrix, so M1 is blocked. On 2026-10-29, the owner authorized staged WP7 Tier A implementation despite the M1 block. This does not mark M1 green or waive browser acceptance, runtime activation, migration, or WP5 cutover gates. Keep v1 consumers active and do not activate v2 runtime entrypoints before atomic cutover. Browser-dependent criteria remain unchecked.
@@ -871,21 +876,34 @@
 - [ ] WP9.5 Fix verified issues found; do not add features. (One verified issue fixed so far: EC37 — changing an allowance's mode kept the stale usage; now reset via `resetUsageOnModeChange` in `shared/allowance.ts` wired into Rules › Limits, tested in `tests/edgeCases.test.ts`.)
 - [ ] WP9.AC Plan §8.2 and §8.3 pass and every §8.4 claim regression is green.
 
-**Notes / progress:** Not started. No new features in this work package.
+**Notes / progress:** Started 2026-10-31 (deterministic subset); no new features in this work package.
 - 2026-10-31 — Started WP9 with the deterministic subset while the browser matrix remains unavailable. Added `tests/edgeCases.test.ts` (WP9.4): EC01 midnight attribution, EC24 exception length boundary, EC36 alias-group budget sharing, EC37 allowance-mode-change reset (found a real gap — the mode change previously kept stale usage; fixed in `src/shared/allowance.ts` and wired into Rules › Limits), EC51 fragment exclusion, EC52 percent/plus decoding, EC53 Unicode whole-word; plus the WP9.2 10,000-event burst (caps hold, no duplicate stamps) and the WP9.3 90-day storage-size budget (< 1 MB). Existing module suites already covered the remaining deterministic rows; the browser-only rows are listed in WP9.4 for the WP9.1 manual matrix. GitHub Actions run #89 (commit `e394c3f`) green: typecheck + full suite (337 tests) + build + packaging.
 - 2026-10-31 — Prepared the WP9.1 execution artifact: `docs/manual-test-guide.md`, a step-by-step browser checklist covering Phase 0 (build/install), Phase 1 (the WP1b S1–S4 spikes that gate the cutover), Phase 2 (the WP5 atomic cutover + migration checks), and Phase 3 (the full §8.2 matrix with the browser-only §8.5 rows and the WP7/WP8 acceptance checks, mapped to EC tags with per-browser result blanks). The owner runs it in Chrome/Edge/Firefox and returns the filled checklist; each result becomes tracker evidence, and Phase 1 S1 passing is the gate for preparing the WP5 cutover.
 - 2026-10-31 — Started the §8.4 claims regression with `tests/claims.test.ts`: source-level deterministic tests pinning the fifteen claims whose substance is final copy or prohibited-API absence — C02 (no `fetch`/`XMLHttpRequest`/`WebSocket` anywhere in `src/`), C05 (380×580 popup shell), C14 (task empty state + dated/recurring controls), C15 (linked-task removal blocked only while running), C22 (keyword comma/newline split), C29/C30 (password-friction and stop-any-time copy), C31 (20–28-char generator via `crypto.getRandomValues`), C34/C35 (onboarding final button, presets, protection check), C36–C38 (every block reason named, countdown only for session/standalone, blocks counted from real stats), C39 (working Close-tab), C40 (no promo links on the block page; About keeps them). Run #94 (commit `4d33205`) green with the suite (344 tests). The C01–C40 checkboxes stay unticked until the Phase 3 on-screen pass, per the section's "observed against the final UI" rule.
+
+**Evidence:**
+
+| Date | Item | Changed files | Verification | Result |
+|---|---|---|---|---|
+| 2026-10-31 | WP9 deterministic subset | `tests/edgeCases.test.ts` (new), `src/shared/allowance.ts` (+`resetUsageOnModeChange`), `src/ui/popup/RulesView.tsx` (mode-change reset wiring). | GitHub Actions run #89 (commit `e394c3f`): typecheck + full suite (337 tests) + build + packaging + ZIP validation green, including the new EC01/EC24/EC36/EC37/EC51–EC53 tests, the 10,000-event burst, and the 90-day storage budget. | PASS — the deterministic subset of WP9.2/9.3/9.4 is verified; WP9.1, the browser-only lifecycle rows, and the runtime budgets stay open. |
+| 2026-10-31 | WP9.1 guide prepared | `docs/manual-test-guide.md` (new). | Committed (`9b198a5`); markdown-only, CI unaffected. | READY — the owner executes it in Chrome/Edge/Firefox; results become tracker evidence. |
+| 2026-10-31 | §8.4 claims regression (deterministic subset) | `tests/claims.test.ts` (new). | GitHub Actions run #94 (commit `4d33205`): 15 claims pinned (C02, C05, C14, C15, C22, C29, C30, C31, C34, C35, C36, C37, C38, C39, C40) + full suite green (344 tests) + build + packaging. | PASS — the C01–C40 checkboxes stay unticked until the Phase 3 on-screen pass; the pinned copy now cannot regress silently. |
+
+**Failures / blockers:** WP9.1 and the browser-only lifecycle/performance rows remain blocked by the unavailable Chrome/Edge/Firefox matrix; everything deterministic is covered and green (runs #89/#94).
+
+**Decisions / deferred work:**
+- 2026-10-31 — EC43's documented behavior (a DevTools weakening edit is accepted unless the Tier B watchdog exists) is kept as-is: the watchdog stays unbuilt, so the copy and guard behavior match the plan's default. Revisit only if the owner requests E.8.
 
 ---
 
 ## WP10 — Release
 
-**Plan:** §6 WP10 · **Blocked by:** WP9 · **Status:** NOT STARTED · **Started:** — · **Completed:** — · **Progress:** 0/9
+**Plan:** §6 WP10 · **Blocked by:** WP9 · **Status:** IN PROGRESS — 10.1/10.2 done; screenshots, install smoke, and profile upgrade need a browser · **Started:** 2026-10-31 · **Completed:** — · **Progress:** 2/9
 
 ### Tasks
 
-- [ ] WP10.1 Set version `1.1.0` in manifest and `package.json`; update changelog with migration and behavior changes.
-- [ ] WP10.2 Make `STORE_LISTING.md` truthful, add permission justification table, and publish `docs/privacy-policy.html` with accurate local-data/no-network statements.
+- [x] WP10.1 Set version `1.1.0` in manifest and `package.json`; update changelog with migration and behavior changes. (Version bumped in both files and the full 1.1.0 entry written in `CHANGELOG.md` 2026-10-31; release-notarization of that entry happens with the WP10.4 smoke test.)
+- [x] WP10.2 Make `STORE_LISTING.md` truthful, add permission justification table, and publish `docs/privacy-policy.html` with accurate local-data/no-network statements. (Listing refreshed 2026-10-31 for the v2 feature set — Block now, allow-only, achievements/habits/reflection, stats/weekly reports — and the permission table now covers `idle`; `docs/privacy-policy.html` was verified present with local-data/no-network statements in WP0.3 and its claims match the C02 network-free source scan.)
 - [ ] WP10.3 Capture new popup, onboarding, and block-page store screenshots.
 - [ ] WP10.4 Run `npm run package:all`; install all three packages and smoke-test start session → blocked site → block page → end session.
 - [ ] WP10.5 Upgrade a real v1 profile containing sites, schedules, allowances, tasks, password, and history; verify nothing is lost.
@@ -897,20 +915,18 @@
 - [ ] WP10.AC3 Every plan §4.7 row is verified or its copy is changed.
 - [ ] WP10.AC4 No `alert()`, content-script `<all_urls>`, or network-call APIs (`fetch`, `XMLHttpRequest`, `WebSocket`) appear in release bundles.
 
-**Notes / progress:** Not started.
+**Notes / progress:**
+- 2026-10-31 — Started WP10 release prep alongside the WP9 deterministic subset (owner's "continue" cycle). WP10.1: version 1.1.0 in `public/manifest.json` + `package.json`, full CHANGELOG entry covering the v2 runtime, migration with rollback backup, new features, removals, and fixes. WP10.2: `STORE_LISTING.md` refreshed for the v2 feature set (Block now, allow-only mode, achievements/habits/reflection, stats/weekly reports) with the `idle` permission justification added; `docs/privacy-policy.html` verified present (WP0.3) and its local-data/no-network statements match the C02 network-free source scan.
 
-**Evidence:** No verified evidence recorded.
+**Evidence:**
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
-| 2026-10-31 | WP9 deterministic subset | `tests/edgeCases.test.ts` (new), `src/shared/allowance.ts` (+`resetUsageOnModeChange`), `src/ui/popup/RulesView.tsx` (mode-change reset wiring). | GitHub Actions run #89 (commit `e394c3f`): typecheck + full suite (337 tests) + build + packaging + ZIP validation green, including the new EC01/EC24/EC36/EC37/EC51–EC53 tests, the 10,000-event burst, and the 90-day storage budget. | PASS — the deterministic subset of WP9.2/9.3/9.4 is verified; WP9.1, the browser-only lifecycle rows, and the runtime budgets stay open. |
-| 2026-10-31 | WP9.1 guide prepared | `docs/manual-test-guide.md` (new). | Committed (`9b198a5`); markdown-only, CI unaffected. | READY — the owner executes it in Chrome/Edge/Firefox; results become tracker evidence, and Phase 1 S1 gates the WP5 cutover. |
-| 2026-10-31 | §8.4 claims regression (deterministic subset) | `tests/claims.test.ts` (new). | GitHub Actions run #94 (commit `4d33205`): 15 claims pinned (C02, C05, C14, C15, C22, C29, C30, C31, C34, C35, C36, C37, C38, C39, C40) + full suite green (344 tests) + build + packaging. | PASS — the C01–C40 checkboxes stay unticked until the Phase 3 on-screen pass; the pinned copy now cannot regress silently. |
+| 2026-10-31 | WP10.1 + WP10.2 | `public/manifest.json`, `package.json`, `CHANGELOG.md`, `STORE_LISTING.md`. | GitHub Actions run #109 (commit `eacf681`): typecheck + full suite (361 tests) + build + packaging + ZIP validation green with the release version and refreshed listing. | PASS — screenshots, the three-browser install smoke, and the real-v1-profile upgrade remain browser runs. |
 
-**Failures / blockers:** None recorded for this reset. 2026-10-31 — WP9.1 and the browser-only lifecycle/performance rows remain blocked by the unavailable Chrome/Edge/Firefox matrix; everything deterministic is covered and green (run #89).
+**Failures / blockers:** WP10.3 (screenshots), WP10.4 (install smoke), WP10.5 (v1-profile upgrade), and WP10.AC1–AC4 need the real-browser pass; they are rows in Phase 3 of `docs/manual-test-guide.md`.
 
-**Decisions / deferred work:**
-- 2026-10-31 — EC43's documented behavior (a DevTools weakening edit is accepted unless the Tier B watchdog exists) is kept as-is: the watchdog stays unbuilt, so the copy and guard behavior match the plan's default. Revisit only if the owner requests E.8.
+**Decisions / deferred work:** None recorded.
 
 ---
 
@@ -982,6 +998,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-31 | WP10.1/10.2 release prep | Version 1.1.0 in manifest + package.json; full 1.1.0 CHANGELOG entry (v2 runtime, migration with backup, new features, removals, fixes); STORE_LISTING refreshed for the v2 feature set with the `idle` permission justification added; privacy-policy statements re-checked against the C02 network-free scan. | Run #109 (commit `eacf681`) green: typecheck + 361 tests + build + packaging + ZIP validation. Remaining WP10 items (screenshots, install smoke, profile upgrade) need a browser. |
 | 2026-10-31 | WP5 ATOMIC CUTOVER EXECUTED (owner chose fast path) | The owner authorized activating the v2 runtime before the S1 spike results. Changes: `src/background/index.ts` now starts the v2 worker via the new chrome adapter (`src/background/chrome.ts`, self-contained typing, memoized event wrappers); `public/manifest.json` routes popup.html/dashboard.html (options_ui)/content-v2.js + web-accessible blocked.html; `build-extension.mjs` builds only v2 (staged-UI Vite build to dist root with publicDir, background bundle from the worker composition, content-v2 bundle); v1 runtime files deleted (public/background.js, public/content.js, index.html, src/App.tsx, src/main.tsx, src/index.css, src/hooks/useChromeStorage.ts, src/content/index.ts, tests/ui/legacyGuardrails.test.ts). Migration activates on install/update via `worker.handleInstalled` (ready() → recover → tasks). Runtime gates: WP1b/Phase 1+3 browser observations remain open; nothing is claimed from CI beyond the deterministic suite. | Run #107 (commit `90a730f`) green: typecheck + 360 tests + build + packaging + ZIP validation; interim runs #103–#106 fixed the adapter typing and test drift. |
 | 2026-10-31 | WP5 cutover prepared: worker composition staged | `src/background/worker.ts` assembles all staged v2 services against an injected browser API; `tests/background/worker.test.ts` verifies registration/detachment, install flow, message dispatch, commands, and midnight/weekly effects. Dormant: the active entrypoint still bridges v1. Cutover reduces to the index.ts import flip + manifest routes + migration activation, gated on Phase 1 S1. Runs #96–#100 fixed the interim type/harness issues; run #101 green (361 tests). | Run #101 (commit `79f0f54`) green. |
 | 2026-10-31 | §8.4 claims regression started | `tests/claims.test.ts` pins 15 source-verifiable claims (copy, prohibited APIs, required behaviours); one interim run fixed a scan-path bug (readdirSync resolved one directory too high). Remaining C-rows are runtime/browser observations for the Phase 3 matrix. | Run #94 (commit `4d33205`) green: 344 tests. |
