@@ -248,7 +248,8 @@ describe("v2 worker composition (dormant until cutover)", () => {
     stop();
     expect(harness.signals.onInstalled.count()).toBe(0);
     expect(harness.signals.onAlarm.count()).toBe(0);
-    expect(harness.signals.onCommitted.count()).toBe(1);
+    // Both onCommitted listeners (navigation fallback + attention) detach.
+    expect(harness.signals.onCommitted.count()).toBe(0);
   });
 
   it("finalizes the install flow: migration, recovery, and rule install", async () => {
