@@ -5,8 +5,8 @@
 ## Overall status
 
 - **Status:** IN PROGRESS
-- **Progress:** 61% (95/156 required checklist items currently verified)
-- **Current work package:** WP9 — deterministic subset verified; browser matrix open; WP5 cutover prepared (worker composition staged)
+- **Progress:** 64% (100/156 required checklist items currently verified)
+- **Current work package:** WP9 — deterministic subset verified; browser matrix open; WP5 atomic cutover **executed and CI-verified** (v2 runtime active in code; runtime observation pending)
 - **Last updated:** 2026-10-31
 - **Run order:** WP0 → WP1 → WP2 module/unit work → WP3 staged engine → WP4 staged content → WP5 staged UI (current) → WP1b browser spikes (required before WP5 cutover/M1 green) → WP5 atomic v1→v2 cutover → WP6 → WP7 (Tier A, then Tier B) → WP8 → WP9 → WP10
 - **Reconciliation:** The owner clarified that the 0/156 reset must not erase verified non-browser work. Checkmarks below reflect current source review and fresh local checks; WP1b remains genuinely incomplete, and browser/runtime/cutover gates remain open.
@@ -37,10 +37,10 @@
 | WP1 — Foundation, build, storage, migration | DONE — evidence recorded | 16/16 | 2026-10-27 | 2026-10-28 | — |
 | WP1b — De-risking spikes | BLOCKED — partial Chromium S1 only; full browser matrix unavailable | 0/5 | 2026-10-28 | — | Before WP5 cutover/M1 green |
 | WP2 — Session engine | IN PROGRESS | 4/14 | 2026-10-28 | — | Runtime AC after WP5 cutover |
-| WP3 — Blocking engine | IN PROGRESS | 11/22 | 2026-10-28 | — | WP3.10 active-v1 fallback removal at cutover; browser AC/S1 |
-| WP4 — Content script | IN PROGRESS | 6/15 | 2026-10-28 | — | Live selector/runtime acceptance and WP5 cutover |
-| WP5 — UI foundation and screen fixes | BLOCKED — owner authorized WP6 staged work; verification/cutover remain open | 11/18 | 2026-10-28 | — | WP1b/WP4 browser evidence, active-v1 copy audit, accessibility and atomic cutover |
-| WP6 — Security, standalone, protection, backup | IN PROGRESS | 15/17 | 2026-10-28 | — | Staged implementation only; runtime acceptance after WP5 cutover |
+| WP3 — Blocking engine | IN PROGRESS | 13/22 | 2026-10-28 | — | 9 browser ACs; v1 fallback removal done at cutover |
+| WP4 — Content script | IN PROGRESS | 7/15 | 2026-10-28 | — | Live selector/runtime acceptance (v1 scripts removed at cutover) |
+| WP5 — UI foundation and screen fixes | IN PROGRESS — cutover executed; browser ACs open | 13/18 | 2026-10-28 | — | Keyboard/accessibility browser pass; AC1/AC3–AC5 runtime checks |
+| WP6 — Security, standalone, protection, backup | IN PROGRESS — cutover executed; AC4 browser check open | 16/17 | 2026-10-28 | — | WP6.AC4 browser observation |
 | WP7 — Feature ports, Tier A and Tier B | IN PROGRESS — Tier A and Tier B deterministic-verified; browser acceptance open | 19/20 | 2026-10-29 | — | Browser acceptance and runtime activation remain gated |
 | WP8 — Stats, insights, reports | IN PROGRESS — deterministic-verified; AC1 runtime check open | 7/8 | 2026-10-31 | — | WP8.AC1 browser observation |
 | WP9 — QA hardening | IN PROGRESS — deterministic subset verified; browser matrix open | 0/6 | 2026-10-31 | — | Manual matrix and browser-only lifecycle checks |
@@ -333,7 +333,7 @@
 - [x] WP3.7 Implement `time_budget`, `count`, and `interval` allowances with attention ledger; count focused active-tab/non-idle or audible use; enforce per-entry caps, `duringBlocks`, and always-blocked precedence.
 - [x] WP3.8 Implement normalized boundary-checked exceptions and DNR allow rule from the same entry; exceptions override other rules.
 - [x] WP3.9 Implement keyword scope/match and host parameter table (`yahoo p`, `yandex text`, `baidu wd`, `youtube search_query`, `amazon k`, generic `q`/`query` only); never generic `p`; retain last 50 matches.
-- [ ] WP3.10 Add filtered `webNavigation` fallback listeners for HTTP(S) using `explainBlock`, `recordBlock`, and `tabs.update`; delete `tabs.onUpdated` fallback and repeated audit loop.
+- [x] WP3.10 Add filtered `webNavigation` fallback listeners for HTTP(S) using `explainBlock`, `recordBlock`, and `tabs.update`; delete `tabs.onUpdated` fallback and repeated audit loop. (Completed at the WP5 cutover: `registerBlockNavigation` is registered by the worker composition with HTTP(S) filtering, and the v1 worker carrying the `tabs.onUpdated` fallback was deleted.)
 - [x] WP3.11 Deduplicate `recordBlock` for three seconds by tab/domain; cap `recentBlocks` at 200 and update daily/domain/session counters.
 - [x] WP3.12 Route `tick`, `boundary`, `session_phase_end`, `weekly_report`, and `midnight` alarms through `ensureAlarms()`.
 
@@ -489,7 +489,7 @@
 - [x] WP4.5 Generate `manifest.content_scripts[0].matches` from the site table (no `<all_urls>`); test manifest/table equality.
 - [x] WP4.6 Re-run YouTube filtering on `yt-navigate-finish`.
 - [x] WP4.7 Replace unconditional Shorts/Reels/TikTok hiding with `settings.contentFilters` toggles; existing users default ON for the three previously unconditional filters.
-- [ ] WP4.8 Delete old `public/content.js` and `public/background.js` after WP3/WP4 replace them.
+- [x] WP4.8 Delete old `public/content.js` and `public/background.js` after WP3/WP4 replace them. (Deleted in the WP5 atomic cutover commit; the manifest and build reference only content-v2.js and the v2 worker bundle.)
 
 ### Acceptance criteria
 
@@ -562,9 +562,9 @@
 - [x] WP5.8 Build Rules view: site timing chips/live status, Check a URL, pasted-URL normalization, comma/newline keyword parsing and modes, always-visible delete controls, editable schedules including `24:00`, and Appendix F allowance UI.
 - [x] WP5.9 Build block page: read URL from hash; use `explainBlock`; show countdown only for session/standalone; show today's block count; safe text rendering; working close/open-tab actions; no promo footer; “Block ended” flow for URLs no longer blocked; no popup bundle.
 - [x] WP5.10 Implement onboarding Welcome → goal → presets/sites → optional password with honest tradeoffs → Protection check → Open FocusGate.
-- [ ] WP5.11 Apply the replacement-copy table and review every string for the prohibited words: “completely,” “instantly,” “cannot,” “always,” and “guaranteed.”
+- [x] WP5.11 Apply the replacement-copy table and review every string for the prohibited words: “completely,” “instantly,” “cannot,” “always,” and “guaranteed.” (Completed at the WP5 cutover: the v1 UI carrying the old copy was deleted; the banned-words scan now covers the entire remaining UI and is green.)
 - [ ] WP5.12 Complete accessibility pass: labels, focus-visible ring, modal focus traps, no color-only status, visual tab order, keyboard-only walkthrough.
-- [ ] WP5.13 Delete `src/App.tsx` and `src/hooks/useChromeStorage.ts` after all views move; `npm run typecheck` is clean with strict mode.
+- [x] WP5.13 Delete `src/App.tsx` and `src/hooks/useChromeStorage.ts` after all views move; `npm run typecheck` is clean with strict mode. (Deleted in the WP5 atomic cutover; typecheck green on run #107.)
 
 ### Acceptance criteria
 
@@ -684,7 +684,7 @@
 - [x] WP6.2 Require custom passwords of 8–64 characters with strength hint and “Generate (recommended)” option.
 - [x] WP6.3 Implement PasswordField: visible by default, setup copy/paste allowed, unlock paste blocked but autofill allowed, disabled below 8 characters.
 - [x] WP6.4 Implement one `guard(action, state)` returning Appendix E outcomes; UI explains/disables and background messages enforce it; test every action/state combination.
-- [ ] WP6.5 Implement Appendix D standalone Block now: own list, absolute 5-minute–30-day expiry, append-only while active, extend/add only, live countdown, confirmation, no “No limit”; remove old card/keys/functions and every stop path.
+- [x] WP6.5 Implement Appendix D standalone Block now: own list, absolute 5-minute–30-day expiry, append-only while active, extend/add only, live countdown, confirmation, no “No limit”; remove old card/keys/functions and every stop path. (The v2 implementation was complete 2026-10-29; the v1 card, “No limit” option, and every stop path were removed with the v1 UI in the WP5 atomic cutover. Browser observation of the no-stop invariant is WP6.AC4.)
 - [x] WP6.6 Add Protection status for incognito, host permission, notifications, heartbeat, reconcile/error, DNR count, recent gaps, settings link, and the limitations from plan §3.
 - [x] WP6.7 Implement backup that excludes password/runtime secrets, validates versions/unknown keys, caps at 2 MB, previews counts, and merges safely; empty-state restore allowed without password; no Replace button; reset requires password and typed confirmation and is refused during lock.
 - [x] WP6.8 Add dark/light/system theme and 0.9–1.2 font scale settings.
@@ -982,6 +982,7 @@ Append dated entries; do not replace earlier history.
 
 | Date | Work item | Progress, decision, failure, blocker, or deferred work | Evidence / outcome |
 |---|---|---|---|
+| 2026-10-31 | WP5 ATOMIC CUTOVER EXECUTED (owner chose fast path) | The owner authorized activating the v2 runtime before the S1 spike results. Changes: `src/background/index.ts` now starts the v2 worker via the new chrome adapter (`src/background/chrome.ts`, self-contained typing, memoized event wrappers); `public/manifest.json` routes popup.html/dashboard.html (options_ui)/content-v2.js + web-accessible blocked.html; `build-extension.mjs` builds only v2 (staged-UI Vite build to dist root with publicDir, background bundle from the worker composition, content-v2 bundle); v1 runtime files deleted (public/background.js, public/content.js, index.html, src/App.tsx, src/main.tsx, src/index.css, src/hooks/useChromeStorage.ts, src/content/index.ts, tests/ui/legacyGuardrails.test.ts). Migration activates on install/update via `worker.handleInstalled` (ready() → recover → tasks). Runtime gates: WP1b/Phase 1+3 browser observations remain open; nothing is claimed from CI beyond the deterministic suite. | Run #107 (commit `90a730f`) green: typecheck + 360 tests + build + packaging + ZIP validation; interim runs #103–#106 fixed the adapter typing and test drift. |
 | 2026-10-31 | WP5 cutover prepared: worker composition staged | `src/background/worker.ts` assembles all staged v2 services against an injected browser API; `tests/background/worker.test.ts` verifies registration/detachment, install flow, message dispatch, commands, and midnight/weekly effects. Dormant: the active entrypoint still bridges v1. Cutover reduces to the index.ts import flip + manifest routes + migration activation, gated on Phase 1 S1. Runs #96–#100 fixed the interim type/harness issues; run #101 green (361 tests). | Run #101 (commit `79f0f54`) green. |
 | 2026-10-31 | §8.4 claims regression started | `tests/claims.test.ts` pins 15 source-verifiable claims (copy, prohibited APIs, required behaviours); one interim run fixed a scan-path bug (readdirSync resolved one directory too high). Remaining C-rows are runtime/browser observations for the Phase 3 matrix. | Run #94 (commit `4d33205`) green: 344 tests. |
 | 2026-10-31 | WP9 started: deterministic subset verified | Added the §8.5 traceability suite (EC01/24/36/37/51–53 + 10k burst + 90-day storage budget) and found+fixed one real bug (EC37: allowance mode change kept stale usage). Manual matrix and browser-only lifecycle/performance rows remain open (0/6 — no checklist item is fully complete without the browser). | Run #89 (commit `e394c3f`) green: typecheck + 337 tests + build + packaging + ZIP validation. |
