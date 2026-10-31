@@ -51,10 +51,9 @@ import type { BlockPlan, BlockReason } from "../shared/plan.ts";
 
 /**
  * WP5 cutover composition: assembles every staged v2 service against the
- * injected browser APIs and returns the registration handles. This module is
- * deliberately NOT imported by the active entrypoint (src/background/index.ts
- * still bridges the v1 worker); the cutover flips that import together with
- * the manifest routes and activates migration in the same change.
+ * injected browser APIs and returns the registration handles. Imported by
+ * src/background/index.ts (via the chrome adapter) since the WP5 cutover;
+ * before the cutover this module was dormant and the v1 worker was active.
  */
 
 export interface WorkerEventSource<T> {

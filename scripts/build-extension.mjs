@@ -6,22 +6,14 @@ import { build as viteBuild } from "vite";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const dist = resolve(root, "dist");
 
-await viteBuild({
-  configFile: resolve(root, "vite.config.ts"),
-  root,
-  publicDir: resolve(root, "public"),
-  base: "./",
-  build: {
-    outDir: dist,
-    emptyOutDir: true,
-  },
-});
-
-// Build WP5 UI pages separately; the active manifest still points to index.html.
+// WP5 cutover build: the v2 popup/blocked/onboarding/dashboard pages are the
+// only UI; the Vite build also copies public/ (manifest, icons) into dist/.
 await viteBuild({
   configFile: resolve(root, "vite.staged-ui.config.ts"),
 });
 
+// The v2 worker composition is the service worker (src/background/index.ts
+// imports worker.ts via the chrome adapter at the cutover).
 await esbuild({
   absWorkingDir: root,
   entryPoints: ["src/background/index.ts"],
@@ -33,18 +25,8 @@ await esbuild({
   sourcemap: false,
 });
 
-await esbuild({
-  absWorkingDir: root,
-  entryPoints: ["src/content/index.ts"],
-  outfile: resolve(dist, "content.js"),
-  bundle: true,
-  platform: "browser",
-  format: "iife",
-  target: "chrome110",
-  sourcemap: false,
-});
-
-// Stage the v2 content script without referencing it from the active manifest.
+// The v2 content script replaces the v1 content script (manifest
+// content_scripts now reference content-v2.js).
 await esbuild({
   absWorkingDir: root,
   entryPoints: ["src/content/v2-entry.ts"],

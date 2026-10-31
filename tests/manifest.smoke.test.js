@@ -15,25 +15,40 @@ describe("extension manifest smoke test", () => {
     expect(manifest.minimum_chrome_version).toBe("110");
     expect(manifest.permissions).toContain("idle");
     expect(manifest.action.default_popup).toBeTruthy();
+    // WP5 cutover: the popup is the staged UI page (built to dist root).
+    expect(manifest.action.default_popup).toBe("popup.html");
     expect(
-      existsSync(resolve(projectRoot, manifest.action.default_popup)),
+      existsSync(resolve(projectRoot, "src/ui", manifest.action.default_popup)),
     ).toBe(true);
 
-    expect(manifest.background.service_worker).toBeTruthy();
+    expect(manifest.background.service_worker).toBe("background.js");
     expect(
-      existsSync(
-        resolve(projectRoot, "public", manifest.background.service_worker),
-      ),
+      existsSync(resolve(projectRoot, "src/background/index.ts")),
     ).toBe(true);
 
     for (const contentScript of manifest.content_scripts ?? []) {
       expect(contentScript.matches).not.toContain("<all_urls>");
+      // WP5 cutover: the content entry is the v2 script built from
+      // src/content/v2-entry.ts.
       for (const scriptPath of contentScript.js ?? []) {
+        expect(scriptPath).toBe("content-v2.js");
         expect(
-          existsSync(resolve(projectRoot, "public", scriptPath)),
+          existsSync(resolve(projectRoot, "src/content/v2-entry.ts")),
         ).toBe(true);
       }
     }
+  });
+
+  it("exposes the block page to web-initiated redirects and the dashboard as options", () => {
+    expect(manifest.options_ui).toMatchObject({
+      page: "dashboard.html",
+      open_in_tab: true,
+    });
+    expect(
+      manifest.web_accessible_resources?.some((resource) =>
+        resource.resources?.includes("blocked.html"),
+      ),
+    ).toBe(true);
   });
 
   it("keeps manifest matches aligned with the supported site table", () => {

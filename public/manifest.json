@@ -11,7 +11,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_popup": "index.html",
+    "default_popup": "popup.html",
     "default_title": "FocusGate: Website Blocker & Focus Timer",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -20,6 +20,16 @@
       "128": "icons/icon-128.png"
     }
   },
+  "options_ui": {
+    "page": "dashboard.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "permissions": [
     "storage",
     "tabs",
@@ -63,7 +73,7 @@
         "*://*.linkedin.com/*"
       ],
       "js": [
-        "content.js"
+        "content-v2.js"
       ],
       "run_at": "document_start"
     }

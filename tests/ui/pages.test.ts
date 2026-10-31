@@ -10,7 +10,7 @@ const manifest = JSON.parse(
   web_accessible_resources?: { resources?: string[] }[];
 };
 
-describe("staged UI page routing", () => {
+describe("cutover UI page routing", () => {
   it.each([
     ["popup.html", "./popup/main.tsx"],
     ["blocked.html", "./blocked/main.tsx"],
@@ -21,13 +21,29 @@ describe("staged UI page routing", () => {
     expect(html).toContain(`src="${entrypoint}"`);
   });
 
-  it("keeps staged routes out of the active v1 manifest", () => {
-    expect(manifest.action?.default_popup).toBe("index.html");
-    expect(manifest.options_ui?.page).not.toBe("dashboard.html");
+  it("routes the manifest to the v2 pages after the WP5 cutover", () => {
+    expect(manifest.action?.default_popup).toBe("popup.html");
+    expect(manifest.options_ui?.page).toBe("dashboard.html");
     expect(
       manifest.web_accessible_resources?.some((resource) =>
         resource.resources?.includes("blocked.html"),
       ),
-    ).toBeFalsy();
+    ).toBe(true);
+  });
+
+  it("keeps the worker and content entries on the v2 composition", () => {
+    const background = readFileSync(
+      new URL("../background/index.ts", import.meta.url),
+      "utf8",
+    );
+    expect(background).toContain("createChromeWorker");
+    expect(background).not.toContain("public/background.js");
+
+    const manifestSource = readFileSync(
+      new URL("../../public/manifest.json", import.meta.url),
+      "utf8",
+    );
+    expect(manifestSource).toContain("content-v2.js");
+    expect(manifestSource).not.toContain('"content.js"');
   });
 });
