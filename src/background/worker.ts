@@ -450,23 +450,38 @@ export function createWorker(api: WorkerBrowserApi): Worker {
   const start = (): (() => void) => {
     const unbinders: Array<() => void> = [];
 
-    api.runtime.onInstalled.addListener((details) => {
+    const onInstalledListener = (details: { reason: string }): void => {
       void handleInstalled(details);
-    });
-    api.alarms.onAlarm.addListener((name) => {
+    };
+    const onAlarmListener = (name: string): void => {
       void handleAlarm(name);
-    });    api.commands.onCommand.addListener((command) => {
+    };
+    const onCommandListener = (command: string): void => {
       void handleCommand(command);
-    });
-    api.runtime.onMessage.addListener((event) => {
+    };
+    const onMessageListener = (event: WorkerMessageEvent): void => {
       void handleMessage(event.message)
         .then((response) => event.sendResponse(response))
         .catch((error) => {
           onError("message", error);
           event.sendResponse(undefined);
         });
-      return true;
-    });
+    };
+
+    api.runtime.onInstalled.addListener(onInstalledListener);
+    unbinders.push(() =>
+      api.runtime.onInstalled.removeListener(onInstalledListener),
+    );
+    api.alarms.onAlarm.addListener(onAlarmListener);
+    unbinders.push(() => api.alarms.onAlarm.removeListener(onAlarmListener));
+    api.commands.onCommand.addListener(onCommandListener);
+    unbinders.push(() =>
+      api.commands.onCommand.removeListener(onCommandListener),
+    );
+    api.runtime.onMessage.addListener(onMessageListener);
+    unbinders.push(() =>
+      api.runtime.onMessage.removeListener(onMessageListener),
+    );
 
     unbinders.push(
       registerBlockNavigation(

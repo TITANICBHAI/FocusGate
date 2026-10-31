@@ -252,11 +252,11 @@ describe("v2 worker composition (dormant until cutover)", () => {
   });
 
   it("finalizes the install flow: migration, recovery, and rule install", async () => {
-    // A v2-shaped seed with one blocked site: the install flow must install
-    // a redirect rule for it and leave the session idle.
+    // A v2-shaped seed with one always-blocked site: the install flow must
+    // install a redirect rule for it and leave the session idle.
     const harness = createHarness({
       schemaVersion: 2,
-      blockedSites: ["example.com"],
+      alwaysBlockedSites: ["example.com"],
     });
     await harness.worker.handleInstalled({ reason: "update" });
     expect(harness.dnrRules.length).toBe(1);
@@ -324,7 +324,8 @@ describe("v2 worker composition (dormant until cutover)", () => {
   it("runs the midnight hooks and writes the weekly report on its alarm", async () => {
     await harness.worker.handleAlarm(MIDNIGHT_ALARM);
     const state = await harness.localState();
-    expect(state.lastWeeklyReport).toBeNull();
+    // The key is only written when a report exists; absent means null.
+    expect(state.lastWeeklyReport ?? null).toBeNull();
 
     await harness.worker.handleAlarm(WEEKLY_REPORT_ALARM);
     const updated = await harness.localState();
