@@ -35,12 +35,41 @@ schedules, and daily limits. Your rules and usage data stay in your browser.
 - **Daily limits:** Set a daily time or page-open cap, or a repeating time
   window. A site is blocked when its budget is used until the limit resets.
 
+### What can FocusGate block?
+
+- **Websites:** Add domains to your focus rules or your permanent 24/7 block
+  list, with alias groups (x.com and twitter.com share one entry) and URL
+  exceptions for single pages. Focus rules apply during focus sessions and
+  schedules; embedded content on other sites is not affected.
+- **Keywords:** Choose Block, Hide, or Both, with optional whole-word
+  matching. Block rules match searches and page addresses; Hide applies on
+  supported pages, including YouTube and Google Search. A match log shows the
+  last 50 hits.
+- **Schedules:** Choose the days and hours when site and keyword rules apply,
+  including overnight and 24:00 windows. Each schedule can have its own list.
+- **Daily limits:** Set a daily time or page-open cap, or a repeating time
+  window. A site is blocked when its budget is used until the limit resets,
+  with a heads-up notification before that happens.
+
 ### How does FocusGate support deep work?
 
 - **Focus timer:** Start a timed work session. Strict sessions require a
   password or typed confirmation to end early; Commitment sessions have no
   early-stop action. Either lock can be bypassed by disabling or removing the
   extension.
+- **Block now:** Start a timed block with its own site list that ends
+  automatically (5 minutes to 30 days). While it runs you can extend it or add
+  sites, but nothing can end it early.
+- **Tasks and reminders:** Plan tasks with dates, durations, priorities, and
+  repetition. FocusGate reminds you before a task starts and can start the
+  session for you. Tasks can also run in an allow-only mode that blocks
+  everything except the domains you choose.
+- **Stats and reports:** A dashboard with Today/Week/Month totals, a daily
+  goal, focus score, streaks, insights, and weekly reports — computed on your
+  device from your sessions.
+- **Habits and reflection:** Daily habit check-ins with streaks and an
+  optional end-of-day mood and note, plus achievements for clean sessions and
+  focus streaks.
 
 ### Can I use FocusGate without an account?
 
@@ -64,11 +93,14 @@ sold.
   match an active blocking rule.
 - **`webNavigation`** — Detects committed navigations and history-state changes
   so an active block can be enforced when a page or route changes.
-- **`alarms`** — Runs the background expiry timer for temporary focus modes.
+- **`alarms`** — Runs the background timers for focus sessions, temporary
+  blocks, task reminders, weekly reports, and daily limit resets.
 - **`declarativeNetRequest`** — Applies the user's blocking and allow-list rules
   at the browser network layer without sending URLs to a server.
-- **`notifications`** — Shows local reminders when a focus session or scheduled
-  event needs the user's attention.
+- **`idle`** — Detects when the user is away so that unfocused time is not
+  counted against daily allowance budgets.
+- **`notifications`** — Shows local reminders when a focus session, task,
+  allowance budget, or weekly report needs the user's attention.
 
 ### Host access
 
