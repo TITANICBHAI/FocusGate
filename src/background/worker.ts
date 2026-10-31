@@ -156,6 +156,17 @@ function isUnknownResponse(response: unknown): boolean {
   );
 }
 
+// Satisfies AttentionEventSources.tick without emitting: the alarm handler's
+// tick path calls the sampler exactly once per tick.
+const neverEmittedSource: WorkerEventSource<never> = {
+  addListener() {
+    return undefined;
+  },
+  removeListener() {
+    return undefined;
+  },
+};
+
 export function createWorker(api: WorkerBrowserApi): Worker {
   const onError = (effect: string, error: unknown): void =>
     api.onError?.(effect, error);
@@ -350,6 +361,8 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     onEffectError: onError,
   });
 
+  const handleAlarm = (name: string): Promise<boolean> => alarmHandler(name);
+
   const passwordService = createPasswordActionService({ store, now });
   const guardedService = createGuardedStateWriteService({ store, now });
   const standaloneService = createStandaloneActionService({
@@ -362,15 +375,19 @@ export function createWorker(api: WorkerBrowserApi): Worker {
   const dataService = createDataActionService({
     store,
     now,
-    verifyPassword: async (input, stored) =>
-      (await verifyPassword(input, stored)).valid,
+    verifyPassword: async (input, stored) => ({
+      valid: (await verifyPassword(input, stored)).valid,
+    }),
     afterChange: async () => {
       await reconciler("data");
     },
   });
 
   const quickBlock = createQuickBlockCommandHandler({
-    getActiveTab: async () => (await api.tabs.queryActive())[0] ?? null,
+    getActiveTab: async () => {
+      const tab = (await api.tabs.queryActive())[0];
+      return tab && tab.id !== undefined ? { id: tab.id, url: tab.url } : null;
+    },
     getDestination: async () => (await store.readState()).quickBlockMode,
     addSites: async (domains, destination) => {
       const key =
@@ -438,8 +455,7 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     });
     api.alarms.onAlarm.addListener((name) => {
       void handleAlarm(name);
-    });
-    api.commands.onCommand.addListener((command) => {
+    });    api.commands.onCommand.addListener((command) => {
       void handleCommand(command);
     });
     api.runtime.onMessage.addListener((event) => {
@@ -460,7 +476,9 @@ export function createWorker(api: WorkerBrowserApi): Worker {
         },
         {
           getState: store.readState,
-          recordBlock: recorder,
+          recordBlock: async (tabId: number, domain: string, reason: BlockReason) => {
+            await recorder({ tabId, domain, reason });
+          },
           updateTab: api.tabs.update,
           blockedBase: api.runtime.getURL("blocked.html"),
           now,
@@ -471,6 +489,9 @@ export function createWorker(api: WorkerBrowserApi): Worker {
 
     unbinders.push(
       attention.attach({
+        // Sampling is driven by the alarm handler's tick path, so the tick
+        // source attached here is intentionally never emitted.
+        tick: neverEmittedSource,
         tabActivated: api.events.tabActivated,
         windowFocusChanged: api.events.windowFocusChanged,
         mainFrameCommitted: api.webNavigation.onCommitted,
