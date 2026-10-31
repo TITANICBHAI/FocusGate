@@ -1,4 +1,8 @@
-import { createWorker, type WorkerBrowserApi, type WorkerEventSource, type WorkerMessageEvent } from "./worker.ts";
+import {
+  createWorker,
+  type WorkerBrowserApi,
+  type WorkerEventSource,
+} from "./worker.ts";
 import type { TaskReminderButtonEvents } from "./taskAlarms.ts";
 import type { DnrRule } from "../shared/dnr.ts";
 
@@ -12,6 +16,23 @@ import type { DnrRule } from "../shared/dnr.ts";
 type ChromeEvent<T> = {
   addListener(callback: (argument: T) => void): void;
   removeListener(callback: (argument: T) => void): void;
+};
+
+type ChromeMessageEvent = {
+  addListener(
+    callback: (
+      message: unknown,
+      sender: unknown,
+      sendResponse: (response: unknown) => void,
+    ) => boolean | void,
+  ): void;
+  removeListener(
+    callback: (
+      message: unknown,
+      sender: unknown,
+      sendResponse: (response: unknown) => void,
+    ) => boolean | void,
+  ): void;
 };
 
 interface ChromeLike {
@@ -29,10 +50,16 @@ interface ChromeLike {
     };
   };
   alarms: {
-    get(name: string): Promise<{ name: string; scheduledTime: number } | undefined>;
+    get(
+      name: string,
+    ): Promise<{ name: string; scheduledTime: number } | undefined>;
     create(
       name: string,
-      info: { when?: number; delayInMinutes?: number; periodInMinutes?: number },
+      info: {
+        when?: number;
+        delayInMinutes?: number;
+        periodInMinutes?: number;
+      },
     ): void;
     clear(name: string): boolean | Promise<boolean>;
     getAll(): Promise<Array<{ name: string; scheduledTime: number }>>;
@@ -40,7 +67,14 @@ interface ChromeLike {
   };
   notifications: {
     create(id: string, options: unknown): string | Promise<string>;
-    onButtonClicked?: ChromeEvent<[string, number]>;
+    onButtonClicked?: ChromeEvent<string> & {
+      addListener(
+        callback: (notificationId: string, buttonIndex: number) => void,
+      ): void;
+      removeListener(
+        callback: (notificationId: string, buttonIndex: number) => void,
+      ): void;
+    };
   };
   action: {
     setBadgeText(details: { text: string }): void | Promise<void>;
@@ -49,10 +83,13 @@ interface ChromeLike {
   };
   tabs: {
     query(query: unknown): Promise<Array<{ id?: number; url?: string }>>;
-    update(tabId: number, url: string): Promise<unknown>;
+    update(
+      tabId: number,
+      properties: { url?: string },
+    ): Promise<unknown>;
     getCurrent(): Promise<{ id?: number } | undefined>;
     remove(tabId: number): Promise<void>;
-    onActivated: ChromeEvent<unknown>;
+    onActivated: ChromeEvent<{ tabId: number; windowId: number }>;
   };
   webNavigation: {
     onCommitted: ChromeEvent<{ tabId: number; url: string; frameId: number }>;
@@ -68,12 +105,12 @@ interface ChromeLike {
       focused?: boolean;
       tabs?: Array<{ active?: boolean; url?: string; audible?: boolean }>;
     }>;
-    onFocusChanged: ChromeEvent<unknown>;
+    onFocusChanged: ChromeEvent<number>;
   };
   idle: {
-    queryState(detectionIntervalSeconds: number): Promise<
-      "active" | "idle" | "locked"
-    >;
+    queryState(
+      detectionIntervalSeconds: number,
+    ): Promise<"active" | "idle" | "locked">;
     onStateChanged: ChromeEvent<"active" | "idle" | "locked">;
   };
   declarativeNetRequest: {
@@ -86,12 +123,12 @@ interface ChromeLike {
   runtime: {
     getURL(path: string): string;
     onInstalled: ChromeEvent<{ reason: string }>;
-    onMessage: ChromeEvent<[unknown, unknown, (response: unknown) => void]>;
+    onMessage: ChromeMessageEvent;
   };
 }
 
 function chromeApi(): ChromeLike {
-  const chrome = (globalThis as { chrome?: ChromeLike }).chrome;
+  const chrome = (globalThis as unknown as { chrome?: ChromeLike }).chrome;
   if (!chrome) {
     throw new Error(
       "FocusGate must run inside a browser extension context (chrome APIs unavailable).",
@@ -104,19 +141,27 @@ function adaptEvent<TArgument, TEvent>(
   event: ChromeEvent<TEvent>,
   project: (argument: TEvent) => TArgument,
 ): WorkerEventSource<TArgument> {
+  const wrappers = new Map<
+    (argument: TArgument) => void,
+    (argument: TEvent) => void
+  >();
   return {
     addListener(listener: (argument: TArgument) => void) {
-      event.addListener((argument: TEvent) => listener(project(argument)));
+      const wrapper = (argument: TEvent) => listener(project(argument));
+      wrappers.set(listener, wrapper);
+      event.addListener(wrapper);
     },
     removeListener(listener: (argument: TArgument) => void) {
-      event.removeListener((argument: TEvent) => listener(project(argument)));
+      const wrapper = wrappers.get(listener);
+      if (wrapper) {
+        wrappers.delete(listener);
+        event.removeListener(wrapper);
+      }
     },
   };
 }
 
-export function createChromeWorker(): ReturnType<
-  typeof createWorker
-> {
+export function createChromeWorker(): ReturnType<typeof createWorker> {
   const chrome = chromeApi();
 
   const api: WorkerBrowserApi = {
@@ -132,14 +177,15 @@ export function createChromeWorker(): ReturnType<
       create: (id, options) => chrome.notifications.create(id, options),
       ...(chrome.notifications.onButtonClicked
         ? {
-            onButtonClicked: chrome.notifications
-              .onButtonClicked as unknown as TaskReminderButtonEvents,
+            onButtonClicked:
+              chrome.notifications.onButtonClicked as unknown as TaskReminderButtonEvents,
           }
         : {}),
     },
     action: chrome.action,
     tabs: {
-      queryActive: async () => await chrome.tabs.query({ active: true, currentWindow: true }),
+      queryActive: async () =>
+        await chrome.tabs.query({ active: true, currentWindow: true }),
       queryAll: async () => await chrome.tabs.query({}),
       update: async (tabId, url) => {
         await chrome.tabs.update(tabId, { url });
@@ -200,15 +246,15 @@ export function createChromeWorker(): ReturnType<
       },
     },
     events: {
-      tabActivated: adaptEvent(chrome.tabs.onActivated, () => undefined),
-      windowFocusChanged: adaptEvent(
-        chrome.windows.onFocusChanged,
-        () => undefined,
-      ),
-      idleStateChanged: adaptEvent(
-        chrome.idle.onStateChanged,
-        (state) => state,
-      ),
+      tabActivated: adaptEvent(chrome.tabs.onActivated, () => {
+        // Tab/window/idle events carry no payload the sampler needs.
+      }),
+      windowFocusChanged: adaptEvent(chrome.windows.onFocusChanged, () => {
+        // Intentionally empty: see tabActivated.
+      }),
+      idleStateChanged: adaptEvent(chrome.idle.onStateChanged, () => {
+        // Intentionally empty: see tabActivated.
+      }),
     },
   };
 
