@@ -34,7 +34,7 @@ describe("content filter site table", () => {
   it("keeps content script host patterns aligned with the active manifest", async () => {
     const manifest = await import("../../public/manifest.json");
     expect(manifest.content_scripts[0].matches).toEqual(CONTENT_SCRIPT_MATCHES);
-    expect(manifest.content_scripts[0].js).toEqual(["content.js"]);
+    expect(manifest.content_scripts[0].js).toEqual(["content-v2.js"]);
   });
 
   it("keeps the three legacy unconditional filters enabled for migrated users", () => {

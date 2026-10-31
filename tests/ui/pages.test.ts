@@ -33,7 +33,7 @@ describe("cutover UI page routing", () => {
 
   it("keeps the worker and content entries on the v2 composition", () => {
     const background = readFileSync(
-      new URL("../background/index.ts", import.meta.url),
+      new URL("../../src/background/index.ts", import.meta.url),
       "utf8",
     );
     expect(background).toContain("createChromeWorker");
