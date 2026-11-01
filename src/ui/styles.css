@@ -13,7 +13,7 @@
   /* text */
   --text: #ecf2ee;
   --text-muted: #9aa5a0;
-  --text-subtle: #6e7a74;
+  --text-subtle: #8a958f;
 
   /* meaning */
   --accent: #34d399;
@@ -53,17 +53,36 @@
   --border: #dddfdb;
   --text: #17201b;
   --text-muted: #5a6660;
-  --text-subtle: #8b958f;
-  --accent: #0e9f6e;
+  --text-subtle: #636e68;
+  --accent: #047857;
   --accent-contrast: #ffffff;
   --break: #2563eb;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --danger-contrast: #ffffff;
-  --warning: #b45309;
+  --warning: #9a4708;
   --warning-contrast: #ffffff;
   --info: #2563eb;
   --shadow-pop: 0 8px 24px rgba(23, 32, 27, 0.14);
   --scrim: rgba(23, 32, 27, 0.32);
+}
+
+:root[data-theme="system"] {
+  color-scheme: dark;
+  --bg: #0b0d0c;
+  --surface: #141715;
+  --surface-2: #1b1f1d;
+  --border: #262b28;
+  --text: #ecf2ee;
+  --text-muted: #9aa5a0;
+  --text-subtle: #8a958f;
+  --accent: #34d399;
+  --accent-contrast: #052e1f;
+  --break: #7db1fa;
+  --danger: #f87171;
+  --danger-contrast: #2a0708;
+  --warning: #fbbf24;
+  --warning-contrast: #2b1d02;
+  --info: #7db1fa;
 }
 
 @media (prefers-color-scheme: light) {
@@ -75,13 +94,13 @@
     --border: #dddfdb;
     --text: #17201b;
     --text-muted: #5a6660;
-    --text-subtle: #8b958f;
-    --accent: #0e9f6e;
+    --text-subtle: #636e68;
+    --accent: #047857;
     --accent-contrast: #ffffff;
     --break: #2563eb;
-    --danger: #dc2626;
+    --danger: #b91c1c;
     --danger-contrast: #ffffff;
-    --warning: #b45309;
+    --warning: #9a4708;
     --warning-contrast: #ffffff;
     --info: #2563eb;
     --shadow-pop: 0 8px 24px rgba(23, 32, 27, 0.14);
