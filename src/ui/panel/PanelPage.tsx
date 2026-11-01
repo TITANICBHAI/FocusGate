@@ -7,8 +7,10 @@ import { useAppState } from "../hooks/useStorage.ts";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
-import { AppHeader, Card } from "../components/primitives.tsx";
+import { AppHeader } from "../components/primitives.tsx";
 import { FocusScreen } from "./views/FocusScreen.tsx";
+import { RulesScreen } from "./views/RulesScreen.tsx";
+import { YouScreen } from "./views/YouScreen.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
 type PanelTab = "focus" | "rules" | "you";
@@ -88,8 +90,8 @@ function PanelShell() {
               onOpenTasks={() => setTab("you")}
             />
           )}
-          {tab === "rules" && <Placeholder label="Rules" />}
-          {tab === "you" && <Placeholder label="You" />}
+          {tab === "rules" && <RulesScreen state={state} />}
+          {tab === "you" && <YouScreen state={state} />}
         </div>
       </main>
       <nav className="fg-tabbar" aria-label="Panel sections">
@@ -110,14 +112,6 @@ function PanelShell() {
         ))}
       </nav>
     </div>
-  );
-}
-
-function Placeholder({ label }: { label: string }) {
-  return (
-    <Card title={label}>
-      <p className="fg-card__desc">This screen is being rebuilt.</p>
-    </Card>
   );
 }
 
