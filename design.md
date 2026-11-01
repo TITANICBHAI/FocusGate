@@ -219,6 +219,7 @@ else in any `.tsx`/`.css` file**; §10 Phase 1 adds a grep self-check):
   --accent: #047857;
   --accent-contrast: #ffffff;
   --break: #2563eb;
+  --info: #1d4ed8;
   --danger: #b91c1c;
   --danger-contrast: #ffffff;
   --warning: #9a4708;
