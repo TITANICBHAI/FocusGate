@@ -61,7 +61,7 @@
   --danger-contrast: #ffffff;
   --warning: #9a4708;
   --warning-contrast: #ffffff;
-  --info: #2563eb;
+  --info: #1d4ed8;
   --shadow-pop: 0 8px 24px rgba(23, 32, 27, 0.14);
   --scrim: rgba(23, 32, 27, 0.32);
 }
@@ -102,7 +102,7 @@
     --danger-contrast: #ffffff;
     --warning: #9a4708;
     --warning-contrast: #ffffff;
-    --info: #2563eb;
+    --info: #1d4ed8;
     --shadow-pop: 0 8px 24px rgba(23, 32, 27, 0.14);
     --scrim: rgba(23, 32, 27, 0.32);
   }
