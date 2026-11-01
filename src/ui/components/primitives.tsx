@@ -1,9 +1,11 @@
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Settings2 } from "lucide-react";
 import {
   Children,
   cloneElement,
   isValidElement,
+  useEffect,
   useId,
+  useRef,
   useState,
 } from "react";
 import type {
@@ -13,18 +15,51 @@ import type {
   ReactNode,
 } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "quiet" | "danger";
+/* =====================================================================
+   Shared UI primitives (design.md §4.2)
+   All class names come from the foundation block in styles.css.
+   ===================================================================== */
+
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "quiet"
+  | "danger"
+  | "danger-quiet";
+export type ButtonSize = "default" | "dense" | "jumbo";
+
+function buttonClasses(
+  variant: ButtonVariant,
+  size: ButtonSize,
+  wide: boolean,
+  icon: boolean,
+): string {
+  const classes = ["fg-btn", `fg-btn--${variant}`];
+  if (size === "dense") classes.push("fg-btn--dense");
+  if (size === "jumbo") classes.push("fg-btn--jumbo");
+  if (wide) classes.push("fg-btn--wide");
+  if (icon) classes.push("fg-btn--icon");
+  return classes.join(" ");
+}
 
 export function Button({
-  variant = "primary",
+  variant = "secondary",
+  size = "default",
+  wide = false,
+  icon = false,
   className = "",
   type = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  wide?: boolean;
+  icon?: boolean;
+}) {
   return (
     <button
       type={type}
-      className={`fg-button fg-button--${variant} ${className}`.trim()}
+      className={`${buttonClasses(variant, size, wide, icon)} ${className}`.trim()}
       {...props}
     />
   );
@@ -40,7 +75,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`fg-icon-button ${className}`.trim()}
+      className={`fg-btn fg-btn--quiet fg-btn--icon fg-btn--dense ${className}`.trim()}
       {...props}
     />
   );
@@ -62,17 +97,21 @@ export function Card({
   return (
     <section className={`fg-card ${className}`.trim()}>
       {(title || description || actions) && (
-        <header className="fg-card__header">
-          <div>
-            {title && <h2 className="fg-card__title">{title}</h2>}
-            {description && <p className="fg-muted">{description}</p>}
+        <div className="fg-wrap" style={{ justifyContent: "space-between" }}>
+          <div className="fg-stack" style={{ gap: 2 }}>
+            {title && <h3 className="fg-card__title">{title}</h3>}
+            {description && <p className="fg-card__desc">{description}</p>}
           </div>
           {actions}
-        </header>
+        </div>
       )}
       {children}
     </section>
   );
+}
+
+export function SectionLabel({ children }: { children: ReactNode }) {
+  return <p className="fg-section-label">{children}</p>;
 }
 
 export function Field({
@@ -92,17 +131,18 @@ export function Field({
 }) {
   const helperId = `${id}-helper`;
   const errorId = `${id}-error`;
-  const descriptionIds = [
-    helper ? helperId : "",
-    error ? errorId : "",
-  ].filter(Boolean);
+  const descriptionIds = [helper ? helperId : "", error ? errorId : ""].filter(
+    Boolean,
+  );
   const describedChildren = connectFieldControls(
     children,
     descriptionIds,
     error ? errorId : undefined,
   );
   return (
-    <div className={`fg-field ${className}`.trim()}>
+    <div
+      className={`fg-field ${error ? "has-error" : ""} ${className}`.trim()}
+    >
       <label className="fg-field__label" htmlFor={id}>
         {label}
       </label>
@@ -172,11 +212,11 @@ export function Toggle({
 }) {
   const descriptionId = useId();
   return (
-    <div className={`fg-toggle-row ${disabled ? "is-disabled" : ""}`}>
-      <div className="fg-toggle-row__copy">
-        <span className="fg-toggle-row__label">{label}</span>
+    <div className={`fg-toggle ${disabled ? "is-disabled" : ""}`}>
+      <div className="fg-toggle__copy">
+        <span className="fg-toggle__label fg-field__label">{label}</span>
         {description && (
-          <span className="fg-muted" id={descriptionId}>
+          <span className="fg-field__helper" id={descriptionId}>
             {description}
           </span>
         )}
@@ -185,14 +225,13 @@ export function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-pressed={checked}
         aria-label={label}
         aria-describedby={description ? descriptionId : undefined}
         disabled={disabled}
-        className={`fg-switch ${checked ? "is-on" : ""}`}
+        className="fg-toggle__track"
         onClick={() => onCheckedChange(!checked)}
-      >
-        <span className="fg-switch__thumb" />
-      </button>
+      />
     </div>
   );
 }
@@ -211,16 +250,24 @@ export function Segmented<T extends string>({
   disabled?: boolean;
 }) {
   return (
-    <div className="fg-segmented-wrap">
-      <span className="fg-field__label">{label}</span>
-      <div className="fg-segmented" role="group" aria-label={label}>
+    <div className="fg-field">
+      <span className="fg-field__label" id={`${label}-seg-label`}>
+        {label}
+      </span>
+      <div
+        className="fg-seg"
+        role="group"
+        aria-label={label}
+        aria-labelledby={`${label}-seg-label`}
+      >
         {options.map((option) => (
           <button
             key={option.value}
             type="button"
             aria-pressed={value === option.value}
+            aria-selected={value === option.value}
             disabled={disabled}
-            className={value === option.value ? "is-selected" : ""}
+            className="fg-seg__btn"
             onClick={() => onChange(option.value)}
           >
             {option.label}
@@ -234,28 +281,298 @@ export function Segmented<T extends string>({
 export function Chip({
   children,
   tone = "neutral",
+  onRemove,
+  removeLabel,
 }: {
   children: ReactNode;
   tone?: "neutral" | "accent" | "warning" | "danger";
+  onRemove?: () => void;
+  removeLabel?: string;
 }) {
-  return <span className={`fg-chip fg-chip--${tone}`}>{children}</span>;
+  const toneClass =
+    tone === "accent"
+      ? "fg-chip--live"
+      : tone === "warning"
+        ? "fg-chip--lock"
+        : tone === "danger"
+          ? "fg-chip--danger"
+          : "";
+  return (
+    <span className={`fg-chip ${toneClass}`.trim()}>
+      {children}
+      {onRemove && (
+        <button
+          type="button"
+          className="fg-chip__btn"
+          aria-label={removeLabel ?? "Remove"}
+          onClick={onRemove}
+        >
+          ×
+        </button>
+      )}
+    </span>
+  );
 }
 
 export function EmptyState({
+  icon,
   title,
   description,
   action,
 }: {
+  icon?: ReactNode;
   title: string;
   description: string;
   action?: ReactNode;
 }) {
   return (
-    <div className="fg-empty-state">
-      <h3>{title}</h3>
-      <p className="fg-muted">{description}</p>
+    <div className="fg-empty">
+      {icon}
+      <span className="fg-empty__title">{title}</span>
+      <span className="fg-empty__desc">{description}</span>
       {action}
     </div>
+  );
+}
+
+export function ListRow({
+  swatch,
+  icon,
+  title,
+  sub,
+  chips,
+  status,
+  actions,
+}: {
+  swatch?: string;
+  icon?: ReactNode;
+  title: ReactNode;
+  sub?: ReactNode;
+  chips?: ReactNode;
+  status?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="fg-row">
+      {(swatch || icon) && (
+        <div className="fg-row__swatch" aria-hidden="true">
+          {icon ?? swatch}
+        </div>
+      )}
+      <div className="fg-row__copy">
+        <span className="fg-row__title">{title}</span>
+        {sub && <span className="fg-row__sub">{sub}</span>}
+        {chips && <div className="fg-row__chips">{chips}</div>}
+      </div>
+      {status}
+      {actions && <div className="fg-row__actions">{actions}</div>}
+    </div>
+  );
+}
+
+export function Stat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+}) {
+  return (
+    <div className="fg-stat">
+      <span className="fg-stat__label">{label}</span>
+      <span className="fg-stat__value">{value}</span>
+      {sub && <span className="fg-stat__sub">{sub}</span>}
+    </div>
+  );
+}
+
+export function Progress({
+  value,
+  tone = "accent",
+}: {
+  value: number;
+  tone?: "accent" | "break" | "warn";
+}) {
+  const safe = Math.max(0, Math.min(1, value));
+  const toneClass =
+    tone === "break"
+      ? "fg-progress--break"
+      : tone === "warn"
+        ? "fg-progress--warn"
+        : "";
+  return (
+    <div
+      className={`fg-progress ${toneClass}`.trim()}
+      role="progressbar"
+      aria-valuenow={Math.round(safe * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <span style={{ width: `${Math.round(safe * 100)}%` }} />
+    </div>
+  );
+}
+
+export function AppHeader({
+  status = "idle",
+  onOpenSettings,
+}: {
+  status?: "idle" | "focus" | "break" | "block";
+  onOpenSettings(): void;
+}) {
+  return (
+    <header className="fg-header">
+      <span className="fg-wordmark">
+        <img src="/icon.png" alt="" />
+        FocusGate
+      </span>
+      <div className="fg-header__actions">
+        <span
+          className={`fg-status-dot fg-status-dot--${status}`}
+          role="img"
+          aria-label={
+            status === "idle" ? "Idle" : `${status} in progress`
+          }
+        />
+        <IconButton label="Open settings" onClick={onOpenSettings}>
+          <Settings2 aria-hidden="true" />
+        </IconButton>
+      </div>
+    </header>
+  );
+}
+
+function formatClock(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safe / 60);
+  const rest = safe % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+}
+
+export function HeroTimer({
+  label,
+  seconds,
+  meta,
+  progress,
+  tone = "accent",
+  editable = false,
+  onEditStart,
+  chip,
+}: {
+  label: string;
+  seconds: number;
+  meta?: ReactNode;
+  progress?: number;
+  tone?: "accent" | "break" | "warn";
+  editable?: boolean;
+  onEditStart?: () => void;
+  chip?: ReactNode;
+}) {
+  const toneClass =
+    tone === "break"
+      ? "fg-hero--break"
+      : tone === "warn"
+        ? "fg-hero--warn"
+        : "";
+  const timeNode = (
+    <div
+      className={`fg-hero__time ${editable ? "fg-hero__time--clickable" : ""}`.trim()}
+      onClick={editable ? onEditStart : undefined}
+      onKeyDown={
+        editable
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onEditStart?.();
+              }
+            }
+          : undefined
+      }
+      role={editable ? "button" : undefined}
+      tabIndex={editable ? 0 : undefined}
+      aria-label={editable ? "Edit session length" : undefined}
+    >
+      {formatClock(seconds)}
+    </div>
+  );
+  return (
+    <div className={`fg-hero ${toneClass}`.trim()}>
+      <div className="fg-hero__label">
+        {label}
+        {chip}
+      </div>
+      {timeNode}
+      {meta && <div className="fg-hero__meta">{meta}</div>}
+      {progress !== undefined && (
+        <div className="fg-hero__progress">
+          <Progress value={progress} tone={tone} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Sheet({
+  open,
+  title,
+  onClose,
+  children,
+  footer,
+}: {
+  open: boolean;
+  title: string;
+  onClose(): void;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement;
+    panelRef.current?.focus();
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (previous instanceof HTMLElement) previous.focus();
+    };
+  }, [open]);
+
+  if (!open) return null;
+  return (
+    <>
+      <div className="fg-scrim" onClick={onClose} aria-hidden="true" />
+      <div
+        className="fg-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        ref={panelRef}
+      >
+        <div className="fg-sheet__grip" aria-hidden="true" />
+        <h2 className="fg-card__title">{title}</h2>
+        <div className="fg-stack">{children}</div>
+        {footer && (
+          <div className="fg-wrap" style={{ marginTop: "var(--gap)" }}>
+            {footer}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

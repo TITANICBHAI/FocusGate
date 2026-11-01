@@ -53,7 +53,9 @@ describe("accessible UI primitives", () => {
         onCheckedChange={() => undefined}
       />,
     );
-    const descriptionId = markup.match(/<span class="fg-muted" id="([^"]+)"/)?.[1];
+    const descriptionId = markup.match(
+      /<span class="fg-field__helper" id="([^"]+)"/,
+    )?.[1];
 
     expect(descriptionId).toBeDefined();
     expect(markup).toContain(`aria-describedby="${descriptionId}"`);

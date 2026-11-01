@@ -40,7 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={showToast}>
       {children}
-      <div className="fg-toast-stack" aria-live="polite" aria-relevant="additions">
+      <div className="fg-toast-host" aria-live="polite" aria-relevant="additions">
         {toasts.map((toast) => (
           <div
             className={`fg-toast fg-toast--${toast.tone}`}
