@@ -8,6 +8,7 @@ import { StorageGate } from "../components/StorageGate.tsx";
 import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { AppHeader, Card } from "../components/primitives.tsx";
+import { FocusScreen } from "./views/FocusScreen.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
 type PanelTab = "focus" | "rules" | "you";
@@ -80,7 +81,13 @@ function PanelShell() {
         tabIndex={0}
       >
         <div className="fg-stack">
-          {tab === "focus" && <Placeholder label="Focus" />}
+          {tab === "focus" && (
+            <FocusScreen
+              state={state}
+              onOpenRules={() => setTab("rules")}
+              onOpenTasks={() => setTab("you")}
+            />
+          )}
           {tab === "rules" && <Placeholder label="Rules" />}
           {tab === "you" && <Placeholder label="You" />}
         </div>
