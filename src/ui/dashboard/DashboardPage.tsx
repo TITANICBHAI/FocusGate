@@ -1,10 +1,16 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { Component } from "react";
+import type { ErrorInfo, FormEvent, ReactNode } from "react";
 import type { AppState, WeeklyReport } from "../../shared/types.ts";
-import { Button, Card, EmptyState, Field } from "../components/primitives.tsx";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  ListRow,
+  SectionLabel,
+  Stat,
+} from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
-import { Tabs } from "../components/Tabs.tsx";
-import type { TabOption } from "../components/Tabs.tsx";
 import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { Modal, ToastProvider, useToast } from "../components/feedback.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
@@ -15,21 +21,51 @@ import { guard } from "../../shared/gating.ts";
 import { RESET_CONFIRMATION_PHRASE } from "../../shared/dataActions.ts";
 import type { DataActionResult } from "../../background/dataActions.ts";
 import { sendDataActionMessage } from "../lib/dataActions.ts";
-import { RulesView } from "../popup/RulesView.tsx";
-import { SettingsView } from "../popup/SettingsView.tsx";
+import { RulesScreen } from "../panel/views/RulesScreen.tsx";
+import { DashboardSettings } from "./DashboardSettings.tsx";
 import { DashboardStats } from "./DashboardStats.tsx";
 import { HabitsCard } from "./HabitsCard.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
-type DashboardTab = "stats" | "reports" | "rules" | "settings" | "backup";
+type DashboardTab = "overview" | "rules" | "reports" | "settings" | "data";
 
-const DASHBOARD_TABS: readonly TabOption<DashboardTab>[] = [
-  { value: "stats", label: "Stats" },
-  { value: "reports", label: "Reports" },
+const DASHBOARD_TABS: { value: DashboardTab; label: string }[] = [
+  { value: "overview", label: "Overview" },
   { value: "rules", label: "Rules" },
+  { value: "reports", label: "Reports" },
   { value: "settings", label: "Settings" },
-  { value: "backup", label: "Backup" },
+  { value: "data", label: "Data" },
 ];
+
+class DashboardErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("FocusGate dashboard crashed:", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="fg-full-page">
+          <div className="fg-full-page__inner">
+            <h1 className="fg-block-headline">FocusGate could not start</h1>
+            <p className="fg-muted">{this.state.error.message}</p>
+            <p className="fg-muted">Reload this page to try again.</p>
+          </div>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function DashboardPage() {
   return (
@@ -37,7 +73,9 @@ export function DashboardPage() {
       <ToastProvider>
         <ThemeRoot>
           <GuardPromptHost />
-          <DashboardShell />
+          <DashboardErrorBoundary>
+            <DashboardShell />
+          </DashboardErrorBoundary>
         </ThemeRoot>
       </ToastProvider>
     </StorageGate>
@@ -46,7 +84,7 @@ export function DashboardPage() {
 
 function DashboardShell() {
   const state = useAppState();
-  const [tab, setTab] = useState<DashboardTab>("stats");
+  const [tab, setTab] = useState<DashboardTab>("overview");
   const [message, setMessage] = useState("");
 
   async function openPopup() {
@@ -66,7 +104,7 @@ function DashboardShell() {
   }
 
   return (
-    <div className="fg-dashboard">
+    <div className="fg-dashboard fg-dashboard--flush">
       <header className="fg-dashboard__header">
         <a className="fg-dashboard__brand" href="./dashboard.html" aria-label="FocusGate dashboard">
           <img src="/icon.png" alt="" width="34" height="34" />
@@ -85,37 +123,38 @@ function DashboardShell() {
             Run setup
           </a>
           <Button variant="secondary" onClick={() => void openPopup()}>
-            Open popup
+            Open FocusGate
           </Button>
         </div>
       </header>
       {message && <p className="fg-muted" role="status">{message}</p>}
-      <Tabs
-        idPrefix="dashboard"
-        label="Dashboard sections"
-        options={DASHBOARD_TABS}
-        value={tab}
-        onChange={setTab}
-        className="fg-dashboard__tabs"
-      />
-      <main
-        className="fg-dashboard__main"
-        id={`dashboard-${tab}-panel`}
-        role="tabpanel"
-        aria-labelledby={`dashboard-${tab}-tab`}
-        tabIndex={0}
-      >
-        {tab === "stats" && (
-          <>
-            <DashboardStats state={state} />
-            <HabitsCard state={state} />
-          </>
-        )}
-        {tab === "reports" && <ReportsPanel state={state} />}
-        {tab === "rules" && <RulesView state={state} />}
-        {tab === "settings" && <SettingsView state={state} />}
-        {tab === "backup" && <BackupPanel state={state} />}
-      </main>
+      <div className="fg-dash">
+        <nav className="fg-dash__rail" aria-label="Dashboard sections">
+          {DASHBOARD_TABS.map((item) => (
+            <Button
+              key={item.value}
+              wide
+              variant={tab === item.value ? "secondary" : "quiet"}
+              aria-current={tab === item.value ? "page" : undefined}
+              onClick={() => setTab(item.value)}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </nav>
+        <main className="fg-dash__main">
+          {tab === "overview" && (
+            <>
+              <DashboardStats state={state} />
+              <HabitsCard state={state} />
+            </>
+          )}
+          {tab === "rules" && <RulesScreen state={state} density="wide" />}
+          {tab === "reports" && <ReportsPanel state={state} />}
+          {tab === "settings" && <DashboardSettings state={state} />}
+          {tab === "data" && <BackupPanel state={state} />}
+        </main>
+      </div>
     </div>
   );
 }
@@ -123,27 +162,21 @@ function DashboardShell() {
 function ReportsPanel({ state }: { state: AppState }) {
   const reports = [...state.weeklyReports].reverse();
   return (
-    <section className="fg-page" aria-labelledby="reports-title">
-      <div className="fg-page__heading">
-        <div>
-          <h1 id="reports-title">Weekly reports</h1>
-          <p className="fg-muted">Review saved summaries of your focus activity.</p>
-        </div>
-      </div>
+    <section className="fg-stack" aria-labelledby="reports-title">
+      <h1 id="reports-title" hidden>Reports</h1>
+      <SectionLabel>Weekly reports</SectionLabel>
       {reports.length === 0 ? (
         <EmptyState
           title="No weekly reports yet"
           description="A report will appear here after FocusGate records one."
         />
       ) : (
-        <div className="fg-stack">
-          {reports.map((report, index) => (
-            <WeeklyReportCard
-              key={`${stringField(report, "startDateKey") ?? "report"}-${index}`}
-              report={report}
-            />
-          ))}
-        </div>
+        reports.map((report, index) => (
+          <WeeklyReportCard
+            key={`${stringField(report, "startDateKey") ?? "report"}-${index}`}
+            report={report}
+          />
+        ))
       )}
     </section>
   );
@@ -166,25 +199,27 @@ function WeeklyReportCard({ report }: { report: WeeklyReport }) {
     : [];
   return (
     <Card title={start && end ? `${start} – ${end}` : "Weekly summary"}>
-      <dl className="fg-stat-list">
-        <div><dt>Focus time</dt><dd>{focusText ?? "Not recorded"}</dd></div>
-        <div><dt>Sessions completed</dt><dd>{numberField(report, "sessionsCompleted")}</dd></div>
-        <div><dt>Tasks completed</dt><dd>{numberField(report, "tasksCompleted")}</dd></div>
-        <div><dt>Pages blocked</dt><dd>{numberField(report, "blockedAttempts")}</dd></div>
-        <div><dt>Current streak</dt><dd>{numberField(report, "streak")} days</dd></div>
-      </dl>
+      <div className="fg-stat-row fg-stat-row--2">
+        <Stat label="Focus time" value={focusText ?? "Not recorded"} />
+        <Stat label="Sessions completed" value={numberField(report, "sessionsCompleted")} />
+        <Stat label="Tasks completed" value={numberField(report, "tasksCompleted")} />
+        <Stat label="Pages blocked" value={numberField(report, "blockedAttempts")} />
+        <Stat
+          label="Current streak"
+          value={`${numberField(report, "streak")} day${numberField(report, "streak") === 1 ? "" : "s"}`}
+        />
+      </div>
       {topBlockedSites.length > 0 && (
-        <div className="fg-stack fg-report-sites">
-          <h3>Most blocked sites</h3>
-          <ul className="fg-list">
-            {topBlockedSites.map((site) => (
-              <li className="fg-list-item" key={site.domain}>
-                <strong>{site.domain}</strong>
-                <span className="fg-muted">{site.count} blocks</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <>
+          <SectionLabel>Most blocked sites</SectionLabel>
+          {topBlockedSites.map((site) => (
+            <ListRow
+              key={site.domain}
+              title={site.domain}
+              status={<span className="fg-muted">{site.count} blocks</span>}
+            />
+          ))}
+        </>
       )}
     </Card>
   );
@@ -299,15 +334,9 @@ function BackupPanel({ state }: { state: AppState }) {
   }
 
   return (
-    <section className="fg-page" aria-labelledby="backup-title">
-      <div className="fg-page__heading">
-        <div>
-          <h1 id="backup-title">Backup and restore</h1>
-          <p className="fg-muted">
-            Export your settings and activity, or restore from a FocusGate backup.
-          </p>
-        </div>
-      </div>
+    <section className="fg-stack" aria-labelledby="backup-title">
+      <h1 id="backup-title" hidden>Data</h1>
+      <SectionLabel>Backup and restore</SectionLabel>
       {state.backup_v1 ? (
         <Card title="Migration safety copy">
           <p className="fg-muted">
@@ -346,15 +375,18 @@ function BackupPanel({ state }: { state: AppState }) {
             Exported {new Date(backupPreview.exportedAt).toLocaleString()}.
             This will {preview.mode === "merge" ? "merge safely with existing data" : "restore into an empty state"}.
           </p>
-          <dl className="fg-stat-list">
-            <div><dt>Sites</dt><dd>{backupPreview.data.sites.length + backupPreview.data.alwaysBlockedSites.length}</dd></div>
-            <div><dt>Keywords</dt><dd>{backupPreview.data.keywords.length}</dd></div>
-            <div><dt>Schedules</dt><dd>{backupPreview.data.schedules.length}</dd></div>
-            <div><dt>Allowances</dt><dd>{Object.keys(backupPreview.data.allowances).length}</dd></div>
-            <div><dt>Exceptions</dt><dd>{backupPreview.data.exceptions.length}</dd></div>
-            <div><dt>Tasks</dt><dd>{backupPreview.data.tasks.length}</dd></div>
-            <div><dt>Session records</dt><dd>{backupPreview.data.stats.sessionHistory.length}</dd></div>
-          </dl>
+          <div className="fg-stat-row fg-stat-row--2">
+            <Stat
+              label="Sites"
+              value={backupPreview.data.sites.length + backupPreview.data.alwaysBlockedSites.length}
+            />
+            <Stat label="Keywords" value={backupPreview.data.keywords.length} />
+            <Stat label="Schedules" value={backupPreview.data.schedules.length} />
+            <Stat label="Allowances" value={Object.keys(backupPreview.data.allowances).length} />
+            <Stat label="Exceptions" value={backupPreview.data.exceptions.length} />
+            <Stat label="Tasks" value={backupPreview.data.tasks.length} />
+            <Stat label="Session records" value={backupPreview.data.stats.sessionHistory.length} />
+          </div>
           <p className="fg-muted">
             Import only adds or strengthens data in a working state. It never
             replaces existing data and is allowed during a lock.
@@ -366,13 +398,13 @@ function BackupPanel({ state }: { state: AppState }) {
         <Card title={result.mode === "merge" ? "Backup merge results" : result.mode === "reset" ? "Data reset" : "Backup restore results"}>
           {result.added && result.added.length > 0 && (
             <>
-              <h3>Added or restored</h3>
+              <SectionLabel>Added or restored</SectionLabel>
               <ul>{result.added.map((item) => <li key={item}>{item}</li>)}</ul>
             </>
           )}
           {result.skipped && result.skipped.length > 0 && (
             <>
-              <h3>Skipped for safety</h3>
+              <SectionLabel>Skipped for safety</SectionLabel>
               <ul>{result.skipped.map((item) => <li key={item}>{item}</li>)}</ul>
             </>
           )}

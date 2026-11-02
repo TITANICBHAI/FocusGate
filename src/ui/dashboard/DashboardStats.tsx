@@ -12,7 +12,15 @@ import {
 import { localDateKey } from "../../shared/time.ts";
 import type { AppState } from "../../shared/types.ts";
 import { AchievementsCard } from "../components/AchievementsCard.tsx";
-import { Card, ProgressRing, Segmented } from "../components/primitives.tsx";
+import {
+  Card,
+  ListRow,
+  Progress,
+  ProgressRing,
+  SectionLabel,
+  Segmented,
+  Stat,
+} from "../components/primitives.tsx";
 import { summarizeProtectionGaps } from "../lib/protectionStatus.ts";
 
 type StatsRange = "today" | "week" | "month";
@@ -81,14 +89,20 @@ export function DashboardStats({ state }: { state: AppState }) {
     state.session.gaps,
     now.getTime(),
   );
+  const rangeLabel =
+    range === "today" ? "Today" : range === "week" ? "This week" : "This month";
 
   return (
-    <section className="fg-page" aria-labelledby="dashboard-stats-title">
-      <div className="fg-page__heading">
-        <div>
-          <h1 id="dashboard-stats-title">Stats</h1>
-          <p className="fg-muted">
-            Actual focus time from your recorded sessions.
+    <section className="fg-stack" aria-labelledby="dashboard-stats-title">
+      <h1 id="dashboard-stats-title" hidden>Overview</h1>
+
+      <div className="fg-hero fg-hero--smallest">
+        <div className="fg-hero__time">{formatDuration(totals.focusMs)}</div>
+        <p className="fg-hero__sub">{rangeLabel} focus time</p>
+        <div className="fg-hero__goal" aria-label={`Daily goal ${Math.round(goalProgress * 100)}% complete`}>
+          <Progress value={goalProgress} />
+          <p className="fg-hero__sub">
+            {Math.round(goalProgress * 100)}% of today's {state.settings.dailyGoalMin} min goal
           </p>
         </div>
       </div>
@@ -104,75 +118,47 @@ export function DashboardStats({ state }: { state: AppState }) {
         onChange={setRange}
       />
 
-      <div className="fg-stats-grid">
-        <Card title="Focus time">
-          <p className="fg-stats-focus__value">{formatDuration(totals.focusMs)}</p>
-          <p className="fg-muted">
-            {range === "today" ? "Today" : range === "week" ? "This week" : "This month"}
-          </p>
-        </Card>
-        <Card title="Sessions">
-          <dl className="fg-stat-list">
-            <div>
-              <dt>Completed</dt>
-              <dd>{totals.sessionsCompleted}</dd>
-            </div>
-            <div>
-              <dt>Clean</dt>
-              <dd>{cleanSessions}</dd>
-            </div>
-            <div>
-              <dt>Completion rate</dt>
-              <dd>{Math.round(totals.completionRate * 100)}%</dd>
-            </div>
-            <div>
-              <dt>Pages blocked</dt>
-              <dd>{totals.blocks}</dd>
-            </div>
-          </dl>
-        </Card>
-        <Card title="Focus score">
-          <div className="fg-stats-focus">
-            <ProgressRing
-              size={110}
-              stroke={7}
-              progress={focusScore / 100}
-              label={`Focus score ${focusScore} of 100`}
-            >
-              <strong className="fg-stats-focus__value">{focusScore}</strong>
-              <span className="fg-muted">of 100 today</span>
-            </ProgressRing>
-            <p className="fg-muted">
-              Daily goal {state.settings.dailyGoalMin} min · tasks{" "}
-              {today?.tasksCompleted ?? 0}/{tasksPlannedToday}
-            </p>
-            <div
-              className="fg-stats-goal-ring"
-              role="img"
-              aria-label={`Daily goal ${Math.round(goalProgress * 100)}% complete`}
-            >
-              {Math.round(goalProgress * 100)}% of today's goal
-            </div>
-          </div>
-        </Card>
-        <Card title="Streaks">
-          <dl className="fg-stat-list">
-            <div>
-              <dt>Current streak</dt>
-              <dd>{streaks.current} day{streaks.current === 1 ? "" : "s"}</dd>
-            </div>
-            <div>
-              <dt>Best streak</dt>
-              <dd>{streaks.best} day{streaks.best === 1 ? "" : "s"}</dd>
-            </div>
-          </dl>
-        </Card>
+      <SectionLabel>Sessions</SectionLabel>
+      <div className="fg-stat-row">
+        <Stat label="Completed" value={totals.sessionsCompleted} />
+        <Stat label="Clean" value={cleanSessions} sub="No blocks hit" />
+        <Stat
+          label="Completion rate"
+          value={`${Math.round(totals.completionRate * 100)}%`}
+        />
+        <Stat label="Pages blocked" value={totals.blocks} />
       </div>
 
-      <Card
-        title="Focus minutes per day"
-        description="Daily focus time drawn inline — no chart library."
-      >
+      <div className="fg-stat-row fg-stat-row--2">
+        <Stat
+          label="Current streak"
+          value={`${streaks.current} day${streaks.current === 1 ? "" : "s"}`}
+        />
+        <Stat
+          label="Best streak"
+          value={`${streaks.best} day${streaks.best === 1 ? "" : "s"}`}
+        />
+      </div>
+
+      <Card title="Focus score">
+        <div className="fg-stats-focus">
+          <ProgressRing
+            size={110}
+            stroke={7}
+            progress={focusScore / 100}
+            label={`Focus score ${focusScore} of 100`}
+          >
+            <strong className="fg-stats-focus__value">{focusScore}</strong>
+            <span className="fg-muted">of 100 today</span>
+          </ProgressRing>
+          <p className="fg-muted">
+            Daily goal {state.settings.dailyGoalMin} min · tasks{" "}
+            {today?.tasksCompleted ?? 0}/{tasksPlannedToday}
+          </p>
+        </div>
+      </Card>
+
+      <Card title="Focus minutes per day">
         <svg
           className="fg-stats-chart"
           role="img"
@@ -207,92 +193,90 @@ export function DashboardStats({ state }: { state: AppState }) {
         </svg>
       </Card>
 
-      <Card title="Insights">
-        <dl className="fg-stat-list">
-          <div>
-            <dt>Most productive hour</dt>
-            <dd>
-              {insights.mostProductiveHour === null
-                ? "Not recorded"
-                : `${String(insights.mostProductiveHour).padStart(2, "0")}:00`}
-            </dd>
-          </div>
-          <div>
-            <dt>Best weekday</dt>
-            <dd>
-              {insights.bestWeekday === null
-                ? "Not recorded"
-                : WEEKDAYS[insights.bestWeekday]}
-            </dd>
-          </div>
-          <div>
-            <dt>Average session</dt>
-            <dd>{formatDuration(insights.averageSessionMs)}</dd>
-          </div>
-          <div>
-            <dt>Completion rate</dt>
-            <dd>{Math.round(insights.completionRate * 100)}%</dd>
-          </div>
-          <div>
-            <dt>Total focus time</dt>
-            <dd>{formatDuration(insights.totalHours * 3_600_000)}</dd>
-          </div>
-          <div>
-            <dt>This week</dt>
-            <dd>
-              {insights.thisWeekSessions} session
-              {insights.thisWeekSessions === 1 ? "" : "s"} ·{" "}
-              {Math.round(insights.thisWeekMinutes)} min
-            </dd>
-          </div>
-          <div>
-            <dt>Best session</dt>
-            <dd>{formatDuration(insights.bestSessionMs)}</dd>
-          </div>
-        </dl>
-      </Card>
-
-      <div className="fg-stats-grid">
-        <Card title="Top blocked domains">
-          {insights.topBlockedDomains.length === 0 ? (
-            <p className="fg-muted">Nothing blocked in the recorded period.</p>
-          ) : (
-            <dl className="fg-stat-list">
-              {insights.topBlockedDomains.map((entry) => (
-                <div key={entry.domain}>
-                  <dt>{entry.domain}</dt>
-                  <dd>{entry.count}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </Card>
-        <Card title="Allowance usage today">
-          {allowanceRows.length === 0 ? (
-            <p className="fg-muted">No daily limits configured.</p>
-          ) : (
-            <dl className="fg-stat-list">
-              {allowanceRows.map((row) => (
-                <div key={row.domain}>
-                  <dt>{row.domain}</dt>
-                  <dd>
-                    {row.limitMinutes === null
-                      ? `${row.usedMinutes} min used`
-                      : `${row.usedMinutes} of ${row.limitMinutes} min`}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </Card>
-        <Card title="Protection gaps">
-          <p className="fg-muted">
-            {protectionGaps.count === 0
-              ? "None recorded in the last 7 days."
-              : `${protectionGaps.count} gap${protectionGaps.count === 1 ? "" : "s"} · ${Math.ceil(protectionGaps.durationMs / 60_000)} min total`}
-          </p>
-        </Card>
+      <SectionLabel>Insights</SectionLabel>
+      <div className="fg-stat-row fg-stat-row--2">
+        <Stat
+          label="Most productive hour"
+          value={
+            insights.mostProductiveHour === null
+              ? "Not recorded"
+              : `${String(insights.mostProductiveHour).padStart(2, "0")}:00`
+          }
+        />
+        <Stat
+          label="Best weekday"
+          value={
+            insights.bestWeekday === null ? "Not recorded" : WEEKDAYS[insights.bestWeekday]
+          }
+        />
+        <Stat label="Average session" value={formatDuration(insights.averageSessionMs)} />
+        <Stat
+          label="Completion rate"
+          value={`${Math.round(insights.completionRate * 100)}%`}
+        />
+        <Stat
+          label="Total focus time"
+          value={formatDuration(insights.totalHours * 3_600_000)}
+        />
+        <Stat
+          label="This week"
+          value={`${insights.thisWeekSessions} session${insights.thisWeekSessions === 1 ? "" : "s"}`}
+          sub={`${Math.round(insights.thisWeekMinutes)} min`}
+        />
+        <Stat label="Best session" value={formatDuration(insights.bestSessionMs)} />
       </div>
+
+      <SectionLabel>Top blocked</SectionLabel>
+      {insights.topBlockedDomains.length === 0 ? (
+        <p className="fg-muted">Nothing blocked in the recorded period.</p>
+      ) : (
+        insights.topBlockedDomains.map((entry) => (
+          <ListRow
+            key={entry.domain}
+            title={entry.domain}
+            status={<span className="fg-muted">{entry.count} blocks</span>}
+          />
+        ))
+      )}
+
+      <SectionLabel>Allowance usage today</SectionLabel>
+      {allowanceRows.length === 0 ? (
+        <p className="fg-muted">No daily limits configured.</p>
+      ) : (
+        allowanceRows.map((row) => (
+          <ListRow
+            key={row.domain}
+            title={row.domain}
+            sub={
+              row.limitMinutes === null
+                ? `${row.usedMinutes} min used`
+                : `${row.usedMinutes} of ${row.limitMinutes} min`
+            }
+            status={
+              row.limitMinutes === null ? undefined : (
+                <div className="fg-usage-cell">
+                  <Progress
+                    value={Math.min(1, row.usedMinutes / Math.max(1, row.limitMinutes))}
+                    tone={row.usedMinutes >= row.limitMinutes ? "warn" : "accent"}
+                  />
+                </div>
+              )
+            }
+          />
+        ))
+      )}
+
+      <ListRow
+        title="Protection gaps"
+        sub="Last 7 days"
+        status={
+          <span className="fg-muted">
+            {protectionGaps.count === 0
+              ? "None recorded"
+              : `${protectionGaps.count} · ${Math.ceil(protectionGaps.durationMs / 60_000)} min`}
+          </span>
+        }
+      />
 
       <AchievementsCard state={state} />
     </section>
