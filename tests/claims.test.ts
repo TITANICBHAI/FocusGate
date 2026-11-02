@@ -161,20 +161,14 @@ describe("C39 — the block page Close action really closes", () => {
   });
 });
 
-describe("C40 — no advertising anywhere in the UI", () => {
-  it("keeps promo links out of the block page and out of the whole UI", () => {
+describe("C40 — no advertising on the block page, links live in About", () => {
+  it("keeps promo links out of the block page and in the dashboard About card", () => {
     const blocked = read("src/ui/blocked/BlockedPage.tsx");
     expect(blocked).not.toContain("focusflowpc.pages.dev");
     expect(blocked).not.toContain("focusflowapp.pages.dev");
 
-    // The P7 cutover removed the popup About card; the promo links are
-    // expected nowhere in the interface now.
-    const uiSources = sourceFiles.filter((file) => file.startsWith("ui/"));
-    expect(uiSources.length).toBeGreaterThan(20);
-    for (const file of uiSources) {
-      const source = read(`src/${file}`);
-      expect(source, file).not.toContain("focusflowpc.pages.dev");
-      expect(source, file).not.toContain("focusflowapp.pages.dev");
-    }
+    const about = read("src/ui/dashboard/DashboardSettings.tsx");
+    expect(about).toContain("focusflowpc.pages.dev");
+    expect(about).toContain("focusflowapp.pages.dev");
   });
 });

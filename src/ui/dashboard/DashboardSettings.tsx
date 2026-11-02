@@ -241,6 +241,7 @@ export function DashboardSettings({ state }: { state: AppState }) {
             </output>
           </div>
         </Field>
+        <p className="fg-field__helper">The panel can sit on either side of the window — drag it where you like.</p>
       </Card>
 
       <SectionLabel>Timer</SectionLabel>
@@ -704,6 +705,14 @@ export function DashboardSettings({ state }: { state: AppState }) {
           Blocking behavior depends on your browser permissions and the rules
           you configure.
         </p>
+        <div className="fg-wrap">
+          <a href="https://focusflowpc.pages.dev" target="_blank" rel="noreferrer">
+            FocusGate PC
+          </a>
+          <a href="https://focusflowapp.pages.dev" target="_blank" rel="noreferrer">
+            FocusGate App
+          </a>
+        </div>
       </Card>
     </section>
   );
