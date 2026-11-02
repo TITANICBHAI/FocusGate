@@ -28,10 +28,10 @@ import {
   Progress,
   Sheet,
   Stat,
-} from "../../../components/primitives.tsx";
-import { Modal, useToast } from "../../../components/feedback.tsx";
-import { sendSessionMessage } from "../../../lib/sessionActions.ts";
-import { sendStandaloneMessage } from "../../../lib/standaloneActions.ts";
+} from "../../components/primitives.tsx";
+import { Modal, useToast } from "../../components/feedback.tsx";
+import { sendSessionMessage } from "../../lib/sessionActions.ts";
+import { sendStandaloneMessage } from "../../lib/standaloneActions.ts";
 import { blockScopeSummary } from "../../lib/blockSummary.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;

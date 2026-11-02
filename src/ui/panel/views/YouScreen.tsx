@@ -17,8 +17,8 @@ import {
   ListRow,
   Progress,
   Stat,
-} from "../../../components/primitives.tsx";
-import { useToast } from "../../../components/feedback.tsx";
+} from "../../components/primitives.tsx";
+import { useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 

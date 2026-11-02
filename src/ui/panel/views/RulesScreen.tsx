@@ -21,8 +21,8 @@ import {
   Segmented,
   Sheet,
   Toggle,
-} from "../../../components/primitives.tsx";
-import { ConfirmDialog, useToast } from "../../../components/feedback.tsx";
+} from "../../components/primitives.tsx";
+import { ConfirmDialog, useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import { weakeningLockReason } from "../../lib/guardState.ts";
