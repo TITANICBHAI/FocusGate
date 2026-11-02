@@ -85,23 +85,6 @@ export function DashboardPage() {
 function DashboardShell() {
   const state = useAppState();
   const [tab, setTab] = useState<DashboardTab>("overview");
-  const [message, setMessage] = useState("");
-
-  async function openPopup() {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime?.id ||
-      !chrome.action?.openPopup
-    ) {
-      setMessage("Open FocusGate from your browser toolbar.");
-      return;
-    }
-    try {
-      await chrome.action.openPopup();
-    } catch {
-      setMessage("Open FocusGate from your browser toolbar.");
-    }
-  }
 
   return (
     <div className="fg-dashboard fg-dashboard--flush">
@@ -122,12 +105,8 @@ function DashboardShell() {
           >
             Run setup
           </a>
-          <Button variant="secondary" onClick={() => void openPopup()}>
-            Open FocusGate
-          </Button>
         </div>
       </header>
-      {message && <p className="fg-muted" role="status">{message}</p>}
       <div className="fg-dash">
         <nav className="fg-dash__rail" aria-label="Dashboard sections">
           {DASHBOARD_TABS.map((item) => (

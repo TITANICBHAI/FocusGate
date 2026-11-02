@@ -259,5 +259,21 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
     },
   };
 
+  // The toolbar action opens the side panel on Chromium 116+; older
+  // browsers without the API simply keep the default behavior.
+  try {
+    (globalThis as unknown as {
+      chrome?: {
+        sidePanel?: {
+          setPanelBehavior(options: {
+            openPanelOnActionClick: boolean;
+          }): Promise<void>;
+        };
+      };
+    }).chrome?.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
+  } catch {
+    // Feature-detected: no side panel API, nothing to configure.
+  }
+
   return createWorker(api);
 }

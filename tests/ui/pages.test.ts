@@ -6,13 +6,14 @@ const manifest = JSON.parse(
   readFileSync(new URL("../../public/manifest.json", import.meta.url), "utf8"),
 ) as {
   action?: { default_popup?: string };
+  side_panel?: { default_path?: string };
   options_ui?: { page?: string };
   web_accessible_resources?: { resources?: string[] }[];
 };
 
 describe("cutover UI page routing", () => {
   it.each([
-    ["popup.html", "./popup/main.tsx"],
+    ["panel.html", "./panel/main.tsx"],
     ["blocked.html", "./blocked/main.tsx"],
     ["onboarding.html", "./onboarding/main.tsx"],
     ["dashboard.html", "./dashboard/main.tsx"],
@@ -21,8 +22,9 @@ describe("cutover UI page routing", () => {
     expect(html).toContain(`src="${entrypoint}"`);
   });
 
-  it("routes the manifest to the v2 pages after the WP5 cutover", () => {
-    expect(manifest.action?.default_popup).toBe("popup.html");
+  it("routes the manifest to the side panel after the P7 cutover", () => {
+    expect(manifest.side_panel?.default_path).toBe("panel.html");
+    expect(manifest.action?.default_popup).toBeUndefined();
     expect(manifest.options_ui?.page).toBe("dashboard.html");
     expect(
       manifest.web_accessible_resources?.some((resource) =>

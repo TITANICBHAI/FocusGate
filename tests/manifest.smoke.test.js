@@ -12,13 +12,14 @@ const manifest = JSON.parse(
 describe("extension manifest smoke test", () => {
   it("uses Manifest V3 and points to existing source entrypoints", () => {
     expect(manifest.manifest_version).toBe(3);
-    expect(manifest.minimum_chrome_version).toBe("110");
+    expect(manifest.minimum_chrome_version).toBe("116");
     expect(manifest.permissions).toContain("idle");
-    expect(manifest.action.default_popup).toBeTruthy();
-    // WP5 cutover: the popup is the staged UI page (built to dist root).
-    expect(manifest.action.default_popup).toBe("popup.html");
+    // P7 cutover: the toolbar action opens the side panel page.
+    expect(manifest.side_panel?.default_path).toBe("panel.html");
+    expect(manifest.permissions).toContain("sidePanel");
+    expect(manifest.action?.default_popup).toBeUndefined();
     expect(
-      existsSync(resolve(projectRoot, "src/ui", manifest.action.default_popup)),
+      existsSync(resolve(projectRoot, "src/ui", manifest.side_panel.default_path)),
     ).toBe(true);
 
     expect(manifest.background.service_worker).toBe("background.js");

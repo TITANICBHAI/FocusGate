@@ -148,17 +148,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-.popup-page,
-html:has(.popup-page) {
-  width: 380px;
-  height: 580px;
-  min-width: 380px;
-  min-height: 580px;
-  max-width: 380px;
-  max-height: 580px;
-  overflow: hidden;
-}
-
 .full-page {
   min-height: 100vh;
 }
@@ -171,28 +160,6 @@ html:has(.popup-page) {
     var(--bg);
 }
 
-.fg-block-page {
-  display: grid;
-  place-items: center;
-}
-
-.fg-block-page__content {
-  display: grid;
-  width: min(100%, 620px);
-  gap: 20px;
-}
-
-.fg-block-page__header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.fg-block-page__header img {
-  flex: 0 0 auto;
-  border-radius: 12px;
-}
-
 .fg-eyebrow {
   margin: 0 0 2px;
   color: var(--text-muted);
@@ -200,137 +167,6 @@ html:has(.popup-page) {
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.fg-block-page h1 {
-  margin: 0;
-  font-size: clamp(1.5rem, 5vw, 2.125rem);
-  line-height: 1.15;
-}
-
-.fg-block-page__card {
-  display: grid;
-  gap: 16px;
-  padding: clamp(20px, 4vw, 32px);
-}
-
-.fg-block-page__message {
-  margin: 0;
-  font-size: 1.125rem;
-}
-
-.fg-block-page__countdown {
-  margin: 0;
-  font-size: 1.75rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-
-.fg-block-page__target {
-  display: grid;
-  max-width: 100%;
-  gap: 4px;
-  overflow-wrap: anywhere;
-  font-size: 0.75rem;
-}
-
-.fg-block-page__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.fg-block-page blockquote {
-  margin: 0;
-  padding-left: 14px;
-  border-left: 3px solid var(--accent);
-  color: var(--text-muted);
-}
-
-.fg-onboarding {
-  display: flex;
-  justify-content: center;
-}
-
-.fg-onboarding__content {
-  display: flex;
-  width: min(100%, 480px);
-  flex-direction: column;
-  gap: 18px;
-}
-
-.fg-onboarding__header,
-.fg-dashboard__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1rem;
-  font-weight: 650;
-}
-
-.fg-onboarding__header img,
-.fg-dashboard__brand img {
-  flex: 0 0 auto;
-  border-radius: 10px;
-}
-
-.fg-onboarding h1 {
-  margin: 0;
-  font-size: clamp(1.625rem, 5vw, 2.125rem);
-  line-height: 1.15;
-}
-
-.fg-onboarding__goals,
-.fg-onboarding__presets {
-  display: grid;
-  gap: 10px;
-}
-
-.fg-onboarding__goal,
-.fg-onboarding__preset {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
-}
-
-.fg-onboarding__goal {
-  flex-direction: column;
-}
-
-.fg-onboarding__goal.is-selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-
-.fg-onboarding__goal span,
-.fg-onboarding__preset span span {
-  display: block;
-}
-
-.fg-onboarding__preset input {
-  width: 18px;
-  height: 18px;
-  margin: 2px 0 0;
-  accent-color: var(--accent);
-}
-
-.fg-onboarding__checks {
-  display: grid;
-  gap: 12px;
-}
-
-.fg-onboarding__checks > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 .fg-dashboard {
@@ -372,15 +208,6 @@ html:has(.popup-page) {
 .fg-dashboard__setup {
   color: var(--accent);
   font-size: 0.8125rem;
-}
-
-.fg-dashboard__tabs {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  overflow-x: auto;
-  padding: 8px 0;
-  background: var(--bg);
 }
 
 .fg-dashboard__main {
@@ -443,28 +270,6 @@ html:has(.popup-page) {
     justify-content: flex-end;
     gap: 8px;
   }
-}
-
-.fg-popup {
-  display: flex;
-  width: 380px;
-  height: 580px;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.fg-popup__header {
-  display: flex;
-  height: 48px;
-  flex: 0 0 48px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
 }
 
 .fg-brand {
@@ -550,51 +355,6 @@ html:has(.popup-page) {
   height: 8px;
   border-radius: 50%;
   background: var(--danger);
-}
-
-.fg-popup__main {
-  min-height: 0;
-  flex: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.fg-popup__nav {
-  display: grid;
-  height: 56px;
-  flex: 0 0 56px;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  border-top: 1px solid var(--border);
-  background: var(--bg);
-  padding: 4px 8px;
-}
-
-.fg-popup__nav button {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-subtle);
-  cursor: pointer;
-  font-size: 0.75rem;
-}
-
-.fg-popup__nav button[aria-selected="true"] {
-  background: var(--surface-2);
-  color: var(--accent);
-}
-
-.fg-popup__nav svg {
-  width: 17px;
-  height: 17px;
 }
 
 .fg-page {
@@ -1199,41 +959,6 @@ html:has(.popup-page) {
   gap: 6px;
 }
 
-.fg-onboarding {
-  width: min(100%, 480px);
-  min-height: 100vh;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 24px;
-  padding: 32px 24px;
-}
-
-.fg-onboarding__step {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.fg-onboarding h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  line-height: 1.15;
-}
-
-.fg-onboarding__progress {
-  height: 4px;
-  border-radius: 999px;
-  background: var(--surface-2);
-}
-
-.fg-onboarding__progress span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-}
-
 @keyframes fg-pulse {
   50% {
     opacity: 0.55;
@@ -1252,11 +977,6 @@ html:has(.popup-page) {
 }
 
 /* Dashboard and popup statistics layouts (WP8) */
-.fg-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
 
 .fg-stats-focus {
   display: flex;
@@ -1269,29 +989,6 @@ html:has(.popup-page) {
 .fg-stats-focus__value {
   font-size: 1.6rem;
   line-height: 1.1;
-}
-
-.fg-stat-list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-.fg-stat-list > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.fg-stat-list dt {
-  color: var(--text-muted);
-}
-
-.fg-stat-list dd {
-  margin: 0;
-  font-weight: 600;
-  text-align: right;
 }
 
 .fg-stats-chart {
@@ -2007,4 +1704,15 @@ body.full-page {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* restored brand rules (were grouped with the removed legacy onboarding selectors) */
+.fg-dashboard__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.fg-dashboard__brand img {
+  flex: 0 0 auto;
+  border-radius: 10px;
 }

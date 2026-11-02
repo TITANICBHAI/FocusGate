@@ -21,6 +21,7 @@ import {
 import { useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
+import { TasksView } from "./TasksView.tsx";
 
 /**
  * P4 You screen (design.md §5.4): today's stats and reflection, the week
@@ -107,6 +108,8 @@ export function YouScreen({
           />
         </div>
       </Card>
+
+      <TasksView state={state} />
 
       <ReflectionCard state={state} />
 

@@ -3,8 +3,8 @@ import type { FormEvent } from "react";
 import { guard } from "../../shared/gating.ts";
 import { generatePassword } from "../../shared/password.ts";
 import type { AppState } from "../../shared/types.ts";
-import { Button, Card, PasswordField } from "../components/primitives.tsx";
-import { sendPasswordMessage } from "../lib/passwordActions.ts";
+import { Button, Card, PasswordField } from "../../components/primitives.tsx";
+import { sendPasswordMessage } from "../../lib/passwordActions.ts";
 
 function passwordGuidance(value: string): string {
   if (!value) {

@@ -4,7 +4,7 @@ import type { AppState } from "../../shared/types.ts";
 import { Button, Card, Field, SectionLabel, Toggle } from "../components/primitives.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
-import { PasswordSettings } from "../popup/PasswordSettings.tsx";
+import { PasswordSettings } from "../settings/PasswordSettings.tsx";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 import { CONTENT_FILTER_OPTIONS } from "../../content/sites.ts";
 import { weakeningLockReason } from "../lib/guardState.ts";

@@ -39,6 +39,17 @@ const firefoxManifest = {
       scripts: [serviceWorker],
     };
   })(),
+  // Chromium-only side panel keys become the Firefox sidebar.
+  side_panel: undefined,
+  sidebar_action: {
+    default_title: 'FocusGate',
+    default_panel: 'panel.html',
+    default_icon: manifest.icons,
+    open_at_install: false,
+  },
+  permissions: (manifest.permissions ?? []).filter(
+    (permission) => permission !== 'sidePanel',
+  ),
   browser_specific_settings: {
     gecko: {
       id: 'focusgate@tbtechs.com',

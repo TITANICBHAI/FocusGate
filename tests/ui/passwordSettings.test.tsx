@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   PasswordSettings,
   passwordFormDisabled,
-} from "../../src/ui/popup/PasswordSettings.tsx";
+} from "../../src/ui/settings/PasswordSettings.tsx";
 import { preventPasswordPaste } from "../../src/ui/components/primitives.tsx";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 

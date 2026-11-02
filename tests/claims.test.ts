@@ -34,17 +34,20 @@ describe("C02 — privacy claims", () => {
   });
 });
 
-describe("C05 — fixed 380×580 popup shell", () => {
-  it("styles the popup at exactly 380×580", () => {
+describe("C05 — the side panel is a fixed flexible shell", () => {
+  it("styles the panel as a flexible column with a 300px floor", () => {
     const css = read("src/ui/styles.css");
-    const block = css.slice(css.indexOf(".fg-popup {"), css.indexOf("}", css.indexOf(".fg-popup {")));
-    expect(block).toContain("width: 380px");
-    expect(block).toContain("height: 580px");
+    const block = css.slice(
+      css.indexOf(".fg-panel {"),
+      css.indexOf("}", css.indexOf(".fg-panel {")),
+    );
+    expect(block).toContain("min-width: 300px");
+    expect(css).not.toContain("width: 380px");
   });
 });
 
 describe("C14 — task empty state and dated/recurring tasks", () => {
-  const tasks = read("src/ui/popup/TasksView.tsx");
+  const tasks = read("src/ui/panel/views/TasksView.tsx");
 
   it("shows the documented empty state", () => {
     expect(tasks).toContain('title="No tasks yet"');
@@ -63,7 +66,7 @@ describe("C14 — task empty state and dated/recurring tasks", () => {
 });
 
 describe("C15 — a commitment task is only protected while its session runs", () => {
-  const tasks = read("src/ui/popup/TasksView.tsx");
+  const tasks = read("src/ui/panel/views/TasksView.tsx");
 
   it("blocks removal of the linked task only while it runs", () => {
     expect(tasks).toContain("This task is linked to the running session.");
@@ -72,21 +75,21 @@ describe("C15 — a commitment task is only protected while its session runs", (
 });
 
 describe("C22 — keyword input splits lists", () => {
-  const rules = read("src/ui/popup/RulesView.tsx");
+  const rules = read("src/ui/panel/views/RulesScreen.tsx");
 
   it("splits keyword input on commas and new lines", () => {
-    expect(rules).toContain('input.split(/[,\\n]/)');
+    expect(rules).toContain('.split(/[,\\n]/)');
   });
 });
 
 describe("C29/C30 — password and lock copy", () => {
   it("says the password adds friction without preventing removal (C29)", () => {
-    const password = read("src/ui/popup/PasswordSettings.tsx");
+    const password = read("src/ui/settings/PasswordSettings.tsx");
     expect(password).toContain("It does not prevent this extension from being disabled or");
   });
 
   it("describes the none lock as stop-any-time (C30)", () => {
-    const focus = read("src/ui/popup/FocusView.tsx");
+    const focus = read("src/ui/panel/views/FocusScreen.tsx");
     expect(focus).toContain("You can stop any time with a confirmation.");
     expect(focus).toContain(
       "There is no early-stop action. You can still disable or remove the extension.",
@@ -158,14 +161,20 @@ describe("C39 — the block page Close action really closes", () => {
   });
 });
 
-describe("C40 — no advertising on the block page", () => {
-  it("keeps promo links out of the block page and in About", () => {
+describe("C40 — no advertising anywhere in the UI", () => {
+  it("keeps promo links out of the block page and out of the whole UI", () => {
     const blocked = read("src/ui/blocked/BlockedPage.tsx");
     expect(blocked).not.toContain("focusflowpc.pages.dev");
     expect(blocked).not.toContain("focusflowapp.pages.dev");
 
-    const settings = read("src/ui/popup/SettingsView.tsx");
-    expect(settings).toContain("focusflowpc.pages.dev");
-    expect(settings).toContain("focusflowapp.pages.dev");
+    // The P7 cutover removed the popup About card; the promo links are
+    // expected nowhere in the interface now.
+    const uiSources = sourceFiles.filter((file) => file.startsWith("ui/"));
+    expect(uiSources.length).toBeGreaterThan(20);
+    for (const file of uiSources) {
+      const source = read(`src/${file}`);
+      expect(source, file).not.toContain("focusflowpc.pages.dev");
+      expect(source, file).not.toContain("focusflowapp.pages.dev");
+    }
   });
 });

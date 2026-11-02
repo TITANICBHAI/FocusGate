@@ -6,19 +6,19 @@ import type {
   Task,
   TaskPriority,
   TaskRecurrence,
-} from "../../shared/types.ts";
-import { normalizeDomain } from "../../shared/domains.ts";
-import { Button, Card, EmptyState, Field, Chip } from "../components/primitives.tsx";
-import { ConfirmDialog, Modal, useToast } from "../components/feedback.tsx";
-import { sendSessionMessage } from "../lib/sessionActions.ts";
-import { uiStorageStore } from "../hooks/storageStore.ts";
-import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
+} from "../../../shared/types.ts";
+import { normalizeDomain } from "../../../shared/domains.ts";
+import { Button, Card, EmptyState, Field, Chip } from "../../components/primitives.tsx";
+import { ConfirmDialog, Modal, useToast } from "../../components/feedback.tsx";
+import { sendSessionMessage } from "../../lib/sessionActions.ts";
+import { uiStorageStore } from "../../hooks/storageStore.ts";
+import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import {
   generateRecurringForToday,
   groupTasksForDate,
   taskDurationForStart,
   type TaskGroupKey,
-} from "../../shared/taskScheduling.ts";
+} from "../../../shared/taskScheduling.ts";
 
 const TASK_GROUPS: Array<{ key: TaskGroupKey; label: string }> = [
   { key: "overdue", label: "Overdue" },

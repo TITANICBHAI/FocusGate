@@ -214,26 +214,31 @@ function OnboardingFlow() {
   }
 
   async function openFocusGate() {
+    const fallback =
+      "Setup is saved. Open FocusGate from your browser toolbar to continue.";
     if (typeof chrome === "undefined" || !chrome.runtime?.id) {
-      setProtectionMessage(
-        "Setup is saved. Open FocusGate from your browser toolbar to continue.",
-      );
+      setProtectionMessage(fallback);
       return;
     }
     try {
-      if (chrome.action?.openPopup) await chrome.action.openPopup();
-      else {
-        setProtectionMessage(
-          "Setup is saved. Open FocusGate from your browser toolbar to continue.",
-        );
+      const sidePanel = (
+        chrome as unknown as {
+          sidePanel?: {
+            open(options: { windowId?: number; tabId?: number }): Promise<void>;
+          };
+        }
+      ).sidePanel;
+      if (sidePanel?.open) {
+        const win = await chrome.windows.getCurrent();
+        await sidePanel.open({ windowId: win.id });
+      } else {
+        setProtectionMessage(fallback);
         return;
       }
       const tab = await chrome.tabs.getCurrent();
       if (tab?.id !== undefined) await chrome.tabs.remove(tab.id);
     } catch {
-      setProtectionMessage(
-        "Setup is saved. Open FocusGate from your browser toolbar to continue.",
-      );
+      setProtectionMessage(fallback);
     }
   }
 

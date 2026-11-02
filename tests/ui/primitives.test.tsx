@@ -9,7 +9,6 @@ import {
   Toggle,
 } from "../../src/ui/components/primitives.tsx";
 import { Modal } from "../../src/ui/components/feedback.tsx";
-import { Tabs } from "../../src/ui/components/Tabs.tsx";
 
 describe("accessible UI primitives", () => {
   it("connects nested field controls to helper and error text", () => {
@@ -113,27 +112,5 @@ describe("accessible UI primitives", () => {
     expect(markup).toContain('aria-describedby="');
     expect(markup).toContain('aria-label="Close dialog"');
     expect(markup).toContain("Confirm change");
-  });
-
-  it("exposes tab selection and panel relationships in the markup", () => {
-    const markup = renderToStaticMarkup(
-      <Tabs
-        idPrefix="settings"
-        label="Settings sections"
-        options={[
-          { value: "timer", label: "Timer" },
-          { value: "data", label: "Data" },
-        ]}
-        value="timer"
-        onChange={() => undefined}
-      />,
-    );
-
-    expect(markup).toContain('role="tablist" aria-label="Settings sections"');
-    expect(markup).toContain('id="settings-timer-tab"');
-    expect(markup).toContain('aria-controls="settings-timer-panel"');
-    expect(markup).toContain('aria-selected="true" tabindex="0"');
-    expect(markup).toContain('id="settings-data-tab"');
-    expect(markup).toContain('aria-selected="false" tabindex="-1"');
   });
 });

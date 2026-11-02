@@ -7,8 +7,9 @@ import { defineConfig } from "vite";
 const projectRoot = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const uiRoot = resolve(projectRoot, "src/ui");
 
-// WP5 cutover: this is the only UI build. publicDir copies the manifest and
-// icons to the dist root so the extension loads from a single folder.
+// P7 cutover: the side panel is the primary surface. This is the only UI
+// build; publicDir copies the manifest and icons to the dist root so the
+// extension loads from a single folder.
 export default defineConfig({
   root: uiRoot,
   base: "./",
@@ -19,7 +20,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        popup: resolve(uiRoot, "popup.html"),
+        panel: resolve(uiRoot, "panel.html"),
         blocked: resolve(uiRoot, "blocked.html"),
         onboarding: resolve(uiRoot, "onboarding.html"),
         dashboard: resolve(uiRoot, "dashboard.html"),
