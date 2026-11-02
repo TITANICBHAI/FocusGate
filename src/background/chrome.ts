@@ -259,20 +259,38 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
     },
   };
 
-  // The toolbar action opens the side panel on Chromium 116+; older
-  // browsers without the API simply keep the default behavior.
+  // The toolbar action opens the side panel on Chromium 116+; on Firefox the
+  // sidebar API is used instead. Feature-detected, never throwing.
   try {
-    (globalThis as unknown as {
+    const globalChrome = (globalThis as unknown as {
       chrome?: {
         sidePanel?: {
           setPanelBehavior(options: {
             openPanelOnActionClick: boolean;
           }): Promise<void>;
         };
+        sidebarAction?: { open(windowId: number): Promise<void> };
+        action?: {
+          onClicked?: {
+            addListener(listener: (tab: { windowId: number }) => void): void;
+          };
+        };
       };
-    }).chrome?.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
+    }).chrome;
+    if (globalChrome?.sidePanel?.setPanelBehavior) {
+      void globalChrome.sidePanel.setPanelBehavior({
+        openPanelOnActionClick: true,
+      });
+    } else if (
+      globalChrome?.sidebarAction?.open &&
+      globalChrome.action?.onClicked
+    ) {
+      globalChrome.action.onClicked.addListener((tab) => {
+        void globalChrome.sidebarAction?.open(tab.windowId);
+      });
+    }
   } catch {
-    // Feature-detected: no side panel API, nothing to configure.
+    // Feature-detected: no side panel or sidebar API, nothing to configure.
   }
 
   return createWorker(api);

@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { Component, useEffect } from "react";
 import type { ErrorInfo, FormEvent, ReactNode } from "react";
 import type { AppState, WeeklyReport } from "../../shared/types.ts";
 import {
@@ -85,6 +85,18 @@ export function DashboardPage() {
 function DashboardShell() {
   const state = useAppState();
   const [tab, setTab] = useState<DashboardTab>("overview");
+
+  // The panel gear links to dashboard.html#settings — honor the deep link.
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (
+      (["overview", "rules", "reports", "settings", "data"] as const).some(
+        (value) => value === hash,
+      )
+    ) {
+      setTab(hash as DashboardTab);
+    }
+  }, []);
 
   return (
     <div className="fg-dashboard fg-dashboard--flush">
