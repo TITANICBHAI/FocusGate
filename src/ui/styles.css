@@ -441,53 +441,6 @@ textarea:focus-visible {
   margin: 4px 0 0;
 }
 
-.fg-button {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 0 12px;
-  cursor: pointer;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  transition:
-    background-color 160ms ease-out,
-    border-color 160ms ease-out,
-    color 160ms ease-out;
-}
-
-.fg-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.fg-button--primary {
-  background: var(--accent);
-  color: var(--accent-contrast);
-}
-
-.fg-button--primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-
-.fg-button--secondary {
-  border-color: var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.fg-button--quiet {
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.fg-button--danger {
-  background: var(--danger);
-  color: #ffffff;
-}
 
 .fg-icon-button {
   display: inline-grid;
