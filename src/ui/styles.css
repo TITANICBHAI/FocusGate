@@ -1532,8 +1532,12 @@ button.fg-row {
   color: inherit;
   cursor: pointer;
 }
+button.fg-row:hover {
+  border-color: var(--text-subtle);
+}
 button.fg-row[aria-pressed="true"] {
   border-color: var(--accent);
+  background: var(--surface-2);
 }
 .fg-onboard-actions {
   display: flex;
