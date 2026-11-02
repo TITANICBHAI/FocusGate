@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { explainBlock } from "../../shared/plan.ts";
 import { quoteForLocalDate } from "../../shared/blockPage.ts";
 import { localDateKey } from "../../shared/time.ts";
-import { Button, Card, Chip } from "../components/primitives.tsx";
+import { Button } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
@@ -41,6 +41,47 @@ function reasonTitle(
       return "Not on the allowed list";
     case "keyword":
       return `Keyword “${reason.keyword}” matched this ${reason.where === "query" ? "search" : "page"}`;
+  }
+}
+
+function reasonLabel(
+  reason: NonNullable<ReturnType<typeof explainBlock>>,
+): string {
+  switch (reason.kind) {
+    case "session":
+      return "Blocked by focus session";
+    case "standalone":
+      return "Blocked by Block now";
+    case "schedule":
+      return "Blocked by schedule";
+    case "allowance":
+      return "Daily limit reached";
+    case "always":
+      return "Always blocked";
+    case "allowOnly":
+      return "Outside the allowed list";
+    case "keyword":
+      return "Blocked by keyword";
+  }
+}
+
+function reasonMeta(
+  reason: NonNullable<ReturnType<typeof explainBlock>>,
+): string | null {
+  switch (reason.kind) {
+    case "session":
+    case "standalone":
+      return `Ends ${formatClock(reason.until)}`;
+    case "schedule":
+      return `This schedule ends at ${formatClock(reason.until)}.`;
+    case "allowance":
+      return `Your allowance resets at ${formatClock(reason.resetsAt)}.`;
+    case "keyword":
+      return `Matching ${
+        reason.where === "query" ? "search terms" : "page address"
+      }: ${reason.keyword}`;
+    default:
+      return null;
   }
 }
 
@@ -133,79 +174,64 @@ function BlockedScreen() {
     : undefined;
 
   return (
-    <main className="fg-full-page fg-block-page">
-      <div className="fg-block-page__content">
-        <header className="fg-block-page__header">
-          <img src="/icon.png" alt="" width="40" height="40" />
-          <div>
-            <p className="fg-eyebrow">FocusGate</p>
-            <h1>{ended ? "Block ended" : reason ? reasonTitle(reason) : "Page unavailable"}</h1>
-          </div>
-        </header>
+    <main className="fg-full-page">
+      <div className="fg-full-page__inner fg-block-inner">
+        <img src="/icon.png" alt="" width="40" height="40" className="fg-block-brand" />
 
         {reason ? (
-          <Card className="fg-block-page__card">
-            <p className="fg-block-page__message">
+          <section aria-labelledby="blocked-reason">
+            <p className="fg-block-eyebrow">{reasonLabel(reason)}</p>
+            <h1 id="blocked-reason" className="fg-block-headline">
+              {reasonTitle(reason)}
+            </h1>
+            {(reason.kind === "session" || reason.kind === "standalone") && (
+              <p className="fg-block-countdown" aria-live="off">
+                {formatRemaining(reason.until - now)}
+              </p>
+            )}
+            {reasonMeta(reason) && (
+              <p className="fg-block-meta">{reasonMeta(reason)}</p>
+            )}
+            <p className="fg-block-context">
               {customMessage && customMessage !== defaultMessage
                 ? customMessage
                 : "This page is blocked by your current FocusGate rules."}
             </p>
-            {(reason.kind === "session" || reason.kind === "standalone") && (
-              <p className="fg-block-page__countdown" aria-live="off">
-                {formatRemaining(reason.until - now)} remaining
-                <span className="fg-muted"> · ends {formatClock(reason.until)}</span>
-              </p>
-            )}
-            {reason.kind === "schedule" && (
-              <p className="fg-muted">This schedule ends at {formatClock(reason.until)}.</p>
-            )}
-            {reason.kind === "allowance" && (
-              <p className="fg-muted">
-                Your allowance resets at {formatClock(reason.resetsAt)}.
-              </p>
-            )}
-            {reason.kind === "keyword" && (
-              <p className="fg-muted">
-                Matching {reason.where === "query" ? "search terms" : "page address"}:{" "}
-                <strong>{reason.keyword}</strong>
-              </p>
-            )}
-            {target && (
-              <p className="fg-block-page__target">
-                <span className="fg-muted">Address</span>
-                <code>{target}</code>
-              </p>
-            )}
-            {quote && <blockquote>{quote}</blockquote>}
-            <Chip tone="neutral">{blocksToday} pages blocked today</Chip>
-          </Card>
-        ) : ended ? (
-          <Card className="fg-block-page__card">
-            <p className="fg-block-page__message">
-              {targetHost
-                ? `${targetHost} is no longer blocked by the current rules.`
-                : "This page is no longer blocked by the current rules."}
+            {target && <p className="fg-block-url">{target}</p>}
+            {quote && <p className="fg-block-quote">“{quote}”</p>}
+            <p className="fg-block-count-label">
+              {blocksToday} pages blocked today
             </p>
-            {target && <code className="fg-block-page__target">{target}</code>}
-            <div className="fg-wrap">
+          </section>
+        ) : ended ? (
+          <section aria-labelledby="blocked-ended">
+            <p className="fg-block-eyebrow">Block ended</p>
+            <h1 id="blocked-ended" className="fg-block-headline">
+              {targetHost ?? "This page"} is no longer blocked
+            </h1>
+            {target && <p className="fg-block-url">{target}</p>}
+            <div className="fg-block-btnrow">
               <Button onClick={() => void openNewTab(target ?? undefined)}>
                 Open {targetHost ?? "page"}
               </Button>
-              <Button variant="secondary" onClick={() => void openNewTab()}>
+              <Button variant="quiet" onClick={() => void openNewTab()}>
                 Open new tab
               </Button>
             </div>
-          </Card>
+          </section>
         ) : (
-          <Card className="fg-block-page__card">
-            <p className="fg-block-page__message">
+          <section aria-labelledby="blocked-invalid">
+            <h1 id="blocked-invalid" className="fg-block-headline">
+              Page unavailable
+            </h1>
+            <p className="fg-block-context">
               The address in this block-page link is missing or is not an HTTP or HTTPS page.
             </p>
-          </Card>
+          </section>
         )}
 
         {reason && (
-          <div className="fg-block-page__actions">
+          <div className="fg-block-btnrow">
             <Button variant="secondary" onClick={() => void closeCurrentTab()}>
               Close tab
             </Button>
@@ -214,7 +240,7 @@ function BlockedScreen() {
             </Button>
           </div>
         )}
-        {actionMessage && <p className="fg-muted" role="status">{actionMessage}</p>}
+        {actionMessage && <p className="fg-block-status" role="status">{actionMessage}</p>}
       </div>
     </main>
   );

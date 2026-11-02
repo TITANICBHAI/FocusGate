@@ -1853,3 +1853,115 @@ html.fg-in-panel .fg-toast-host { bottom: calc(var(--tabbar-h) + var(--gutter));
     border-bottom: 1px solid var(--border);
   }
 }
+
+/* ---------- block page (design.md §5.5) ---------- */
+
+.fg-block-inner {
+  text-align: center;
+}
+.fg-block-brand {
+  display: block;
+  margin: 0 auto 24px;
+}
+.fg-block-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+.fg-block-headline {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 8px;
+}
+.fg-block-countdown {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin: 4px 0;
+}
+.fg-block-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+.fg-block-context {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+.fg-block-url {
+  font-size: 13px;
+  color: var(--text-muted);
+  word-break: break-all;
+  margin: 0 0 8px;
+}
+.fg-block-quote {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  margin: 0;
+}
+.fg-block-count-label {
+  font-size: 13px;
+  color: var(--text-subtle);
+  margin: 16px 0 0;
+}
+.fg-block-btnrow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+.fg-block-status {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* ---------- onboarding (design.md §5.6) ---------- */
+
+.fg-dots {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 20px;
+}
+.fg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.fg-dot--active {
+  background: var(--accent);
+}
+button.fg-row {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+button.fg-row[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+.fg-onboard-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.fg-row--select {
+  margin-bottom: 8px;
+}
+.fg-onboard-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}

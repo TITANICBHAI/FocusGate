@@ -5,7 +5,7 @@ import {
   checkProtection as checkBrowserProtection,
   getBrowserProtectionApi,
 } from "../lib/protectionStatus.ts";
-import { Button, Card, Field } from "../components/primitives.tsx";
+import { Button, Card, Chip, Field, ListRow } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { uiStorageStore } from "../hooks/storageStore.ts";
@@ -66,6 +66,13 @@ function permissionLabel(value: PermissionState): string {
   if (value === "review") return "Needs review";
   if (value === "unavailable") return "Check unavailable";
   return "Checking";
+}
+
+function permissionChip(value: PermissionState) {
+  if (value === "available") return <Chip tone="live">Available</Chip>;
+  if (value === "review") return <Chip tone="lock">Needs review</Chip>;
+  if (value === "unavailable") return <Chip tone="neutral">Check unavailable</Chip>;
+  return <Chip tone="neutral">Checking</Chip>;
 }
 
 async function checkProtection(): Promise<ProtectionCheck> {
@@ -266,16 +273,21 @@ function OnboardingFlow() {
   ]).size;
 
   return (
-    <main className="fg-full-page fg-onboarding">
-      <div className="fg-onboarding__content">
-        <header className="fg-onboarding__header">
+    <main className="fg-full-page">
+      <div className="fg-full-page__inner">
+        <header className="fg-onboard-head">
           <img src="/icon.png" alt="" width="36" height="36" />
           <span>FocusGate setup</span>
         </header>
         {step < 4 && (
-          <p className="fg-muted" aria-live="polite">
-            Step {step + 1} of 4
-          </p>
+          <div className="fg-dots" aria-live="polite" aria-label={`Step ${step + 1} of 4`}>
+            {[0, 1, 2, 3].map((dot) => (
+              <span
+                key={dot}
+                className={`fg-dot${dot === step ? " fg-dot--active" : ""}`}
+              />
+            ))}
+          </div>
         )}
 
         {step === 0 && (
@@ -284,17 +296,19 @@ function OnboardingFlow() {
             <p className="fg-muted">
               Choose a starting goal. You can review every site before it is added.
             </p>
-            <div className="fg-onboarding__goals" role="group" aria-label="Focus goal">
+            <div role="group" aria-label="Focus goal">
               {GOALS.map((item) => (
                 <button
                   key={item.id}
-                  className={`fg-onboarding__goal ${goal === item.id ? "is-selected" : ""}`}
+                  className="fg-row fg-row--select"
                   type="button"
                   aria-pressed={goal === item.id}
                   onClick={() => chooseGoal(item.id)}
                 >
-                  <strong>{item.title}</strong>
-                  <span className="fg-muted">{item.copy}</span>
+                  <div className="fg-row__copy">
+                    <span className="fg-row__title">{item.title}</span>
+                    <span className="fg-row__sub">{item.copy}</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -310,7 +324,9 @@ function OnboardingFlow() {
                 <option value={240}>4 hours</option>
               </select>
             </Field>
-            <Button onClick={() => setStep(1)}>Continue</Button>
+            <div className="fg-onboard-actions">
+              <Button wide onClick={() => setStep(1)}>Continue</Button>
+            </div>
           </section>
         )}
 
@@ -321,21 +337,25 @@ function OnboardingFlow() {
               Review the presets, then add the selected sites to your Focus list.
               Nothing is added until you save setup.
             </p>
-            <div className="fg-onboarding__presets">
+            <div>
               {BUILT_IN_PRESETS.map((preset) => (
-                <label className="fg-onboarding__preset" key={preset.id}>
-                  <input
-                    type="checkbox"
-                    checked={selectedPresets.includes(preset.id)}
-                    onChange={() => togglePreset(preset.id)}
-                  />
-                  <span>
-                    <strong>{preset.emoji} {preset.name}</strong>
-                    <span className="fg-muted">
+                <button
+                  key={preset.id}
+                  className="fg-row fg-row--select"
+                  type="button"
+                  aria-pressed={selectedPresets.includes(preset.id)}
+                  onClick={() => togglePreset(preset.id)}
+                >
+                  <div className="fg-row__swatch" aria-hidden="true">
+                    {preset.emoji}
+                  </div>
+                  <div className="fg-row__copy">
+                    <span className="fg-row__title">{preset.name}</span>
+                    <span className="fg-row__sub">
                       {preset.domains.length} sites · {preset.domains.slice(0, 3).join(", ")}
                     </span>
-                  </span>
-                </label>
+                  </div>
+                </button>
               ))}
             </div>
             <Field
@@ -354,7 +374,7 @@ function OnboardingFlow() {
             <p className="fg-muted" role="status">
               {selectedCount} sites selected
             </p>
-            <div className="fg-wrap">
+            <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(0)}>Back</Button>
               <Button
                 onClick={() => {
@@ -413,7 +433,7 @@ function OnboardingFlow() {
                 </Field>
               </>
             )}
-            <div className="fg-wrap">
+            <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(1)}>Back</Button>
               <Button onClick={continueFromPassword}>Continue</Button>
             </div>
@@ -427,34 +447,44 @@ function OnboardingFlow() {
               These permissions affect where FocusGate can work. Your browser
               controls incognito access and site permissions.
             </p>
-            <Card title="Protection check">
-              <div className="fg-onboarding__checks">
-                <div><span>Incognito access</span><strong>{permissionLabel(protection.incognito)}</strong></div>
-                <div><span>Website access</span><strong>{permissionLabel(protection.siteAccess)}</strong></div>
-                <div><span>Notifications</span><strong>{permissionLabel(protection.notifications)}</strong></div>
-              </div>
-              {protection.siteAccess === "review" && (
-                <p className="fg-muted">
-                  Review FocusGate’s site access in your browser’s extension settings.
-                </p>
-              )}
-              {protection.incognito === "review" && (
-                <p className="fg-muted">
-                  To use FocusGate in a private window, enable its incognito access in
-                  your browser’s extension settings.
-                </p>
-              )}
-            </Card>
-            <Button
-              variant="secondary"
-              onClick={() => void refreshProtection()}
-              disabled={checkingProtection}
-              title={checkingProtection ? "Checking browser permissions." : undefined}
-            >
-              {checkingProtection ? "Checking…" : "Check again"}
-            </Button>
+            <ListRow
+              title="Incognito access"
+              sub="Work inside private windows."
+              status={permissionChip(protection.incognito)}
+            />
+            <ListRow
+              title="Website access"
+              sub="Block and allow sites in normal windows."
+              status={permissionChip(protection.siteAccess)}
+            />
+            <ListRow
+              title="Notifications"
+              sub="Session end and break reminders."
+              status={permissionChip(protection.notifications)}
+            />
+            {protection.siteAccess === "review" && (
+              <p className="fg-muted">
+                Review FocusGate’s site access in your browser’s extension settings.
+              </p>
+            )}
+            {protection.incognito === "review" && (
+              <p className="fg-muted">
+                To use FocusGate in a private window, enable its incognito access in
+                your browser’s extension settings.
+              </p>
+            )}
+            <div>
+              <Button
+                variant="quiet"
+                onClick={() => void refreshProtection()}
+                disabled={checkingProtection}
+                title={checkingProtection ? "Checking browser permissions." : undefined}
+              >
+                {checkingProtection ? "Checking…" : "Check again"}
+              </Button>
+            </div>
             {error && <p className="fg-field__error" role="alert">{error}</p>}
-            <div className="fg-wrap">
+            <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(2)}>Back</Button>
               <Button onClick={() => void saveSetup()} disabled={saving}>
                 {saving ? "Saving…" : "Save setup"}
@@ -472,11 +502,15 @@ function OnboardingFlow() {
             </p>
             <Card title="What happens next">
               <p className="fg-muted">
-                Start a focus session from the toolbar popup. Blocking depends on
-                your configured rules and browser permissions.
+                Open the FocusGate side panel to start a focus session. Blocking
+                depends on your configured rules and browser permissions.
               </p>
             </Card>
-            <Button onClick={() => void openFocusGate()}>Open FocusGate</Button>
+            <div className="fg-onboard-actions">
+              <Button wide onClick={() => void openFocusGate()}>
+                Open FocusGate in the side panel
+              </Button>
+            </div>
             {protectionMessage && (
               <p className="fg-muted" role="status">{protectionMessage}</p>
             )}
