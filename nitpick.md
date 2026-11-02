@@ -394,10 +394,229 @@ Commit: `Nitpick N8: token spacing and final sweep`
 
 ## Done report
 
-When N1–N8 are green, reply with: the list of batch commits + run numbers,
+When N1–N12 are green, reply with: the list of batch commits + run numbers,
 which optional items were skipped, and anything that matched a stop rule.
 Everything browser-visible beyond this list (fonts, colors, layout taste)
 needs the owner's real-browser pass per design.md §11 — do not attempt it.
 
-*Issued 2026-11-02 by the reviewing agent. Every item above was verified
-against the source at commit 2360bf5 (CI run #130).*
+---
+
+# Round 2 (issued 2026-11-02, verified against commit 07a56cf / run #132)
+
+The batches below were found in a second, deeper pass. Same rules as §0.
+Work in order N9 → N12, one commit + one CI gate each, one progress-log line
+each. Line numbers refer to the tree as of commit 07a56cf — if a listed line
+no longer matches, stop and report.
+
+## N9 — CSS duplicates, orphans, and two silent visual bugs
+
+Commit: `Nitpick N9: css dedupe, orphan removal, row spread, editable hover`
+
+All edits in `src/ui/styles.css`. Deletion method: brace-matched rule
+removal (the P7 technique) — when a rule's selector is a grouped list, only
+remove it if **every** selector in the group is dead; if a live selector
+shares the group, re-emit the live selector with the same body before
+deleting. After the batch, `grep -c` each deleted class must return 0.
+
+**N9.1 Duplicate `.fg-row` (silent Settings bug).** `.fg-row` is defined
+twice: ~line 403 (legacy, includes `justify-content: space-between`) and
+~line 1100 (foundation, no `space-between`). The later block wins, so the
+seven+ bare `<div className="fg-row">` label/value rows in
+`DashboardSettings.tsx` (Protection section, ~lines 594–646) render their
+labels and values crammed left instead of spread apart.
+
+1. Delete the early `.fg-row` block (~403) entirely.
+2. In the foundation `.fg-row` block (~1100), add
+   `justify-content: space-between;` after `align-items: center;`.
+   (`ListRow` is unaffected — its `__copy` child is `flex: 1`.)
+
+**N9.2 Duplicate `.fg-chip`.** Defined at ~593 (legacy: `background:
+var(--surface-2)`, `min-height: 24px`) and ~1168 (foundation: `background:
+none`, `height: 22px`). The later block is the design. Delete the early
+block. Do not re-emit anything.
+
+**N9.3 Dead editable-timer hover.** `HeroTimer` applies
+`fg-hero__time--clickable` (styled at ~1205 with `cursor: pointer`), but the
+hover rule targets the never-applied parent class:
+`.fg-hero--editable .fg-hero__time:hover { color: var(--accent); }`
+(~1363) plus `.fg-hero--editable .fg-hero__time { cursor: pointer; }`
+(~1362) are dead. Replace both dead rules with one live rule next to the
+existing `--clickable` rule:
+
+```css
+.fg-hero__time--clickable:hover { color: var(--accent); }
+```
+
+**N9.4 Orphan class deletion.** Each of these is defined in styles.css and
+referenced nowhere in `src/` or `tests/` (verified by scan at commit
+07a56cf). Delete every rule (and any group whose remaining selectors are
+also dead) for:
+
+```
+.fg-brand
+.fg-card__header
+.fg-chip--accent
+.fg-chip--warning
+.fg-chip-list
+.fg-chip-remove
+.fg-dashboard-link
+.fg-dashboard__main
+.fg-divider
+.fg-eyebrow
+.fg-empty-state
+.fg-header-status
+.fg-modal__card
+.fg-page--full
+.fg-protection-dot
+.fg-quick-block
+.fg-quick-block-mode
+.fg-report-sites
+.fg-schedule-lists
+.fg-segmented
+.fg-segmented-wrap
+.fg-stats-goal-ring
+.fg-switch
+.fg-switch__thumb
+.fg-tabs
+.fg-tabs--compact
+.fg-toast-stack
+.fg-toggle-row
+.fg-toggle-row__copy
+.fg-toggle-row__label
+.fg-visually-hidden
+.full-page__header
+.is-on
+```
+
+**Do NOT delete** these scan matches — they are dynamically composed and
+alive: `.fg-btn--danger-quiet` (composed from `fg-btn--${variant}`),
+`.fg-status-dot--idle/--focus/--break/--block` (composed from
+`fg-status-dot--${status}`), `.fg-toast--error/--success` (composed from
+`fg-toast--${toast.tone}`), `.fg-hero--break/--warn` (composed in
+`HeroTimer`), `.fg-chip--live/--lock/--danger` (mapped in `Chip`).
+`fg-btn--icon`/`fg-btn--dense` are also composed. If a rule you are about to
+delete contains one of these as a co-selector in a group, keep the group and
+remove only the dead selector from the selector list.
+
+Verification: CI green, and
+`grep -n "fg-row {" src/ui/styles.css` returns exactly 1 match.
+
+---
+
+## N10 — The session debrief card is on the wrong screen
+
+Commit: `Nitpick N10: session debrief moves to the You tab`
+
+design.md §5.2 is explicit for the running state: "**No debrief card** (a
+success toast ... appears after stop; **the full debrief lives on You** and
+in `src/shared/debrief.ts`)." Today the opposite is true: FocusScreen renders
+a `Card title="Session debrief"` on the idle screen (~line 578, gated on a
+completed session within the last hour), and YouScreen has no debrief at all.
+
+1. In `src/ui/panel/views/FocusScreen.tsx`: delete the debrief `Card` block
+   (~lines 580–585), the `latestCompleted`/`debrief` computation
+   (~lines 443–449), and the now-unused `sessionDebrief` import (line 5).
+2. In `src/ui/panel/views/YouScreen.tsx`: add the debrief above
+   `<ReflectionCard ... />`. YouScreen already imports
+   `calculateStreaks`/`localDateKey` — add `sessionDebrief` from
+   `../../../shared/debrief.ts` and compute:
+
+```tsx
+const latestCompleted = [...state.sessionHistory]
+  .filter((record) => record.status === "completed")
+  .sort((left, right) => right.endedAt - left.endedAt)[0];
+const debrief =
+  latestCompleted !== undefined &&
+  Date.now() - latestCompleted.endedAt < 60 * 60_000
+    ? sessionDebrief(latestCompleted)
+    : null;
+```
+
+Render it exactly where the Focus card was, as:
+
+```tsx
+{debrief && (
+  <Card title="Last session">
+    <p className="fg-card__desc">{debrief.headline}</p>
+    {debrief.pace && <p className="fg-card__desc">{debrief.pace}</p>}
+  </Card>
+)}
+```
+
+No test changes (no pinned strings involved).
+
+---
+
+## N11 — Switching panel tabs destroys in-progress work
+
+Commit: `Nitpick N11: keep tab state across panel switches`
+
+`PanelShell` renders `{tab === "focus" && <FocusScreen ... />}` etc., so
+switching Focus → You → Focus unmounts and remounts every screen: a
+half-filled site form, a typed keyword list, an edited duration — all gone.
+The tab bar reads as navigation, not as a destructive action.
+
+In `src/ui/panel/PanelPage.tsx`, mount all three screens once and hide the
+inactive ones. Keep each screen's existing props and the outer
+`.fg-stack`/`main` structure:
+
+```tsx
+<main
+  className="fg-panel__main"
+  id={`panel-${tab}-panel`}
+  role="tabpanel"
+  aria-labelledby={`panel-${tab}-tab`}
+  tabIndex={0}
+>
+  <div className="fg-stack">
+    <div hidden={tab !== "focus"}>
+      <FocusScreen
+        state={state}
+        onOpenRules={() => setTab("rules")}
+        onOpenTasks={() => setTab("you")}
+      />
+    </div>
+    <div hidden={tab !== "rules"}>
+      <RulesScreen state={state} />
+    </div>
+    <div hidden={tab !== "you"}>
+      <YouScreen state={state} />
+    </div>
+  </div>
+</main>
+```
+
+Notes: the `hidden` attribute also removes the inactive screens from the
+accessibility tree and tab order — that is the desired behavior. FocusScreen
+keeps its 1-second ticker while hidden; that is acceptable (same cost as
+letting it run while visible). Do not lazy-mount, do not add CSS.
+
+Check before pushing: `tests/ui/panelRender.test.tsx` renders FocusScreen
+directly (not through PanelShell) — it is unaffected.
+
+---
+
+## N12 — Round-2 sweep additions
+
+Commit: `Nitpick N12: round-2 sweep`
+
+1. In `src/ui/onboarding/OnboardingPage.tsx` the goal rows are plain
+   `<button className="fg-row fg-row--select">` inside a
+   `role="group"` div with `aria-label="Focus goal"` — good — but the
+   selected row gives no text alternative for screen readers beyond
+   `aria-pressed`. That is acceptable; **do not change it**. Instead:
+2. Extend the final sweep from N8 with these greps (all must be clean):
+   - `grep -n "fg-eyebrow\|fg-brand\b\|fg-switch\|fg-tabs\b\|fg-visually-hidden" src/ui/styles.css` → nothing
+   - `grep -c "fg-row {" src/ui/styles.css` → exactly 1
+   - `grep -c "fg-chip {" src/ui/styles.css` → exactly 1
+   - `grep -rn "Session debrief" src/ui` → nothing (N10 renamed it)
+   - `grep -rn 'hidden={tab' src/ui/panel/PanelPage.tsx` → 3 matches (N11)
+3. Run the full CI gate. Green → log line, then the Done report covering
+   N1–N12.
+
+---
+
+*Round 2 issued 2026-11-02 by the reviewing agent; every item verified
+against commit 07a56cf (CI run #132). Round 2 also re-confirms the Focus
+empty state (N3.1), hint string (N2.2), and chart stretch (N6) findings
+against this commit — they still stand.*
