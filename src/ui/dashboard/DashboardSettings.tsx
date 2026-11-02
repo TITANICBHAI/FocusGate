@@ -190,7 +190,7 @@ export function DashboardSettings({ state }: { state: AppState }) {
 
   return (
     <section className="fg-stack" aria-labelledby="dashboard-settings-title">
-      <h1 id="dashboard-settings-title" hidden>Settings</h1>
+      <h1 id="dashboard-settings-title" className="fg-sr-only">Settings</h1>
 
       <SectionLabel>Security</SectionLabel>
       <PasswordSettings state={state} />

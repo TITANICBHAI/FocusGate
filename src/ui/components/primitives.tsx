@@ -567,7 +567,7 @@ export function Sheet({
         <h2 className="fg-card__title">{title}</h2>
         <div className="fg-stack">{children}</div>
         {footer && (
-          <div className="fg-wrap" style={{ marginTop: "var(--gap)" }}>
+          <div className="fg-wrap fg-sheet__footer">
             {footer}
           </div>
         )}

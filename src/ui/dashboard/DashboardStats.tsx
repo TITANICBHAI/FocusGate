@@ -94,7 +94,7 @@ export function DashboardStats({ state }: { state: AppState }) {
 
   return (
     <section className="fg-stack" aria-labelledby="dashboard-stats-title">
-      <h1 id="dashboard-stats-title" hidden>Overview</h1>
+      <h1 id="dashboard-stats-title" className="fg-sr-only">Overview</h1>
 
       <div className="fg-hero fg-hero--smallest">
         <div className="fg-hero__time">{formatDuration(totals.focusMs)}</div>

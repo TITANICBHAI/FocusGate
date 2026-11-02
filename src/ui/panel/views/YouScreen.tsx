@@ -78,7 +78,7 @@ export function YouScreen({
           role="img"
           aria-label={`Focus minutes for the last 7 days; the highest day reached ${chartMax} minutes.`}
           viewBox={`0 0 ${week.length * 28} 120`}
-          style={{ width: "100%", height: 110, color: "var(--accent)" }}
+          className="fg-stats-chart"
         >
           {week.map((point, index) => {
             const height = Math.round((point.minutes / chartMax) * 90);
@@ -149,7 +149,7 @@ export function YouScreen({
                 }
               }}
             >
-              <ExternalLink aria-hidden="true" style={{ width: 16, height: 16 }} />
+              <ExternalLink aria-hidden="true" className="fg-icon-16" />
               Open
             </Button>
           }
@@ -369,8 +369,7 @@ function HabitsCard({ state }: { state: AppState }) {
       )}
       <form className="fg-wrap" onSubmit={(event) => void addHabit(event)}>
         <input
-          className="fg-input"
-          style={{ flex: 1 }}
+          className="fg-input fg-grow"
           value={name}
           maxLength={60}
           placeholder="Read 20 pages"
@@ -379,8 +378,7 @@ function HabitsCard({ state }: { state: AppState }) {
           required
         />
         <input
-          className="fg-input"
-          style={{ flex: "none", width: 64 }}
+          className="fg-input fg-w-64"
           value={emoji}
           maxLength={8}
           aria-label="Habit emoji"

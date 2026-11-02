@@ -154,7 +154,7 @@ function ReportsPanel({ state }: { state: AppState }) {
   const reports = [...state.weeklyReports].reverse();
   return (
     <section className="fg-stack" aria-labelledby="reports-title">
-      <h1 id="reports-title" hidden>Reports</h1>
+      <h1 id="reports-title" className="fg-sr-only">Reports</h1>
       <SectionLabel>Weekly reports</SectionLabel>
       {reports.length === 0 ? (
         <EmptyState
@@ -326,7 +326,7 @@ function BackupPanel({ state }: { state: AppState }) {
 
   return (
     <section className="fg-stack" aria-labelledby="backup-title">
-      <h1 id="backup-title" hidden>Data</h1>
+      <h1 id="backup-title" className="fg-sr-only">Data</h1>
       <SectionLabel>Backup and restore</SectionLabel>
       {state.backup_v1 ? (
         <Card title="Migration safety copy">

@@ -659,8 +659,7 @@ export function FocusScreen({
             onSubmit={(event) => void addStandaloneSite(event)}
           >
             <input
-              className="fg-input"
-              style={{ flex: 1 }}
+              className="fg-input fg-grow"
               value={standaloneSiteInput}
               placeholder="Add a site to this block"
               aria-label="Add a site to this block"
@@ -687,7 +686,7 @@ export function FocusScreen({
         !isRunning && (
           <Card title="Block now">
             <ListRow
-              swatch={<ShieldX aria-hidden="true" style={{ width: 16, height: 16 }} />}
+              swatch={<ShieldX aria-hidden="true" className="fg-icon-16" />}
               title="Timed block with no early stop"
               sub="Block selected sites without starting a focus session."
               actions={
@@ -841,7 +840,7 @@ export function FocusScreen({
                   onChange={(event) =>
                     setStandaloneLongAcknowledged(event.target.checked)
                   }
-                  style={{ marginRight: 8 }}
+                  className="fg-mr-8"
                 />
                 I understand this block lasts over 24 hours and has no early-stop
                 action.

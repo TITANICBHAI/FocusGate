@@ -139,10 +139,9 @@ function UrlCheckRow({ state }: { state: AppState }) {
   return (
     <Card title="Check a URL">
       <div className="fg-wrap">
-        <Search aria-hidden="true" style={{ width: 16, height: 16, flex: "none" }} />
+        <Search aria-hidden="true" className="fg-icon-16" />
         <input
-          className="fg-input"
-          style={{ flex: 1 }}
+          className="fg-input fg-grow"
           value={input}
           placeholder="Paste any address to check"
           aria-label="URL to check"
@@ -404,7 +403,7 @@ function SitesSection({
               aria-expanded={exceptionsOpen}
               onClick={() => setExceptionsOpen((open) => !open)}
             >
-              <Eye aria-hidden="true" style={{ width: 16, height: 16 }} />
+              <Eye aria-hidden="true" className="fg-icon-16" />
               {exceptionsOpen ? "Hide" : "Show"}
             </Button>
           }
@@ -425,7 +424,7 @@ function SitesSection({
               aria-expanded={presetsOpen}
               onClick={() => setPresetsOpen((open) => !open)}
             >
-              <Eye aria-hidden="true" style={{ width: 16, height: 16 }} />
+              <Eye aria-hidden="true" className="fg-icon-16" />
               {presetsOpen ? "Hide" : "Show"}
             </Button>
           }
@@ -476,11 +475,10 @@ function ExceptionsBlock({
   }
 
   return (
-    <div className="fg-stack" style={{ paddingTop: 8 }}>
+    <div className="fg-stack fg-stack--offset">
       <form className="fg-wrap" onSubmit={addException}>
         <input
-          className="fg-input"
-          style={{ flex: 1 }}
+          className="fg-input fg-grow"
           value={input}
           placeholder="https://youtube.com/watch?v=abc123"
           aria-label="Page address to allow"
@@ -558,7 +556,7 @@ function PresetsBlock({ state, mode }: { state: AppState; mode: SiteMode }) {
   }
 
   return (
-    <div className="fg-stack" style={{ paddingTop: 8 }}>
+    <div className="fg-stack fg-stack--offset">
       {presets.map((preset) => (
         <ListRow
           key={preset.id}
@@ -715,7 +713,7 @@ function KeywordsSection({
                 aria-expanded={logOpen}
                 onClick={() => setLogOpen((open) => !open)}
               >
-                <Eye aria-hidden="true" style={{ width: 16, height: 16 }} />
+                <Eye aria-hidden="true" className="fg-icon-16" />
                 {logOpen ? "Hide" : "Show"}
               </Button>
               {state.keywordMatches.length > 0 && (
@@ -1140,7 +1138,7 @@ function LimitsSection({
               const limitValue = allowanceAmount(allowance);
               const usedValue = allowance.mode === "count" ? (usage?.opens ?? 0) : usedMinutes;
               return (
-                <div className="fg-stack" key={domain} style={{ gap: 6, paddingBottom: 8 }}>
+                <div className="fg-stack fg-stack--entry" key={domain}>
                   <ListRow
                     title={domain}
                     sub={
