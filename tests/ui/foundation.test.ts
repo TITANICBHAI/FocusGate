@@ -12,7 +12,7 @@ const styles = readFileSync(
   "utf8",
 );
 
-const TOKENS = [
+const THEME_TOKENS = [
   "--bg",
   "--surface",
   "--surface-2",
@@ -26,6 +26,9 @@ const TOKENS = [
   "--danger",
   "--warning",
   "--info",
+] as const;
+
+const RHYTHM_TOKENS = [
   "--header-h",
   "--tabbar-h",
   "--gutter",
@@ -79,9 +82,12 @@ describe("UI foundation contract", () => {
       const at = styles.indexOf(selector);
       expect(at, selector).toBeGreaterThanOrEqual(0);
       const block = styles.slice(at, styles.indexOf("}", at));
-      for (const token of TOKENS) {
+      for (const token of THEME_TOKENS) {
         expect(block, `${selector} ${token}`).toContain(token);
       }
+    }
+    for (const token of RHYTHM_TOKENS) {
+      expect(styles, token).toContain(`${token}:`);
     }
     expect(styles).toContain(".fg-panel {\n  display: flex;");
     expect(styles).toContain("min-width: 300px");

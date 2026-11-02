@@ -26,6 +26,7 @@ import {
   HeroTimer,
   ListRow,
   Progress,
+  Segmented,
   Sheet,
   Stat,
 } from "../../components/primitives.tsx";
