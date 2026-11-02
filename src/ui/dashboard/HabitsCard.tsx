@@ -9,6 +9,7 @@ import {
   Chip,
   EmptyState,
   Field,
+  ListRow,
 } from "../components/primitives.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
@@ -92,25 +93,23 @@ export function HabitsCard({ state }: { state: AppState }) {
           description="Add a habit to check it in every day."
         />
       ) : (
-        <ul className="fg-list">
-          {state.habits.map((habit) => {
-            const entries = state.habitEntries[habit.id] ?? [];
-            const streak = habitStreak(entries, todayKey);
-            const checkedToday = entries.includes(todayKey);
-            return (
-              <li className="fg-list-item" key={habit.id}>
-                <div className="fg-list-item__copy">
-                  <strong>
-                    {habit.emoji} {habit.name}
-                  </strong>
-                  <span className="fg-muted">
-                    {streak === 1 ? "1-day streak" : `${streak}-day streak`}
-                  </span>
-                </div>
-                <div className="fg-list-item__actions">
-                  <Chip tone={checkedToday ? "accent" : "neutral"}>
-                    {checkedToday ? "Checked in" : "Not yet today"}
-                  </Chip>
+        state.habits.map((habit) => {
+          const entries = state.habitEntries[habit.id] ?? [];
+          const streak = habitStreak(entries, todayKey);
+          const checkedToday = entries.includes(todayKey);
+          return (
+            <ListRow
+              key={habit.id}
+              icon={habit.emoji}
+              title={habit.name}
+              sub={streak === 1 ? "1-day streak" : `${streak}-day streak`}
+              status={
+                <Chip tone={checkedToday ? "accent" : "neutral"}>
+                  {checkedToday ? "Checked in" : "Not yet today"}
+                </Chip>
+              }
+              actions={
+                <>
                   <Button
                     variant={checkedToday ? "quiet" : "secondary"}
                     onClick={() => void toggleCheckIn(habit)}
@@ -124,11 +123,11 @@ export function HabitsCard({ state }: { state: AppState }) {
                   >
                     Remove
                   </Button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </>
+              }
+            />
+          );
+        })
       )}
       <form className="fg-stack" onSubmit={(event) => void addHabit(event)}>
         <div className="fg-grid-two">

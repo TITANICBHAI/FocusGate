@@ -8,7 +8,15 @@ import type {
   TaskRecurrence,
 } from "../../../shared/types.ts";
 import { normalizeDomain } from "../../../shared/domains.ts";
-import { Button, Card, EmptyState, Field, Chip } from "../../components/primitives.tsx";
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Field,
+  ListRow,
+  SectionLabel,
+} from "../../components/primitives.tsx";
 import { ConfirmDialog, Modal, useToast } from "../../components/feedback.tsx";
 import { sendSessionMessage } from "../../lib/sessionActions.ts";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
@@ -306,12 +314,10 @@ export function TasksView({ state }: { state: AppState }) {
         });
 
   return (
-    <section className="fg-page" aria-labelledby="tasks-title">
-      <div className="fg-page__heading">
-        <div>
-          <h1 id="tasks-title">Tasks</h1>
-          <p className="fg-muted">Plan a task and give it a focused session.</p>
-        </div>
+    <section className="fg-stack" aria-labelledby="tasks-title">
+      <SectionLabel>Tasks</SectionLabel>
+      <h1 id="tasks-title" className="fg-sr-only">Tasks</h1>
+      <div className="fg-wrap">
         <Button onClick={() => openEditor()}>Add task</Button>
       </div>
 
@@ -350,7 +356,6 @@ export function TasksView({ state }: { state: AppState }) {
           {TASK_GROUPS.map(({ key, label }) =>
             groups[key].length === 0 ? null : (
               <Card title={label} key={key}>
-                <ul className="fg-list">
                   {groups[key].map((task) => {
             const linkedAndRunning = runningTaskId === task.id;
             const disabledReason =
@@ -365,13 +370,23 @@ export function TasksView({ state }: { state: AppState }) {
               task.scheduledTime,
             ].filter(Boolean).join(" · ");
             return (
-              <li className="fg-list-item" key={task.id}>
-                <div className="fg-list-item__copy">
-                  <strong>{task.title}</strong>
-                  <span className="fg-muted">
+              <ListRow
+                key={task.id}
+                title={task.title}
+                sub={
+                  <>
                     {scheduleLabel || "Unscheduled"} · {task.durationMin} min
-                  </span>
-                  {task.description && <span className="fg-muted">{task.description}</span>}
+                    {task.description && (
+                      <span className="fg-muted">{task.description}</span>
+                    )}
+                    {disabledReason && (
+                      <span className="fg-muted" id={disabledReasonId}>
+                        {disabledReason}
+                      </span>
+                    )}
+                  </>
+                }
+                chips={
                   <div className="fg-wrap">
                     {task.completed ? (
                       <Chip tone="accent">Completed</Chip>
@@ -389,13 +404,9 @@ export function TasksView({ state }: { state: AppState }) {
                     )}
                     {task.tags.map((tag) => <Chip key={tag}>{tag}</Chip>)}
                   </div>
-                  {disabledReason && (
-                    <span className="fg-muted" id={disabledReasonId}>
-                      {disabledReason}
-                    </span>
-                  )}
-                </div>
-                <div className="fg-list-item__actions">
+                }
+                actions={
+                  <div className="fg-wrap">
                   {!linkedAndRunning && (
                     <Button
                       variant="quiet"
@@ -457,11 +468,11 @@ export function TasksView({ state }: { state: AppState }) {
                   >
                     Remove
                   </Button>
-                </div>
-                  </li>
-                  );
+                  </div>
+                }
+              />
+                );
                 })}
-                </ul>
               </Card>
             ),
           )}

@@ -357,37 +357,6 @@ textarea:focus-visible {
   background: var(--danger);
 }
 
-.fg-page {
-  display: flex;
-  min-height: 100%;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-}
-
-.fg-page--full {
-  width: min(100%, 960px);
-  margin: 0 auto;
-  padding: 32px 24px 48px;
-}
-
-.fg-page__heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.fg-page__heading h1 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.fg-page__heading p {
-  margin: 4px 0 0;
-}
-
 .fg-muted {
   color: var(--text-muted);
   font-size: 0.8125rem;
@@ -440,7 +409,6 @@ textarea:focus-visible {
 .fg-card__header .fg-muted {
   margin: 4px 0 0;
 }
-
 
 .fg-icon-button {
   display: inline-grid;
@@ -880,36 +848,6 @@ textarea:focus-visible {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.fg-list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 10px 12px;
-}
-
-.fg-list-item__copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.fg-list-item__copy strong {
-  overflow-wrap: anywhere;
-  font-size: 0.8125rem;
-  font-weight: 500;
-}
-
-.fg-list-item__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 @keyframes fg-pulse {
