@@ -1447,7 +1447,7 @@ html.fg-in-panel .fg-toast-host { bottom: calc(var(--tabbar-h) + var(--gutter));
 }
 .fg-block-brand {
   display: block;
-  margin: 0 auto 24px;
+  margin: 0 auto calc(var(--gap) * 2);
 }
 .fg-block-eyebrow {
   font-size: 12px;
@@ -1494,13 +1494,13 @@ html.fg-in-panel .fg-toast-host { bottom: calc(var(--tabbar-h) + var(--gutter));
 .fg-block-count-label {
   font-size: 13px;
   color: var(--text-subtle);
-  margin: 16px 0 0;
+  margin: var(--gutter) 0 0;
 }
 .fg-block-btnrow {
   display: flex;
-  gap: 12px;
+  gap: var(--gap);
   justify-content: center;
-  margin-top: 24px;
+  margin-top: calc(var(--gap) * 2);
 }
 .fg-block-status {
   font-size: 13px;
@@ -1514,7 +1514,7 @@ html.fg-in-panel .fg-toast-host { bottom: calc(var(--tabbar-h) + var(--gutter));
 .fg-dots {
   display: flex;
   gap: 6px;
-  margin: 0 0 20px;
+  margin: 0 0 var(--gutter);
 }
 .fg-dot {
   width: 8px;
@@ -1541,8 +1541,8 @@ button.fg-row[aria-pressed="true"] {
 }
 .fg-onboard-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: var(--gap);
+  margin-top: var(--gutter);
 }
 .fg-row--select {
   margin-bottom: 8px;
@@ -1553,7 +1553,7 @@ button.fg-row[aria-pressed="true"] {
   gap: 10px;
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: var(--gutter);
 }
 
 /* ---------- dashboard hardening + overview grid (design.md §5.7) ---------- */
