@@ -22,6 +22,7 @@ import {
   Button,
   Card,
   Chip,
+  EmptyState,
   Field,
   HeroTimer,
   ListRow,
@@ -634,10 +635,11 @@ export function FocusScreen({
             }
           />
         ) : (
-          <Button variant="quiet" onClick={onOpenTasks}>
-            <CalendarPlus aria-hidden="true" style={{ width: 24, height: 24 }} />
-            Nothing scheduled — add a task.
-          </Button>
+          <EmptyState
+            icon={<CalendarPlus aria-hidden="true" />}
+            title="Nothing scheduled"
+            description="Add a task to plan your next focus session."
+          />
         )}
       </Card>
 

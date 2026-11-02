@@ -1669,3 +1669,16 @@ body.full-page {
   flex: 0 0 auto;
   border-radius: 10px;
 }
+
+/* screen-reader-only utility (nitpick N3/N4; N4.2 is satisfied here) */
+.fg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

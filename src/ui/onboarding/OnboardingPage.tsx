@@ -285,7 +285,10 @@ function OnboardingFlow() {
           <span>FocusGate setup</span>
         </header>
         {step < 4 && (
-          <div className="fg-dots" aria-live="polite" aria-label={`Step ${step + 1} of 4`}>
+          <div className="fg-dots">
+            <span className="fg-sr-only" aria-live="polite">
+              Step {step + 1} of 4
+            </span>
             {[0, 1, 2, 3].map((dot) => (
               <span
                 key={dot}
