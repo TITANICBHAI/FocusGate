@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CalendarPlus, ShieldX } from "lucide-react";
 import { normalizeDomain } from "../../../shared/domains.ts";
-import { sessionDebrief } from "../../../shared/debrief.ts";
 import { computeBlockPlan, isBlockingActive } from "../../../shared/plan.ts";
 import { isScheduleActiveAt } from "../../../shared/time.ts";
 import {
@@ -441,14 +440,6 @@ export function FocusScreen({
     activeScheduleCount,
   );
 
-  const latestCompleted = [...state.sessionHistory]
-    .filter((record) => record.status === "completed")
-    .sort((left, right) => right.endedAt - left.endedAt)[0];
-  const debrief =
-    latestCompleted !== undefined && now - latestCompleted.endedAt < 60 * 60_000
-      ? sessionDebrief(latestCompleted)
-      : null;
-
   /* ---------------- render ---------------- */
 
   return (
@@ -576,13 +567,6 @@ export function FocusScreen({
         <Button variant="secondary" onClick={() => void skipBreak()}>
           Skip break
         </Button>
-      )}
-
-      {debrief && (
-        <Card title="Session debrief">
-          <p className="fg-card__desc">{debrief.headline}</p>
-          {debrief.pace && <p className="fg-card__desc">{debrief.pace}</p>}
-        </Card>
       )}
 
       <Card title="Today">

@@ -7,6 +7,7 @@ import {
 import { habitStreak } from "../../../shared/habits.ts";
 import { calculateStreaks, focusMinutesPerDay } from "../../../shared/stats.ts";
 import { localDateKey } from "../../../shared/time.ts";
+import { sessionDebrief } from "../../../shared/debrief.ts";
 import type { AppState, DayStats } from "../../../shared/types.ts";
 import {
   Button,
@@ -55,6 +56,15 @@ export function YouScreen({
   const unlockedCount = ACHIEVEMENT_DEFINITIONS.filter((definition) =>
     state.achievements.some((record) => record.id === definition.id),
   ).length;
+
+  const latestCompleted = [...state.sessionHistory]
+    .filter((record) => record.status === "completed")
+    .sort((left, right) => right.endedAt - left.endedAt)[0];
+  const debrief =
+    latestCompleted !== undefined &&
+    Date.now() - latestCompleted.endedAt < 60 * 60_000
+      ? sessionDebrief(latestCompleted)
+      : null;
 
   return (
     <div className="fg-stack">
@@ -110,6 +120,13 @@ export function YouScreen({
           />
         </div>
       </Card>
+
+      {debrief && (
+        <Card title="Last session">
+          <p className="fg-card__desc">{debrief.headline}</p>
+          {debrief.pace && <p className="fg-card__desc">{debrief.pace}</p>}
+        </Card>
+      )}
 
       <TasksView state={state} />
 
