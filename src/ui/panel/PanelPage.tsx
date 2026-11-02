@@ -83,15 +83,19 @@ function PanelShell() {
         tabIndex={0}
       >
         <div className="fg-stack">
-          {tab === "focus" && (
+          <div hidden={tab !== "focus"}>
             <FocusScreen
               state={state}
               onOpenRules={() => setTab("rules")}
               onOpenTasks={() => setTab("you")}
             />
-          )}
-          {tab === "rules" && <RulesScreen state={state} />}
-          {tab === "you" && <YouScreen state={state} />}
+          </div>
+          <div hidden={tab !== "rules"}>
+            <RulesScreen state={state} />
+          </div>
+          <div hidden={tab !== "you"}>
+            <YouScreen state={state} />
+          </div>
         </div>
       </main>
       <nav className="fg-tabbar" aria-label="Panel sections">
