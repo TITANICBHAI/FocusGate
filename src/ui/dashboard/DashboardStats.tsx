@@ -164,7 +164,8 @@ export function DashboardStats({ state }: { state: AppState }) {
           role="img"
           aria-label={`Focus minutes per day for ${chart.length} days; the highest day reached ${chartMax} minutes.`}
           viewBox={`0 0 ${chart.length * 24} 130`}
-          preserveAspectRatio="none"
+          width={chart.length * 24}
+          height={130}
         >
           {chart.map((point, index) => {
             const height = Math.round((point.minutes / chartMax) * 100);

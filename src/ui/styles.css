@@ -883,8 +883,10 @@ textarea:focus-visible {
 }
 
 .fg-stats-chart {
-  width: 100%;
-  height: 130px;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
   color: var(--accent);
 }
 

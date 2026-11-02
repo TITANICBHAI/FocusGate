@@ -78,6 +78,8 @@ export function YouScreen({
           role="img"
           aria-label={`Focus minutes for the last 7 days; the highest day reached ${chartMax} minutes.`}
           viewBox={`0 0 ${week.length * 28} 120`}
+          width={week.length * 28}
+          height={120}
           className="fg-stats-chart"
         >
           {week.map((point, index) => {
