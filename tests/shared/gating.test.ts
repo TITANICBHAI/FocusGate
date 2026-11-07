@@ -218,3 +218,73 @@ describe("lock source and elapsed phases", () => {
     expect(decision.result).toBe("locked");
   });
 });
+
+describe("lock message wording", () => {
+  const twelveFortyTwo = new Date(2026, 10, 3, 0, 42).getTime();
+  const base = createDefaultState();
+
+  it("shows the end as a clock time, not a raw timestamp", () => {
+    const decision = guard("remove_site", {
+      session: {
+        ...base.session,
+        status: "work",
+        lockLevel: "strict",
+        phaseEndsAt: twelveFortyTwo,
+      },
+      standalone: base.standalone,
+      hasPassword: false,
+      now: twelveFortyTwo - 60_000,
+      locale: "en-US",
+    });
+    expect(decision).toMatchObject({
+      result: "locked",
+      reason: "Locked until 12:42 AM by your strict session.",
+      until: twelveFortyTwo,
+    });
+  });
+
+  it("names a commitment session and a Block now the same way", () => {
+    const commitment = guard("remove_site", {
+      session: {
+        ...base.session,
+        status: "work",
+        lockLevel: "commitment",
+        phaseEndsAt: twelveFortyTwo,
+      },
+      standalone: base.standalone,
+      hasPassword: false,
+      now: twelveFortyTwo - 60_000,
+      locale: "en-US",
+    });
+    expect(commitment).toMatchObject({
+      reason: "Locked until 12:42 AM by your commitment session.",
+    });
+
+    const standalone = guard("remove_site", {
+      session: base.session,
+      standalone: { ...base.standalone, active: true, startsAt: 0, until: twelveFortyTwo },
+      hasPassword: false,
+      now: twelveFortyTwo - 60_000,
+      locale: "en-US",
+    });
+    expect(standalone).toMatchObject({
+      reason: "Locked until 12:42 AM by your standalone block.",
+    });
+  });
+
+  it("never puts a 13-digit number in the message", () => {
+    const decision = guard("remove_site", {
+      session: {
+        ...base.session,
+        status: "work",
+        lockLevel: "strict",
+        phaseEndsAt: Date.now() + 3_600_000,
+      },
+      standalone: base.standalone,
+      hasPassword: false,
+      now: Date.now(),
+    });
+    expect(decision.result).toBe("locked");
+    if (decision.result === "locked") expect(decision.reason).not.toMatch(/\d{13}/);
+  });
+});

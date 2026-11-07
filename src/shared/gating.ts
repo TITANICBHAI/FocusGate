@@ -1,3 +1,4 @@
+import { formatClockTime } from "./clockFormat.ts";
 import { isWorkPhaseLive } from "./sessionClock.ts";
 import type { LockLevel, SessionState, StandaloneBlock } from "./types.ts";
 
@@ -97,6 +98,8 @@ export interface GuardState {
   hasPassword: boolean;
   now: number;
   taskId?: string;
+  /** Locale for the clock time in lock messages. Defaults to the browser's. */
+  locale?: string;
 }
 
 interface LockSource {
@@ -125,12 +128,12 @@ function lockSource(state: GuardState): LockSource | null {
   return null;
 }
 
-function locked(source: LockSource): GuardResult {
+function locked(source: LockSource, locale?: string): GuardResult {
   const name =
     source.level === "standalone" ? "standalone block" : `${source.level} session`;
   return {
     result: "locked",
-    reason: `Locked until ${source.until} by your ${name}.`,
+    reason: `Locked until ${formatClockTime(source.until, locale)} by your ${name}.`,
     until: source.until,
   };
 }
@@ -142,14 +145,17 @@ export function guard(action: GuardAction, state: GuardState): GuardResult {
     case "strengthen":
       return { result: "allow" };
     case "weaken":
-      if (source) return locked(source);
+      if (source) return locked(source, state.locale);
       return state.hasPassword ? { result: "password" } : { result: "allow" };
     case "end":
       if (state.session.status === "idle") {
         return { result: "locked", reason: "There is no running session." };
       }
       if (state.session.lockLevel === "commitment") {
-        return locked({ level: "commitment", until: state.session.phaseEndsAt });
+        return locked(
+          { level: "commitment", until: state.session.phaseEndsAt },
+          state.locale,
+        );
       }
       if (state.session.lockLevel === "strict") {
         return state.hasPassword
@@ -158,10 +164,10 @@ export function guard(action: GuardAction, state: GuardState): GuardResult {
       }
       return { result: "confirm" };
     case "password":
-      if (source) return locked(source);
+      if (source) return locked(source, state.locale);
       return state.hasPassword ? { result: "password" } : { result: "allow" };
     case "wipe":
-      if (source) return locked(source);
+      if (source) return locked(source, state.locale);
       return state.hasPassword
         ? { result: "password" }
         : { result: "confirm" };
@@ -175,10 +181,13 @@ export function guard(action: GuardAction, state: GuardState): GuardResult {
         (state.session.lockLevel === "strict" ||
           state.session.lockLevel === "commitment")
       ) {
-        return locked({
-          level: state.session.lockLevel,
-          until: state.session.phaseEndsAt,
-        });
+        return locked(
+          {
+            level: state.session.lockLevel,
+            until: state.session.phaseEndsAt,
+          },
+          state.locale,
+        );
       }
       return { result: "allow" };
     }

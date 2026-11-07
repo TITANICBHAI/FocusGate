@@ -88,7 +88,7 @@ export function ScheduleSection({
     <div className="fg-stack">
       <Card
         title="Schedules"
-        description="Block your rules on the days and hours you choose."
+        description="Block sites on a weekly timetable. Schedules start and stop on their own, so you don't need to start a session."
         actions={
           <Button variant="primary" size="dense" onClick={() => openAdd()}>
             Add schedule
@@ -211,6 +211,7 @@ function ScheduleRow({
             className="fg-toggle__track"
             disabled={switchDisabled}
             title={switchDisabled ? (lockedReason ?? undefined) : undefined}
+            aria-describedby={switchDisabled ? "lock-reason" : undefined}
             onClick={() => {
               const enabled = !schedule.enabled;
               void uiStorageStore
@@ -334,6 +335,7 @@ function ScheduleSheet({
                 variant="danger"
                 disabled={Boolean(lockedReason)}
                 title={lockedReason ?? undefined}
+                aria-describedby={lockedReason ? "lock-reason" : undefined}
                 onClick={() => setConfirmDelete(true)}
               >
                 Delete schedule
@@ -353,7 +355,10 @@ function ScheduleSheet({
             />
           </Field>
 
-          <div className="fg-stack" role="group" aria-label="Days" style={{ gap: 8 }}>
+          <div className="fg-stack" role="group" aria-labelledby="schedule-days-label" style={{ gap: 8 }}>
+            <span className="fg-field__label" id="schedule-days-label">
+              Days
+            </span>
             <div className="fg-wrap">
               {DAY_PRESETS.map((preset) => (
                 <Button
@@ -430,7 +435,7 @@ function ScheduleSheet({
                 />
                 <span>
                   {option.label}
-                  {option.value !== "own" && (
+                  {option.value === "list" && (
                     <span className="fg-field__helper">
                       {" "}
                       ({state.blockedSites.length} {state.blockedSites.length === 1 ? "site" : "sites"})

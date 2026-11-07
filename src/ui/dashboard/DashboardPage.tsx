@@ -22,6 +22,9 @@ import { RESET_CONFIRMATION_PHRASE } from "../../shared/dataActions.ts";
 import type { DataActionResult } from "../../background/dataActions.ts";
 import { sendDataActionMessage } from "../lib/dataActions.ts";
 import { RulesScreen } from "../panel/views/RulesScreen.tsx";
+import type { RuleSection } from "../panel/views/RulesScreen.tsx";
+import { StatusStrip, pillFor } from "../components/StatusStrip.tsx";
+import { describeNow } from "../lib/statusSummary.ts";
 import { DashboardSettings } from "./DashboardSettings.tsx";
 import { DashboardStats } from "./DashboardStats.tsx";
 import { HabitsCard } from "./HabitsCard.tsx";
@@ -53,6 +56,17 @@ export function DashboardPage() {
 function DashboardShell() {
   const state = useAppState();
   const [tab, setTab] = useState<DashboardTab>("overview");
+  const [jump, setJump] = useState<{ section: RuleSection; nonce: number }>({
+    section: "sites",
+    nonce: 0,
+  });
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const summary = describeNow(state, now);
+  const pill = pillFor(summary, state, now);
 
   // The panel gear links to dashboard.html#settings — honor the deep link.
   useEffect(() => {
@@ -77,6 +91,7 @@ function DashboardShell() {
           </span>
         </a>
         <div className="fg-dashboard__header-actions">
+          <span className={`fg-pill fg-pill--${pill.tone}`}>{pill.label}</span>
           <a
             className="fg-dashboard__setup"
             href="./onboarding.html"
@@ -87,6 +102,16 @@ function DashboardShell() {
           </a>
         </div>
       </header>
+      <StatusStrip
+        summary={summary}
+        onCta={(target) => {
+          setJump((current) => ({
+            section: target === "schedule" ? "schedule" : "sites",
+            nonce: current.nonce + 1,
+          }));
+          setTab("rules");
+        }}
+      />
       <div className="fg-dash">
         <nav className="fg-dash__rail" aria-label="Dashboard sections">
           {DASHBOARD_TABS.map((item) => (
@@ -108,7 +133,7 @@ function DashboardShell() {
               <HabitsCard state={state} />
             </>
           )}
-          {tab === "rules" && <RulesScreen state={state} density="wide" />}
+          {tab === "rules" && <RulesScreen state={state} density="wide" jumpTo={jump} />}
           {tab === "reports" && <ReportsPanel state={state} />}
           {tab === "settings" && <DashboardSettings state={state} />}
           {tab === "data" && <BackupPanel state={state} />}

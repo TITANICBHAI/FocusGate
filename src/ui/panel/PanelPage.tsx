@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Shield, Timer, User } from "lucide-react";
-import type { AppState } from "../../shared/types.ts";
+import { describeNow } from "../lib/statusSummary.ts";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { AppHeader } from "../components/primitives.tsx";
+import { StatusStrip, pillFor } from "../components/StatusStrip.tsx";
 import { FocusScreen } from "./views/FocusScreen.tsx";
 import { RulesScreen } from "./views/RulesScreen.tsx";
+import type { RuleSection } from "./views/RulesScreen.tsx";
 import { YouScreen } from "./views/YouScreen.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
@@ -24,22 +26,6 @@ const TABS: ReadonlyArray<{
   { value: "rules", label: "Rules", icon: <Shield aria-hidden="true" /> },
   { value: "you", label: "You", icon: <User aria-hidden="true" /> },
 ];
-
-function statusFromState(state: AppState): "idle" | "focus" | "break" | "block" {
-  if (state.session.status === "work") return "focus";
-  if (state.session.status === "shortBreak" || state.session.status === "longBreak") {
-    return "break";
-  }
-  const now = Date.now();
-  if (
-    state.standalone.active &&
-    state.standalone.startsAt <= now &&
-    now < state.standalone.until
-  ) {
-    return "block";
-  }
-  return "idle";
-}
 
 function PanelPage() {
   return (
@@ -57,6 +43,18 @@ function PanelPage() {
 function PanelShell() {
   const state = useAppState();
   const [tab, setTab] = useState<PanelTab>("focus");
+  const [jump, setJump] = useState<{ section: RuleSection; nonce: number }>({
+    section: "sites",
+    nonce: 0,
+  });
+  // The status line depends on the clock (a schedule can start by itself), so
+  // look again every half minute. Per-second timing stays in the Focus tab.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const summary = describeNow(state, now);
 
   // The panel marks itself so the toast host clears the tab bar.
   useEffect(() => {
@@ -74,7 +72,17 @@ function PanelShell() {
 
   return (
     <div className="fg-panel">
-      <AppHeader status={statusFromState(state)} onOpenSettings={openSettings} />
+      <AppHeader pill={pillFor(summary, state, now)} onOpenSettings={openSettings} />
+      <StatusStrip
+        summary={summary}
+        onCta={(target) => {
+          setJump((current) => ({
+            section: target === "schedule" ? "schedule" : "sites",
+            nonce: current.nonce + 1,
+          }));
+          setTab("rules");
+        }}
+      />
       <main
         className="fg-panel__main"
         id={`panel-${tab}-panel`}
@@ -91,7 +99,7 @@ function PanelShell() {
             />
           </div>
           <div hidden={tab !== "rules"}>
-            <RulesScreen state={state} />
+            <RulesScreen state={state} jumpTo={jump} />
           </div>
           <div hidden={tab !== "you"}>
             <YouScreen state={state} />
@@ -119,4 +127,4 @@ function PanelShell() {
   );
 }
 
-export { PanelPage, statusFromState };
+export { PanelPage };

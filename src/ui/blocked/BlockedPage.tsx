@@ -5,16 +5,12 @@ import { localDateKey } from "../../shared/time.ts";
 import { Button } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
+import { formatClockTime } from "../../shared/clockFormat.ts";
 import { useAppState } from "../hooks/useStorage.ts";
 import { parseBlockTarget } from "../lib/blockTarget.ts";
 import { ThemeRoot } from "../theme.tsx";
 
-function formatClock(timestamp: number): string {
-  // Newer ICU builds put a narrow no-break space before AM and PM. Use a plain one.
-  return new Date(timestamp)
-    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    .replace(/[\u202f\u00a0]/g, " ");
-}
+const formatClock = formatClockTime;
 
 function formatRemaining(milliseconds: number): string {
   const seconds = Math.max(0, Math.ceil(milliseconds / 1_000));

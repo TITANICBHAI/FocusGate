@@ -35,6 +35,12 @@ function withSchedules(schedules: Schedule[], blockedSites: string[] = []): AppS
 describe("ScheduleSection with no schedules", () => {
   const html = render(withSchedules([]));
 
+  it("describes what schedules do", () => {
+    expect(html).toContain(
+      "Block sites on a weekly timetable. Schedules start and stop on their own, so you don&#x27;t need to start a session.",
+    );
+  });
+
   it("offers templates instead of an empty list", () => {
     expect(html).toContain("Block sites on a timetable");
     for (const name of ["Work hours", "Study", "Sleep", "Start from scratch"]) {

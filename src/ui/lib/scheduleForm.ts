@@ -137,7 +137,7 @@ export function planScheduleSave(input: {
     const parsed = parseSites(draft.sitesText);
     if (!parsed.ok) return parsed;
     if (parsed.sites.length === 0) {
-      return { ok: false, error: "Add at least one site, or choose your Focus list." };
+      return { ok: false, error: "Add at least one site, or use your Focus list." };
     }
     sites = parsed.sites;
   }

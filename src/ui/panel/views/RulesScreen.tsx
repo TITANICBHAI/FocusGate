@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Eye, Search } from "lucide-react";
 import type {
@@ -26,7 +26,7 @@ import { weakeningLockReason } from "../../lib/guardState.ts";
 import { aliasesForSiteDisplay } from "../../lib/aliasPresentation.ts";
 import { ScheduleSection } from "./ScheduleSection.tsx";
 
-type RuleSection = "sites" | "keywords" | "schedule" | "limits";
+export type RuleSection = "sites" | "keywords" | "schedule" | "limits";
 type SiteMode = "focus" | "always";
 type KeywordMode = KeywordRule["mode"];
 
@@ -40,18 +40,27 @@ const RULE_SECTIONS: ReadonlyArray<{ value: RuleSection; label: string }> = [
 export function RulesScreen({
   state,
   density = "narrow",
+  jumpTo,
 }: {
   state: AppState;
   density?: "narrow" | "wide";
+  /** Switches to a section when `nonce` changes, for links from the status strip. */
+  jumpTo?: { section: RuleSection; nonce: number };
 }) {
   const [section, setSection] = useState<RuleSection>("sites");
+  const jumpNonce = jumpTo?.nonce;
+  useEffect(() => {
+    if (jumpTo) setSection(jumpTo.section);
+    // Only a new nonce is a new request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpNonce]);
   const lockedReason = weakeningLockReason(state);
 
   return (
     <div className="fg-stack">
       <UrlCheckRow state={state} />
       {lockedReason && (
-        <p className="fg-field__helper" role="status">
+        <p id="lock-reason" className="fg-field__helper" role="status">
           {lockedReason} Additions that strengthen protection remain available.
         </p>
       )}
@@ -374,6 +383,7 @@ function SitesSection({
                         size="dense"
                         disabled={Boolean(lockedReason)}
                         title={lockedReason ?? undefined}
+                        aria-describedby={lockedReason ? "lock-reason" : undefined}
                         aria-label={`Remove ${domain} from ${siteMode === "focus" ? "Focus" : "Always"} rules`}
                         onClick={() => void removeSite(domain, siteMode)}
                       >
@@ -480,7 +490,13 @@ function ExceptionsBlock({
           aria-label="Page address to allow"
           onChange={(event) => setInput(event.target.value)}
         />
-        <Button variant="secondary" size="dense" type="submit" disabled={Boolean(lockedReason)}>
+        <Button
+          variant="secondary"
+          size="dense"
+          type="submit"
+          disabled={Boolean(lockedReason)}
+          aria-describedby={lockedReason ? "lock-reason" : undefined}
+        >
           Allow page
         </Button>
       </form>
@@ -666,6 +682,7 @@ function KeywordsSection({
                     size="dense"
                     disabled={Boolean(lockedReason)}
                     title={lockedReason ?? undefined}
+                        aria-describedby={lockedReason ? "lock-reason" : undefined}
                     aria-label={`Remove keyword ${rule.text}`}
                     onClick={() => {
                       void uiStorageStore
@@ -930,6 +947,7 @@ function LimitsSection({
                         variant="quiet"
                         size="dense"
                         disabled={Boolean(lockedReason)}
+                        aria-describedby={lockedReason ? "lock-reason" : undefined}
                         aria-label={`Remove limit for ${domain}`}
                         onClick={() => {
                           void uiStorageStore

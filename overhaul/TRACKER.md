@@ -4,10 +4,10 @@
 
 ## Overall status
 
-- **Status:** Phases 1 and 2 code and tests written (stopped for the owner); not yet verified with the real npm gates
+- **Status:** Phases 1, 2 and 3 code and tests written (stopped for the owner); not yet verified with the real npm gates
 - **Progress:** 7/39 tasks verified
-- **Current phase:** Phase 0 done; Phases 1 and 2 written, waiting for owner-run checks; Phase 3 not started
-- **Last updated:** 2026-11-06
+- **Current phase:** Phase 0 done; Phases 1, 2 and 3 written, waiting for owner-run checks; Phase 4 not started
+- **Last updated:** 2026-11-07
 
 ## Rules
 
@@ -39,7 +39,7 @@
 | 0 Hotfix | v1.0.1 | DONE: evidence recorded | 7/7 | 2026-11-05 | 2026-11-06 |  |
 | 1 Blocker tells the truth | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build and the --engine smoke | 0/5 | 2026-11-06 | 2026-11-06 (code) | |
 | 2 Schedules explain themselves | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build | 0/5 | 2026-11-06 | 2026-11-06 (code) | Phase 1 |
-| 3 The extension talks | v1.0.1 (no bump) | NOT STARTED | 0/5 | | | T2.1 |
+| 3 The extension talks | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the panel | 0/5 | 2026-11-06 | 2026-11-07 (code) | T2.1 |
 | 4 A real profile | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 3 |
 | 5 Identity | v1.0.1 (no bump) | NOT STARTED | 0/8 | | | Phase 3 |
 | 6 Accessibility and polish | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 5 |
@@ -139,18 +139,37 @@ Evidence:
 
 ## Phase 3: the extension talks
 
-- [ ] T3.1 `describeNow`
-- [ ] T3.2 Status strip and labelled header pill
-- [ ] T3.3 Lock explainer
-- [ ] T3.4 Locked controls explain themselves
-- [ ] T3.5 First run
+- [ ] T3.1 `describeNow` (UNVERIFIED: stand-in runner only)
+- [ ] T3.2 Status strip and labelled header pill (UNVERIFIED: same; static-HTML screenshots only)
+- [ ] T3.3 Lock explainer (UNVERIFIED: same)
+- [ ] T3.4 Locked controls explain themselves (UNVERIFIED: same)
+- [ ] T3.5 First run (UNVERIFIED: same; the install event was not fired in a real browser)
 
 Notes:
+
+- 2026-11-07: Phase 3 written over two sessions. Same limits as Phases 1 and 2: no `node_modules`, no network. Stand-in runner: all 74 test files outside `tests/shared/storage.test.ts` pass. `tsc` error list is identical to the untouched zip (83 errors, missing type packages). The one real finding from `tsc`: `src/background/chrome.ts` declares its own small `chrome` type and lacked `tabs.create`; added. Real `npm test`, `npm run typecheck`, `npm run build` not run.
+- T3.1: `src/ui/lib/statusSummary.ts` (`describeNow`) follows the DESIGN table in order: Block now, live work phase (none, strict, commit), break, schedule, then idle (no sites, Always list only, nothing blocking). An exhausted daily limit adds a second line. A "no schedules" idle state offers `Add a schedule`.
+- T3.2: `StatusStrip` sits under the panel header and above the dashboard. Its button is secondary, never primary, so the "one primary action" test still holds. The header pill says `Not blocking`, `Blocking` or `Break` in words, with a lock icon when locked. The old dot-only status is gone.
+- T3.3: the lock explainer is a list; the selected lock carries `aria-current`. The two sentences `tests/claims.test.ts` pins are kept word for word.
+- T3.4: lock messages now show a clock time (for example "Locked until 12:42 AM by your strict session."), never a raw timestamp. `guard` takes an optional `locale`. `weakeningLockReason` now just returns the guard reason (one wording in one place). The visible lock line has `id="lock-reason"` and every control disabled by the lock has `aria-describedby="lock-reason"`.
+- T3.4 shared formatter: `src/shared/clockFormat.ts` (`formatClockTime`) is now used by the lock messages, the block page and the schedule summary. `FocusScreen` and `PasswordSettings` still format times themselves (not in the task's files; backlog).
+- T3.5: on `reason === "install"` the worker opens `onboarding.html` in a tab after the install work; a failure to open the tab is reported through `onError` and does not undo the install work. An update opens nothing. The Focus tab's empty state now shows a secondary `Add sites` button instead of the grey line; **Start focus** is not disabled (it still toasts and opens Rules when nothing can be blocked, as before).
+- T3.5 test order: the worker test was written first and seen red. The empty-state render test was written together with the change, not before.
+- Corrections to Phase 2 strings found while checking DESIGN section 9.3: the Schedules description line, the visible "Days" label, the "(N sites)" count (only for the "list" option) and the empty-sites error ("Add at least one site, or use your Focus list.") now match the pinned text; tests added.
+- Class name: my first status classes `.fg-status*` collided with an existing `.fg-status` rule, so mine are `.fg-nowline*`.
+- Not done on purpose: the "gate closes" animation (DESIGN, belongs with T6.x). Screenshots are static HTML with the real `styles.css`, not the built extension.
+- `describeNow` counts: "The Always list is blocking N sites." counts the Always list only; the Focus list is not added.
 
 Evidence:
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-11-06 | T3.1 | src/shared/clockFormat.ts; src/ui/lib/statusSummary.ts; tests/ui/statusSummary.test.ts | RED: module not found. GREEN in the stand-in runner. Real gates not run | UNVERIFIED |
+| 2026-11-06 | T3.2 | src/ui/components/StatusStrip.tsx; src/ui/components/primitives.tsx; src/ui/panel/PanelPage.tsx; src/ui/dashboard/DashboardPage.tsx; src/ui/styles.css; tests/ui/statusStrip.test.tsx; tests/ui/panelRender.test.tsx | GREEN in the stand-in runner; foundation, themeTokens, claims still pass. Screenshots overhaul/evidence/phase3/status-{300,400}-{dark,light}.png (static HTML). Real gates not run | UNVERIFIED |
+| 2026-11-06 | T3.3 | src/ui/panel/views/FocusScreen.tsx; src/ui/styles.css; tests/ui/panelRender.test.tsx | GREEN; claims test still passes (two lock sentences intact) | UNVERIFIED |
+| 2026-11-07 | T3.4 | src/shared/gating.ts; src/ui/lib/guardState.ts; src/ui/panel/views/RulesScreen.tsx; src/ui/panel/views/ScheduleSection.tsx; src/ui/blocked/BlockedPage.tsx; src/ui/lib/scheduleSummary.ts; tests/shared/gating.test.ts; tests/ui/lockedControls.test.tsx | RED: gating 3 failed ("Locked until 1793646720000 by your strict session."), lockedControls 2 failed (no id, no aria-describedby). GREEN: gating 9 passed, lockedControls 3 passed | UNVERIFIED |
+| 2026-11-07 | T3.5 | src/background/worker.ts; src/background/chrome.ts; src/ui/panel/views/FocusScreen.tsx; tests/background/worker.test.ts; tests/ui/panelRender.test.tsx | RED: worker "expected length 0 to be 1". GREEN: worker 17 passed, panelRender 6 passed | UNVERIFIED |
+| 2026-11-07 | Phase 3 whole | all of the above, CHANGELOG.md | Stand-in run: 74 test files pass (storage.test.ts excluded, same limit as before). tsc error list identical to the untouched zip (83) | UNVERIFIED |
 
 ## Phase 4: a real profile
 
@@ -216,6 +235,8 @@ Evidence:
 | 2026-11-06 | tests/background/attention.test.ts | In "meters during-block exemptions", the fixture set `session.status = "work"` with `phaseEndsAt` left at 0 (already elapsed). Added `phaseEndsAt = 1_000_000` so the phase is live. No assertion changed | T1.4 (plan allows fixing fixtures that used an elapsed phase) |
 | 2026-11-06 | tests/background/worker.test.ts | Harness only: added `alarms.getAll`, `runtime.onStartup`, a list of created alarms, a DNR update counter and a `dnrRuleDomains` helper. No existing test or assertion changed | T1.1, T1.3 |
 | 2026-11-06 | tests/ui/scheduleStatus.test.ts | Added `scheduleStatus` to the import and a new `describe("scheduleStatus")` block. No existing test changed | T2.1 |
+| 2026-11-07 | tests/ui/panelRender.test.tsx, tests/shared/gating.test.ts | Added new cases only (lock explainer, empty state, lock wording). No existing assertion changed | T3.3, T3.4, T3.5 |
+| 2026-11-07 | tests/background/worker.test.ts | Harness only: `tabs.create` with `createdTabs` and a `tabCreate.fails` switch; two new tests. No existing assertion changed | T3.5 |
 | 2026-11-06 | tests/release.test.ts | Expected version 1.1.1 changed to 1.0.1, changelog heading [1.1.1] changed to [1.0.1] | D9 (owner: keep v1.0.1 for all phases) |
 
 ## Owner-run checks (things an agent without a browser cannot do)
@@ -240,6 +261,7 @@ Evidence:
 - _(date)_: tracker created.
 - 2026-11-05: Phase 0 started (see Phase 0 notes).
 - 2026-11-06: Phase 0 done (T0.1 to T0.7), stopped for the owner. Nothing pushed.
+- 2026-11-07: Phase 3 (T3.1 to T3.5) written and tested in the stand-in runner; stopped for the owner. Nothing pushed. Boxes stay unticked until the real gates are run.
 - 2026-11-06: Phase 2 (T2.1 to T2.5) written and tested in the stand-in runner; stopped for the owner. Nothing pushed. Boxes stay unticked until the real gates are run.
 - 2026-11-06: Phase 1 (T1.1 to T1.5) written and tested in a stand-in runner; stopped for the owner. Nothing pushed. Boxes stay unticked until the real gates are run.
 - 2026-11-06: Owner decision D9: version is 1.0.1 for every phase. package.json, public/manifest.json, CHANGELOG.md heading, tests/release.test.ts, plan.md, README.md, AGENT_PROMPT.md and this tracker updated. Gates (npm test, typecheck, build) NOT re-run after this change: UNVERIFIED, the session has no node_modules and no network for npm install. Owner-run: npm ci (or npm install), then npm test, npm run typecheck, npm run build.

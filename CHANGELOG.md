@@ -10,6 +10,8 @@ Changes you make to your site lists, keywords, schedules and daily limits now re
 
 Schedules now explain themselves. The Schedules screen says what is on now or what starts next, shows your whole week as a strip, and describes each schedule in plain words: which days, which hours and which sites it blocks. You can edit a schedule, pick what it blocks, and start from a Work hours, Study or Sleep template. A schedule that blocks nothing yet is flagged with a quick way to fix it. The block page now says which schedule blocked the site and when it ends.
 
+The panel now says what it is doing. A strip under the header says what is on, such as "Strict focus session is on", "On a break" or "Nothing is blocking right now", with the end time and one button for the obvious next step, and the header badge shows a word (Not blocking, Blocking, Break) instead of a dot. Each lock level is explained in plain words, and the current one is marked. When a lock stops you changing a rule, the message names the time it ends and the controls point to it. A new install opens the setup page. With no sites yet, the Focus tab offers an Add sites button.
+
 ## [1.1.0] - 2026-10-31
 
 The 1.1.0 release replaces the original (v1) runtime with the v2

@@ -788,16 +788,45 @@ button { font: inherit; color: inherit; }
 }
 
 /* status dot (header) */
-.fg-status-dot {
+/* header pill: a word, not a colour alone */
+.fg-pill {
   flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--text-subtle);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
-.fg-status-dot--focus { background: var(--accent); }
-.fg-status-dot--break { background: var(--break); }
-.fg-status-dot--block { background: var(--warning); }
+.fg-pill--focus,
+.fg-pill--schedule,
+.fg-pill--locked { border-color: var(--warning); color: var(--text); }
+.fg-pill--break { border-color: var(--break); color: var(--text); }
+.fg-pill__lock { display: inline-flex; }
+.fg-pill__lock svg { width: 12px; height: 12px; }
+
+/* status strip: one calm sentence about what is happening now */
+.fg-nowline {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-left: 3px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.fg-nowline--break { border-left-color: var(--break); }
+.fg-nowline--focus,
+.fg-nowline--schedule,
+.fg-nowline--locked { border-left-color: var(--warning); }
+.fg-nowline__headline { margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; }
+.fg-nowline__detail { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.fg-nowline__cta { margin-top: 6px; }
 
 .fg-toggle__label { font-size: 13px; font-weight: 500; }
 .fg-hero__time--clickable { cursor: pointer; }
@@ -1399,3 +1428,26 @@ svg.fg-icon-16 { width: 16px; height: 16px; flex: none; }
 }
 .fg-toggle__track[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
 .fg-toggle__track[aria-checked="true"]::after { transform: translateX(16px); background: var(--accent-contrast); }
+
+/* Lock explainer: all three locks stay visible, the chosen one is marked. */
+.fg-lock-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fg-lock-list__row {
+  display: grid;
+  gap: 2px;
+  padding-left: 9px;
+  border-left: 3px solid transparent;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+}
+.fg-lock-list__row strong { font-weight: 600; }
+.fg-lock-list__row[aria-current="true"] {
+  border-left-color: var(--warning);
+  color: var(--text);
+}

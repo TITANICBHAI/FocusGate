@@ -1,4 +1,5 @@
-import { Eye, EyeOff, Settings2 } from "lucide-react";
+import { Eye, EyeOff, Lock, Settings2 } from "lucide-react";
+import type { HeaderPill } from "../lib/statusSummary.ts";
 import {
   Children,
   cloneElement,
@@ -416,10 +417,10 @@ export function Progress({
 }
 
 export function AppHeader({
-  status = "idle",
+  pill,
   onOpenSettings,
 }: {
-  status?: "idle" | "focus" | "break" | "block";
+  pill: HeaderPill;
   onOpenSettings(): void;
 }) {
   return (
@@ -429,13 +430,14 @@ export function AppHeader({
         FocusGate
       </span>
       <div className="fg-header__actions">
-        <span
-          className={`fg-status-dot fg-status-dot--${status}`}
-          role="img"
-          aria-label={
-            status === "idle" ? "Idle" : `${status} in progress`
-          }
-        />
+        <span className={`fg-pill fg-pill--${pill.tone}`}>
+          {pill.tone === "locked" && (
+            <span className="fg-pill__lock" aria-hidden="true">
+              <Lock />
+            </span>
+          )}
+          {pill.label}
+        </span>
         <IconButton label="Open settings" onClick={onOpenSettings}>
           <Settings2 aria-hidden="true" />
         </IconButton>

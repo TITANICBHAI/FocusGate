@@ -89,6 +89,7 @@ interface ChromeLike {
       properties: { url?: string },
     ): Promise<unknown>;
     getCurrent(): Promise<{ id?: number } | undefined>;
+    create(properties: { url: string }): Promise<unknown>;
     remove(tabId: number): Promise<void>;
     onActivated: ChromeEvent<{ tabId: number; windowId: number }>;
   };
@@ -198,6 +199,9 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
       getCurrent: async () => await chrome.tabs.getCurrent(),
       remove: async (tabId) => {
         await chrome.tabs.remove(tabId);
+      },
+      create: async (url) => {
+        await chrome.tabs.create({ url });
       },
     },
     webNavigation: {

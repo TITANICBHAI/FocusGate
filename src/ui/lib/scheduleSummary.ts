@@ -1,3 +1,4 @@
+import { formatClockTime } from "../../shared/clockFormat.ts";
 import { parseHHMM } from "../../shared/time.ts";
 import type { AppState, Schedule } from "../../shared/types.ts";
 import type { ScheduleStatus } from "./scheduleStatus.ts";
@@ -17,7 +18,7 @@ function plainSpaces(text: string): string {
 }
 
 function formatClockMs(timestamp: number, locale?: string): string {
-  return plainSpaces(new Date(timestamp).toLocaleTimeString(locale, MINUTE_FORMAT));
+  return formatClockTime(timestamp, locale);
 }
 
 export function summarizeDays(days: readonly number[]): string {

@@ -95,6 +95,8 @@ function createHarness(seed: Record<string, unknown> = {}) {
     windowFocusChanged: createSignal<void>(),
     idleStateChanged: createSignal<void>(),
   };
+  const createdTabs: string[] = [];
+  const tabCreate = { fails: false };
   const tabs: Array<{ id?: number; url?: string }> = [
     { id: 5, url: "https://x.com/home" },
   ];
@@ -175,6 +177,10 @@ function createHarness(seed: Record<string, unknown> = {}) {
       update: chromeLike.tabs.update,
       getCurrent: chromeLike.tabs.getCurrent,
       remove: chromeLike.tabs.remove,
+      create: async (url: string) => {
+        if (tabCreate.fails) throw new Error("no window");
+        createdTabs.push(url);
+      },
     },
     webNavigation: {
       onCommitted: signals.onCommitted.source,
@@ -232,6 +238,8 @@ function createHarness(seed: Record<string, unknown> = {}) {
             ?.requestDomains ?? [],
       ),
     tabs,
+    createdTabs,
+    tabCreate,
     setNow: (value: number) => {
       now = value;
     },
@@ -281,6 +289,27 @@ describe("v2 worker composition (dormant until cutover)", () => {
     const state = await harness.localState();
     expect(state.schemaVersion).toBe(2);
     expect(state.session.status).toBe("idle");
+  });
+
+  it("opens the onboarding page once on a fresh install, not on an update", async () => {
+    const fresh = createHarness();
+    await fresh.worker.handleInstalled({ reason: "install" });
+    expect(fresh.createdTabs).toHaveLength(1);
+    expect(fresh.createdTabs[0]).toMatch(/\/onboarding\.html$/);
+
+    const updated = createHarness();
+    await updated.worker.handleInstalled({ reason: "update" });
+    expect(updated.createdTabs).toHaveLength(0);
+  });
+
+  it("still finishes the install work when the onboarding tab cannot open", async () => {
+    const harness = createHarness({
+      schemaVersion: 2,
+      alwaysBlockedSites: ["example.com"],
+    });
+    harness.tabCreate.fails = true;
+    await harness.worker.handleInstalled({ reason: "install" });
+    expect(harness.dnrRules.length).toBe(1);
   });
 
   it("dispatches session/start and updates the badge", async () => {

@@ -56,6 +56,19 @@ const LOCK_SUMMARY: Record<Exclude<LockLevel, "strict">, string> = {
     "There is no early-stop action. You can still disable or remove the extension.",
 };
 
+const REMOVAL_RULE: Record<LockLevel, string> = {
+  none: "You can add, change or remove rules at any time.",
+  strict: "You can add rules, but not remove or relax them until the session ends.",
+  commitment: "You can add rules, but not remove or relax them until the session ends.",
+};
+
+/** The Strict stop sentence, shared by the lock explainer and the stop dialog. */
+export function strictStopSummary(hasPassword: boolean): string {
+  return hasPassword
+    ? "Stopping early needs your password. You can still disable or remove the extension."
+    : "Stopping early needs the phrase “I GIVE UP” and a 15-second wait. You can still disable or remove the extension.";
+}
+
 function standaloneSiteEntries(value: string): string[] {
   return value
     .split(/[,\n]/)
@@ -503,13 +516,24 @@ export function FocusScreen({
             value={lockLevel}
             onChange={setLockLevel}
           />
-          <p className="fg-hero__meta">
-            {lockLevel === "strict"
-              ? hasPassword
-                ? "Stopping early needs your password. You can still disable or remove the extension."
-                : "Stopping early needs the phrase “I GIVE UP” and a 15-second wait. You can still disable or remove the extension."
-              : LOCK_SUMMARY[lockLevel]}
-          </p>
+          <ul className="fg-lock-list" aria-label="What each lock means">
+            {LOCK_OPTIONS.map((option) => {
+              const stopRule =
+                option.value === "strict"
+                  ? strictStopSummary(hasPassword)
+                  : LOCK_SUMMARY[option.value];
+              return (
+                <li
+                  key={option.value}
+                  className="fg-lock-list__row"
+                  aria-current={lockLevel === option.value ? "true" : undefined}
+                >
+                  <strong>{option.label}</strong>
+                  <span>{`${stopRule} ${REMOVAL_RULE[option.value]}`}</span>
+                </li>
+              );
+            })}
+          </ul>
           <Button
             variant="primary"
             size="jumbo"
@@ -522,8 +546,8 @@ export function FocusScreen({
             {canBlockAnything ? (
               summaryText
             ) : (
-              <Button variant="quiet" onClick={onOpenRules}>
-                Nothing is blocked yet — add sites in Rules.
+              <Button variant="secondary" size="dense" onClick={onOpenRules}>
+                Add sites
               </Button>
             )}
           </p>

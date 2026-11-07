@@ -90,6 +90,7 @@ export interface WorkerBrowserApi {
     update(tabId: number, url: string): Promise<void>;
     getCurrent(): Promise<{ id?: number } | undefined>;
     remove(tabId: number): Promise<void>;
+    create(url: string): Promise<void>;
   };
   webNavigation: {
     onCommitted: WorkerEventSource<{
@@ -467,6 +468,15 @@ export function createWorker(api: WorkerBrowserApi): Worker {
       await tasks.reconcile();
     } catch (error) {
       onError("install", error);
+    }
+    if (details.reason === "install") {
+      // A new person lands on the setup page. A failure here (no window yet)
+      // must not undo the install work above.
+      try {
+        await api.tabs.create(api.runtime.getURL("onboarding.html"));
+      } catch (error) {
+        onError("install", error);
+      }
     }
   };
 

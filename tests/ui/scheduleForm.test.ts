@@ -107,7 +107,10 @@ describe("planScheduleSave validation", () => {
 
   it("asks for sites when the schedule uses its own", () => {
     const result = plan({ target: "own", sitesText: "  \n " });
-    expect(result.ok).toBe(false);
+    expect(result).toEqual({
+      ok: false,
+      error: "Add at least one site, or use your Focus list.",
+    });
     expect(plan({ target: "own", sitesText: "not a site" }).ok).toBe(false);
   });
 
