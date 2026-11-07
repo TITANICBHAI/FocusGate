@@ -74,6 +74,8 @@ describe("UI theme accessibility", () => {
       }
     }
     expect(contrast(tokens["accent-contrast"], tokens.accent)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens["danger-contrast"], tokens.danger)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens["warning-contrast"], tokens.warning)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("maps system theme to the verified dark and light palettes", () => {

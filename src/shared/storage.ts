@@ -1,4 +1,5 @@
 import { createDefaultState, DEFAULT_STATE } from "./defaults.ts";
+import { withProfileDefaults } from "./profile.ts";
 import {
   isBackupExpired,
   LEGACY_KEYS_TO_REMOVE,
@@ -112,11 +113,12 @@ export function ready(): Promise<void> {
 export async function getState(): Promise<AppState> {
   await ready();
   const stored = (await localStorageArea().get(DEFAULT_STATE)) as Partial<AppState>;
-  return {
+  const state = {
     ...createDefaultState(),
     ...stored,
-    schemaVersion: 2,
+    schemaVersion: 2 as const,
   };
+  return { ...state, settings: withProfileDefaults(state.settings) };
 }
 
 /**

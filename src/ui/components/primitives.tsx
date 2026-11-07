@@ -286,7 +286,7 @@ export function Chip({
   removeLabel,
 }: {
   children: ReactNode;
-  tone?: "neutral" | "accent" | "warning" | "danger" | "live" | "lock";
+  tone?: "neutral" | "accent" | "warning" | "danger" | "live" | "lock" | "strong";
   onRemove?: () => void;
   removeLabel?: string;
 }) {
@@ -295,9 +295,11 @@ export function Chip({
       ? "fg-chip--live"
       : tone === "warning" || tone === "lock"
         ? "fg-chip--lock"
-        : tone === "danger"
-          ? "fg-chip--danger"
-          : "";
+        : tone === "strong"
+          ? "fg-chip--strong"
+          : tone === "danger"
+            ? "fg-chip--danger"
+            : "";
   return (
     <span className={`fg-chip ${toneClass}`.trim()}>
       {children}
@@ -337,6 +339,7 @@ export function EmptyState({
 }
 
 export function ListRow({
+  blocking = false,
   swatch,
   icon,
   title,
@@ -345,6 +348,8 @@ export function ListRow({
   status,
   actions,
 }: {
+  /** True when this row is blocking right now: it gets the amber left bar. */
+  blocking?: boolean;
   swatch?: ReactNode;
   icon?: ReactNode;
   title: ReactNode;
@@ -354,7 +359,7 @@ export function ListRow({
   actions?: ReactNode;
 }) {
   return (
-    <div className="fg-row">
+    <div className={`fg-row${blocking ? " fg-row--on" : ""}`}>
       {(swatch || icon) && (
         <div className="fg-row__swatch" aria-hidden="true">
           {icon ?? swatch}

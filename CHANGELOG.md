@@ -12,6 +12,10 @@ Schedules now explain themselves. The Schedules screen says what is on now or wh
 
 The panel now says what it is doing. A strip under the header says what is on, such as "Strict focus session is on", "On a break" or "Nothing is blocking right now", with the end time and one button for the obvious next step, and the header badge shows a word (Not blocking, Blocking, Break) instead of a dot. Each lock level is explained in plain words, and the current one is marked. When a lock stops you changing a rule, the message names the time it ends and the controls point to it. A new install opens the setup page. With no sites yet, the Focus tab offers an Add sites button.
 
+The You tab now starts with your name and your own reason for focusing, then what you are protecting (tap a row to open that rule), today and this week, and what each achievement asks for. Tasks, reflection and habits sit in a collapsed Journal. The block page shows your reason in quotes. It no longer repeats the stock message, and it says "1 page blocked today" instead of "1 pages".
+
+FocusGate has a new look. The icon has clean corners, colours are periwinkle with amber only where something is blocking right now, and labels are sentence case with a steadier number font. The side panel uses plain lists with a coloured bar instead of stacked boxes, and long site names and chips no longer overlap on a narrow panel. The dashboard Overview shows today at the top, a full-width week chart, and a side column with your schedules, limits and when protection was off. The block page puts the reason first, left-aligned, with Close tab as the main button. The status bar sweeps once when blocking starts. The About card shows the version.
+
 ## [1.1.0] - 2026-10-31
 
 The 1.1.0 release replaces the original (v1) runtime with the v2

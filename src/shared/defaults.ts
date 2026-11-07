@@ -1,5 +1,8 @@
 import type { AppState } from "./types.ts";
 
+/** The stock block-page message. A message that differs from this was written by the person. */
+export const DEFAULT_BLOCK_MESSAGE = "Stay focused. You've got this.";
+
 export const DEFAULT_STATE: AppState = {
   schemaVersion: 2,
   customPresets: [],
@@ -48,6 +51,8 @@ export const DEFAULT_STATE: AppState = {
     theme: "system",
     fontScale: 1,
     dailyGoalMin: 120,
+    displayName: "",
+    why: "",
     defaultDurationMin: 25,
     breaks: {
       enabled: true,
@@ -73,7 +78,7 @@ export const DEFAULT_STATE: AppState = {
       atEnd: true,
     },
     blockPage: {
-      message: "Stay focused. You've got this.",
+      message: DEFAULT_BLOCK_MESSAGE,
       quotes: [],
       showQuotes: false,
       sound: false,

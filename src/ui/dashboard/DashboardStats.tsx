@@ -11,6 +11,8 @@ import {
 } from "../../shared/stats.ts";
 import { localDateKey } from "../../shared/time.ts";
 import type { AppState } from "../../shared/types.ts";
+import { WeekStrip } from "../components/WeekStrip.tsx";
+import { WeekBars } from "../components/WeekBars.tsx";
 import { AchievementsCard } from "../components/AchievementsCard.tsx";
 import {
   Card,
@@ -34,9 +36,14 @@ const RANGE_DAYS: Record<StatsRange, number> = {
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** WP8.1: the full dashboard statistics view with ranges, KPIs, and insights. */
-export function DashboardStats({ state }: { state: AppState }) {
+export function DashboardStats({
+  state,
+  now = new Date(),
+}: {
+  state: AppState;
+  now?: Date;
+}) {
   const [range, setRange] = useState<StatsRange>("week");
-  const now = new Date();
   const todayKey = localDateKey(now);
 
   const rangeDays = RANGE_DAYS[range];
@@ -73,11 +80,9 @@ export function DashboardStats({ state }: { state: AppState }) {
   const goalMs = Math.max(1, state.settings.dailyGoalMin) * 60_000;
   const goalProgress = Math.min(1, (today?.focusMs ?? 0) / goalMs);
 
-  const chartEnd = endDateKey;
-  const chartStart = lastNDaysRange(now, RANGE_DAYS[range] === 1 ? 7 : rangeDays)
-    .startDateKey;
-  const chart = focusMinutesPerDay(state.dayStats, chartStart, chartEnd);
-  const chartMax = Math.max(30, ...chart.map((point) => point.minutes));
+  const weekRange = lastNDaysRange(now, 7);
+  const chart = focusMinutesPerDay(state.dayStats, weekRange.startDateKey, weekRange.endDateKey);
+  const weekMs = chart.reduce((sum, point) => sum + point.minutes, 0) * 60_000;
 
   const allowanceRows = todayAllowanceUsage(
     state.allowances,
@@ -89,20 +94,18 @@ export function DashboardStats({ state }: { state: AppState }) {
     state.session.gaps,
     now.getTime(),
   );
-  const rangeLabel =
-    range === "today" ? "Today" : range === "week" ? "This week" : "This month";
-
   return (
+    <div className="fg-overview">
     <section className="fg-stack" aria-labelledby="dashboard-stats-title">
       <h1 id="dashboard-stats-title" className="fg-sr-only">Overview</h1>
 
       <div className="fg-hero fg-hero--smallest">
-        <div className="fg-hero__time">{formatDuration(totals.focusMs)}</div>
-        <p className="fg-hero__sub">{rangeLabel} focus time</p>
+        <div className="fg-hero__time">{formatDuration(today?.focusMs ?? 0)}</div>
+        <p className="fg-hero__sub">Today's focus time</p>
         <div className="fg-hero__goal" aria-label={`Daily goal ${Math.round(goalProgress * 100)}% complete`}>
           <Progress value={goalProgress} />
           <p className="fg-hero__sub">
-            {Math.round(goalProgress * 100)}% of today's {state.settings.dailyGoalMin} min goal
+            {Math.round(goalProgress * 100)}% of your {state.settings.dailyGoalMin} min goal
           </p>
         </div>
       </div>
@@ -152,46 +155,16 @@ export function DashboardStats({ state }: { state: AppState }) {
             <span className="fg-muted">of 100 today</span>
           </ProgressRing>
           <p className="fg-muted">
-            Daily goal {state.settings.dailyGoalMin} min · tasks{" "}
-            {today?.tasksCompleted ?? 0}/{tasksPlannedToday}
+            Out of 100: 60 points for your daily goal, 30 for tasks done against tasks
+            planned for today, 10 for a streak. Goal {state.settings.dailyGoalMin} min; tasks{" "}
+            {today?.tasksCompleted ?? 0} of {tasksPlannedToday}.
           </p>
         </div>
       </Card>
 
       <Card title="Focus minutes per day">
-        <svg
-          className="fg-stats-chart"
-          role="img"
-          aria-label={`Focus minutes per day for ${chart.length} days; the highest day reached ${chartMax} minutes.`}
-          viewBox={`0 0 ${chart.length * 24} 130`}
-          width={chart.length * 24}
-          height={130}
-        >
-          {chart.map((point, index) => {
-            const height = Math.round((point.minutes / chartMax) * 100);
-            return (
-              <g key={point.dateKey}>
-                <rect
-                  x={index * 24 + 4}
-                  y={110 - height}
-                  width={16}
-                  height={Math.max(point.minutes > 0 ? 2 : 0, height)}
-                  rx={2}
-                  fill="currentColor"
-                  opacity={0.85}
-                />
-                <text
-                  x={index * 24 + 12}
-                  y={126}
-                  textAnchor="middle"
-                  fontSize={9}
-                >
-                  {point.dateKey.slice(8)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+        <WeekBars points={chart} todayKey={todayKey} />
+        <p className="fg-muted">This week: {formatDuration(weekMs)}</p>
       </Card>
 
       <SectionLabel>Insights</SectionLabel>
@@ -212,17 +185,8 @@ export function DashboardStats({ state }: { state: AppState }) {
         />
         <Stat label="Average session" value={formatDuration(insights.averageSessionMs)} />
         <Stat
-          label="Completion rate"
-          value={`${Math.round(insights.completionRate * 100)}%`}
-        />
-        <Stat
           label="Total focus time"
           value={formatDuration(insights.totalHours * 3_600_000)}
-        />
-        <Stat
-          label="This week"
-          value={`${insights.thisWeekSessions} session${insights.thisWeekSessions === 1 ? "" : "s"}`}
-          sub={`${Math.round(insights.thisWeekMinutes)} min`}
         />
         <Stat label="Best session" value={formatDuration(insights.bestSessionMs)} />
       </div>
@@ -240,6 +204,11 @@ export function DashboardStats({ state }: { state: AppState }) {
         ))
       )}
 
+      <AchievementsCard state={state} />
+    </section>
+    <aside className="fg-overview__rail fg-stack" aria-label="Schedules, limits and protection">
+      <SectionLabel>Your week</SectionLabel>
+      <WeekStrip schedules={state.schedules} now={now.getTime()} />
       <SectionLabel>Allowance usage today</SectionLabel>
       {allowanceRows.length === 0 ? (
         <p className="fg-muted">No daily limits configured.</p>
@@ -268,8 +237,8 @@ export function DashboardStats({ state }: { state: AppState }) {
       )}
 
       <ListRow
-        title="Protection gaps"
-        sub="Last 7 days"
+        title="Times protection was off"
+        sub="FocusGate was not running during a focus session. Last 7 days."
         status={
           <span className="fg-muted">
             {protectionGaps.count === 0
@@ -279,7 +248,7 @@ export function DashboardStats({ state }: { state: AppState }) {
         }
       />
 
-      <AchievementsCard state={state} />
-    </section>
+    </aside>
+    </div>
   );
 }

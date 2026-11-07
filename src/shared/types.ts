@@ -155,6 +155,10 @@ export interface Settings {
   theme: "system" | "dark" | "light";
   fontScale: number;
   dailyGoalMin: number;
+  /** Shown in the profile header. Trimmed, at most 24 characters. */
+  displayName: string;
+  /** The person's own reason, shown on the block page. At most 140 characters. */
+  why: string;
   defaultDurationMin: number;
   breaks: {
     enabled: boolean;

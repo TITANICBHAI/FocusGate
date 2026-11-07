@@ -1,4 +1,5 @@
 import { DEFAULT_STATE } from "./defaults.ts";
+import { cleanDisplayName, cleanWhy, withProfileDefaults } from "./profile.ts";
 import { normalizeDomain } from "./domains.ts";
 import type {
   Allowance,
@@ -257,7 +258,7 @@ function isSettings(value: unknown): value is Settings {
       "keywords",
       "allowOnly",
       "autoStartTasks",
-    ])
+    ], ["displayName", "why"])
   ) {
     return false;
   }
@@ -337,7 +338,9 @@ function isSettings(value: unknown): value is Settings {
     hasKeys(allowOnly, ["enabled", "domains"]) &&
     typeof allowOnly.enabled === "boolean" &&
     isDomainArray(allowOnly.domains) &&
-    typeof value.autoStartTasks === "boolean"
+    typeof value.autoStartTasks === "boolean" &&
+    (value.displayName === undefined || typeof value.displayName === "string") &&
+    (value.why === undefined || typeof value.why === "string")
   );
 }
 
@@ -820,8 +823,12 @@ function mergeProtectiveSettings(
     }
   }
 
+  const profile = withProfileDefaults(incoming);
   return {
     ...structuredClone(incoming),
+    // Keep the person's own name and reason when the backup has none.
+    displayName: profile.displayName || cleanDisplayName(current.displayName),
+    why: profile.why || cleanWhy(current.why),
     contentFilters,
     keywords: {
       ...structuredClone(incoming.keywords),
@@ -867,7 +874,7 @@ export function applyBackup(
         allowances: structuredClone(data.allowances),
         exceptions: structuredClone(data.exceptions),
         tasks: structuredClone(data.tasks),
-        settings: structuredClone(data.settings),
+        settings: withProfileDefaults(structuredClone(data.settings)),
         sessionHistory: structuredClone(data.stats.sessionHistory),
         dayStats: structuredClone(data.stats.dayStats),
         recentBlocks: structuredClone(data.stats.recentBlocks),

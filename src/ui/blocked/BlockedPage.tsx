@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { explainBlock } from "../../shared/plan.ts";
 import { quoteForLocalDate } from "../../shared/blockPage.ts";
+import { DEFAULT_BLOCK_MESSAGE } from "../../shared/defaults.ts";
+import type { AppState } from "../../shared/types.ts";
 import { localDateKey } from "../../shared/time.ts";
 import { Button } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
@@ -24,40 +27,19 @@ export function reasonTitle(
 ): string {
   switch (reason.kind) {
     case "session":
-      return "Focus session";
-    case "standalone":
-      return "Standalone block";
-    case "schedule":
-      return `Blocked by schedule: ${reason.name}`;
-    case "allowance":
-      return "Daily limit reached";
-    case "always":
-      return "Always blocked";
-    case "allowOnly":
-      return "Not on the allowed list";
-    case "keyword":
-      return `Keyword “${reason.keyword}” matched this ${reason.where === "query" ? "search" : "page"}`;
-  }
-}
-
-function reasonLabel(
-  reason: NonNullable<ReturnType<typeof explainBlock>>,
-): string {
-  switch (reason.kind) {
-    case "session":
       return "Blocked by focus session";
     case "standalone":
       return "Blocked by Block now";
     case "schedule":
-      return "Scheduled block";
+      return `Blocked by schedule: ${reason.name}`;
     case "allowance":
-      return "Daily limit reached";
+      return "Blocked by daily limit";
     case "always":
-      return "Always blocked";
+      return "Blocked by your Always list";
     case "allowOnly":
-      return "Outside the allowed list";
+      return "Blocked: not on your allowed list";
     case "keyword":
-      return "Blocked by keyword";
+      return `Blocked by keyword “${reason.keyword}”`;
   }
 }
 
@@ -79,6 +61,66 @@ export function reasonMeta(
     default:
       return null;
   }
+}
+
+/** "1 page blocked today", "2 pages blocked today". */
+export function blockedCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "page" : "pages"} blocked today`;
+}
+
+/** The reason section of the block page: headline, countdown, detail, the person's reason. */
+export function BlockedReasonBody({
+  reason,
+  target,
+  now,
+  settings,
+  blocksToday,
+  dateKey,
+  actions,
+}: {
+  actions?: ReactNode;
+  reason: NonNullable<ReturnType<typeof explainBlock>>;
+  target: string | null;
+  now: number;
+  settings: AppState["settings"];
+  blocksToday: number;
+  dateKey: string;
+}) {
+  // Only a message the person wrote is shown; the stock one is not repeated.
+  const customMessage = settings.blockPage.message.trim();
+  const detail =
+    customMessage && customMessage !== DEFAULT_BLOCK_MESSAGE
+      ? customMessage
+      : "This page is blocked by your current FocusGate rules.";
+  const quote = settings.blockPage.showQuotes
+    ? quoteForLocalDate(settings.blockPage.quotes, dateKey)
+    : undefined;
+  return (
+    <section aria-labelledby="blocked-reason">
+      <div className="fg-block-head">
+        <h1 id="blocked-reason" className="fg-block-headline">
+          {reasonTitle(reason)}
+        </h1>
+        {target && <p className="fg-block-url">{target}</p>}
+        {reasonMeta(reason) && <p className="fg-block-meta">{reasonMeta(reason)}</p>}
+      </div>
+      {(reason.kind === "session" || reason.kind === "standalone") && (
+        <p className="fg-block-countdown" aria-live="off">
+          {formatRemaining(reason.until - now)}
+        </p>
+      )}
+      <p className="fg-block-context">{detail}</p>
+      {settings.why && (
+        <p className="fg-block-why">
+          <span className="fg-block-why__label">Your reason</span>
+          <span className="fg-block-why__text">“{settings.why}”</span>
+        </p>
+      )}
+      {quote && <p className="fg-block-quote">“{quote}”</p>}
+      {actions}
+      <p className="fg-block-count-label">{blockedCountLabel(blocksToday)}</p>
+    </section>
+  );
 }
 
 function BlockedScreen() {
@@ -163,51 +205,41 @@ function BlockedScreen() {
     }
   }
 
-  const customMessage = state.settings.blockPage.message.trim();
-  const defaultMessage = "You are supposed to be focusing right now.";
-  const quote = state.settings.blockPage.showQuotes
-    ? quoteForLocalDate(state.settings.blockPage.quotes, dateKey)
-    : undefined;
-
   return (
     <main className="fg-full-page">
       <div className="fg-full-page__inner fg-block-inner">
-        <img src="/icon.png" alt="" width="40" height="40" className="fg-block-brand" />
+        <div className="fg-block-brand">
+          <img src="/icon.png" alt="" width="20" height="20" />
+          <span>FocusGate</span>
+        </div>
 
         {reason ? (
-          <section aria-labelledby="blocked-reason">
-            <p className="fg-block-eyebrow">{reasonLabel(reason)}</p>
-            <h1 id="blocked-reason" className="fg-block-headline">
-              {reasonTitle(reason)}
-            </h1>
-            {(reason.kind === "session" || reason.kind === "standalone") && (
-              <p className="fg-block-countdown" aria-live="off">
-                {formatRemaining(reason.until - now)}
-              </p>
-            )}
-            {reasonMeta(reason) && (
-              <p className="fg-block-meta">{reasonMeta(reason)}</p>
-            )}
-            <p className="fg-block-context">
-              {customMessage && customMessage !== defaultMessage
-                ? customMessage
-                : "This page is blocked by your current FocusGate rules."}
-            </p>
-            {target && <p className="fg-block-url">{target}</p>}
-            {quote && <p className="fg-block-quote">“{quote}”</p>}
-            <p className="fg-block-count-label">
-              {blocksToday} pages blocked today
-            </p>
-          </section>
+          <BlockedReasonBody
+            reason={reason}
+            target={target}
+            now={now}
+            settings={state.settings}
+            blocksToday={blocksToday}
+            dateKey={dateKey}
+            actions={
+              <div className="fg-block-btnrow">
+                <Button variant="primary" onClick={() => void closeCurrentTab()}>
+                  Close tab
+                </Button>
+                <Button variant="quiet" onClick={() => void openNewTab()}>
+                  Open new tab
+                </Button>
+              </div>
+            }
+          />
         ) : ended ? (
           <section aria-labelledby="blocked-ended">
-            <p className="fg-block-eyebrow">Block ended</p>
             <h1 id="blocked-ended" className="fg-block-headline">
               {targetHost ?? "This page"} is no longer blocked
             </h1>
             {target && <p className="fg-block-url">{target}</p>}
             <div className="fg-block-btnrow">
-              <Button onClick={() => void openNewTab(target ?? undefined)}>
+              <Button variant="primary" onClick={() => void openNewTab(target ?? undefined)}>
                 Open {targetHost ?? "page"}
               </Button>
               <Button variant="quiet" onClick={() => void openNewTab()}>
@@ -226,16 +258,6 @@ function BlockedScreen() {
           </section>
         )}
 
-        {reason && (
-          <div className="fg-block-btnrow">
-            <Button variant="secondary" onClick={() => void closeCurrentTab()}>
-              Close tab
-            </Button>
-            <Button variant="quiet" onClick={() => void openNewTab()}>
-              Open new tab
-            </Button>
-          </div>
-        )}
         {actionMessage && <p className="fg-block-status" role="status">{actionMessage}</p>}
       </div>
     </main>

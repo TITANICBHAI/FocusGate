@@ -102,7 +102,13 @@ function PanelShell() {
             <RulesScreen state={state} jumpTo={jump} />
           </div>
           <div hidden={tab !== "you"}>
-            <YouScreen state={state} />
+            <YouScreen
+              state={state}
+              onOpenRules={(section) => {
+                setJump((previous) => ({ section, nonce: previous.nonce + 1 }));
+                setTab("rules");
+              }}
+            />
           </div>
         </div>
       </main>

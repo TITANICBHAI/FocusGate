@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ExternalLink } from "lucide-react";
-import {
-  ACHIEVEMENT_DEFINITIONS,
-} from "../../../shared/achievements.ts";
 import { habitStreak } from "../../../shared/habits.ts";
-import { calculateStreaks, focusMinutesPerDay } from "../../../shared/stats.ts";
 import { localDateKey } from "../../../shared/time.ts";
-import { sessionDebrief } from "../../../shared/debrief.ts";
 import type { AppState, DayStats } from "../../../shared/types.ts";
 import {
   Button,
@@ -16,141 +11,71 @@ import {
   EmptyState,
   Field,
   ListRow,
-  Progress,
-  Stat,
 } from "../../components/primitives.tsx";
 import { useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
+import { saveProfileFieldDefault } from "../../lib/profileActions.ts";
+import type { ProfileField } from "../../lib/profileActions.ts";
+import { AchievementsSection } from "./profile/AchievementsSection.tsx";
+import { ProfileHeader } from "./profile/ProfileHeader.tsx";
+import { ProtectingSection } from "./profile/ProtectingSection.tsx";
+import { ReasonSection } from "./profile/ReasonSection.tsx";
+import { TodayWeekSection } from "./profile/TodayWeekSection.tsx";
+import type { RuleSection } from "./RulesScreen.tsx";
 import { TasksView } from "./TasksView.tsx";
 
 /**
- * P4 You screen (design.md §5.4): today's stats and reflection, the week
- * chart, achievements, habits, and the dashboard link.
+ * The You screen: who you are and why (name and reason), what you are
+ * protecting, today and this week, achievements, and a collapsed journal.
  */
 export function YouScreen({
   state,
   density = "narrow",
+  onOpenRules,
 }: {
   state: AppState;
   density?: "narrow" | "wide";
+  onOpenRules(section: RuleSection): void;
 }) {
+  const showToast = useToast();
   const now = new Date();
-  const todayKey = localDateKey(now);
-  const today = state.dayStats[todayKey];
-  const streaks = calculateStreaks(state.sessionHistory, now);
-  const goalMs = Math.max(1, state.settings.dailyGoalMin) * 60_000;
-  const goalPct = Math.min(1, (today?.focusMs ?? 0) / goalMs);
 
-  const week = focusMinutesPerDay(
-    state.dayStats,
-    localDateKeyOf(now.getTime() - 6 * 86_400_000),
-    todayKey,
-  );
-  const weekFocusMinutes = week.reduce((total, point) => total + point.minutes, 0);
-  const weekSessions = Object.values(state.dayStats)
-    .filter((day) => day.dateKey >= localDateKeyOf(now.getTime() - 6 * 86_400_000) && day.dateKey <= todayKey)
-    .reduce((total, day) => total + day.sessionsCompleted, 0);
-  const chartMax = Math.max(30, ...week.map((point) => point.minutes));
-
-  const unlockedCount = ACHIEVEMENT_DEFINITIONS.filter((definition) =>
-    state.achievements.some((record) => record.id === definition.id),
-  ).length;
-
-  const latestCompleted = [...state.sessionHistory]
-    .filter((record) => record.status === "completed")
-    .sort((left, right) => right.endedAt - left.endedAt)[0];
-  const debrief =
-    latestCompleted !== undefined &&
-    Date.now() - latestCompleted.endedAt < 60 * 60_000
-      ? sessionDebrief(latestCompleted)
-      : null;
+  function saveField(field: ProfileField, value: string): void {
+    void saveProfileFieldDefault(field, value).catch((error) =>
+      showToast(
+        storageWriteErrorMessage(error, "This could not be saved."),
+        "error",
+      ),
+    );
+  }
 
   return (
     <div className="fg-stack">
-      <Card title="Today">
-        <div className="fg-stat-row">
-          <Stat
-            label="Focused"
-            value={`${Math.round((today?.focusMs ?? 0) / 60_000)}m`}
-          />
-          <Stat label="Goal" value={`${Math.round(goalPct * 100)}%`} />
-          <Stat label="Streak" value={`${streaks.current}d`} />
-          <Stat label="Best" value={`${streaks.best}d`} />
+      <ProfileHeader
+        displayName={state.settings.displayName}
+        onSave={(value) => saveField("displayName", value)}
+      />
+      <ReasonSection
+        why={state.settings.why}
+        onSave={(value) => saveField("why", value)}
+      />
+      <ProtectingSection
+        state={state}
+        now={now.getTime()}
+        onOpenRules={onOpenRules}
+      />
+      <TodayWeekSection state={state} now={now} />
+      <AchievementsSection state={state} />
+
+      <details className="fg-journal">
+        <summary className="fg-journal__summary">Journal and tasks</summary>
+        <div className="fg-stack">
+          <TasksView state={state} />
+          <ReflectionCard state={state} />
+          <HabitsCard state={state} />
         </div>
-        <div className="fg-hero__progress">
-          <Progress value={goalPct} />
-        </div>
-      </Card>
-
-      <Card title="This week">
-        <svg
-          role="img"
-          aria-label={`Focus minutes for the last 7 days; the highest day reached ${chartMax} minutes.`}
-          viewBox={`0 0 ${week.length * 28} 120`}
-          width={week.length * 28}
-          height={120}
-          className="fg-stats-chart"
-        >
-          {week.map((point, index) => {
-            const height = Math.round((point.minutes / chartMax) * 90);
-            return (
-              <g key={point.dateKey}>
-                <rect
-                  x={index * 28 + 6}
-                  y={100 - height}
-                  width={16}
-                  height={Math.max(point.minutes > 0 ? 2 : 0, height)}
-                  rx={2}
-                  fill="currentColor"
-                  opacity={0.85}
-                />
-                <text x={index * 28 + 14} y={114} textAnchor="middle" fontSize={9}>
-                  {point.dateKey.slice(8)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-        <div className="fg-stat-row">
-          <Stat label="Sessions" value={weekSessions} />
-          <Stat
-            label="Focused"
-            value={`${Math.floor(weekFocusMinutes / 60)}h ${weekFocusMinutes % 60}m`}
-          />
-        </div>
-      </Card>
-
-      {debrief && (
-        <Card title="Last session">
-          <p className="fg-card__desc">{debrief.headline}</p>
-          {debrief.pace && <p className="fg-card__desc">{debrief.pace}</p>}
-        </Card>
-      )}
-
-      <TasksView state={state} />
-
-      <ReflectionCard state={state} />
-
-      <Card title="Achievements">
-        <div className="fg-wrap">
-          {ACHIEVEMENT_DEFINITIONS.map((definition) => {
-            const unlocked = state.achievements.some(
-              (record) => record.id === definition.id,
-            );
-            return (
-              <Chip key={definition.id} tone={unlocked ? "live" : "neutral"}>
-                {definition.label}
-              </Chip>
-            );
-          })}
-        </div>
-        <p className="fg-field__helper">
-          {unlockedCount} of {ACHIEVEMENT_DEFINITIONS.length} unlocked.
-        </p>
-      </Card>
-
-      <HabitsCard state={state} />
+      </details>
 
       <Card>
         <ListRow
@@ -179,13 +104,6 @@ export function YouScreen({
       <span hidden data-density={density} />
     </div>
   );
-}
-
-function localDateKeyOf(timestamp: number): string {
-  const date = new Date(timestamp);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
 }
 
 /** Pure update behind the Reflection card: set or clear today's mood and note. */

@@ -1,4 +1,5 @@
 import { createDefaultState } from "./defaults.ts";
+import { withProfileDefaults } from "./profile.ts";
 import { EXISTING_USER_CONTENT_FILTER_DEFAULTS } from "./contentFilterDefaults.ts";
 import type {
   Allowance,
@@ -552,7 +553,7 @@ function mergeSettings(value: unknown): AppState["settings"] {
   const allowOnly = asRecord(settings.allowOnly);
   const contentFilters = asRecord(settings.contentFilters);
 
-  return {
+  return withProfileDefaults({
     ...defaults,
     ...settings,
     breaks: { ...defaults.breaks, ...breaks },
@@ -577,7 +578,7 @@ function mergeSettings(value: unknown): AppState["settings"] {
       ...allowOnly,
       domains: stringList(allowOnly.domains),
     },
-  } as AppState["settings"];
+  } as AppState["settings"]);
 }
 
 function backupFor(v1: UnknownRecord, now: number): BackupV1 | null {

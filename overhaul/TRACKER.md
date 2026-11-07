@@ -4,9 +4,9 @@
 
 ## Overall status
 
-- **Status:** Phases 1, 2 and 3 code and tests written (stopped for the owner); not yet verified with the real npm gates
+- **Status:** Phases 1 to 5 code and tests written (stopped for the owner); not yet verified with the real npm gates
 - **Progress:** 7/39 tasks verified
-- **Current phase:** Phase 0 done; Phases 1, 2 and 3 written, waiting for owner-run checks; Phase 4 not started
+- **Current phase:** Phase 0 done; Phases 1 to 5 written, waiting for owner-run checks; Phase 6 not started
 - **Last updated:** 2026-11-07
 
 ## Rules
@@ -40,8 +40,8 @@
 | 1 Blocker tells the truth | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build and the --engine smoke | 0/5 | 2026-11-06 | 2026-11-06 (code) | |
 | 2 Schedules explain themselves | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build | 0/5 | 2026-11-06 | 2026-11-06 (code) | Phase 1 |
 | 3 The extension talks | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the panel | 0/5 | 2026-11-06 | 2026-11-07 (code) | T2.1 |
-| 4 A real profile | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 3 |
-| 5 Identity | v1.0.1 (no bump) | NOT STARTED | 0/8 | | | Phase 3 |
+| 4 A real profile | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the You tab and block page | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 3 |
+| 5 Identity | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at every screen in both themes | 0/8 | 2026-11-07 | 2026-11-07 (code) | Phase 4 |
 | 6 Accessibility and polish | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 5 |
 | 7 Release | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 6 |
 | **Total** | | | **7/39** | | | |
@@ -173,22 +173,34 @@ Evidence:
 
 ## Phase 4: a real profile
 
-- [ ] T4.1 Two new settings (`displayName`, `why`)
-- [ ] T4.2 Profile screen
-- [ ] T4.3 The user's reason on the block page, and plural fix
+- [ ] T4.1 Two new settings (`displayName`, `why`) (UNVERIFIED: stand-in runner only)
+- [ ] T4.2 Profile screen (UNVERIFIED: same; static-HTML screenshots only)
+- [ ] T4.3 The user's reason on the block page, and plural fix (UNVERIFIED: same)
 
 Notes:
+
+- 2026-11-07: Phase 4 written. Same limits as before (no `node_modules`, no network). Stand-in runner: all 79 test files outside `tests/shared/storage.test.ts` pass. The `tsc` error list for `tsconfig.json` is identical to the untouched zip.
+- New check method for `src/ui`: `tsc -p tsconfig.ui.json` stops at "Cannot find type definition file for chrome / vite/client" and never reports real errors, so earlier phases' UI code was not type-checked by me. I now run a temporary config with `types: []` and compare the real-error codes (2322, 2339, 2345, 2304, 2305, 2551, 2554 and similar) against the untouched zip. Result: no new real errors in Phases 1 to 4. The only differences are `key` prop errors that come from React types being absent (the same class as the existing ones). The owner's real `npm run typecheck` is still the authority.
+- T4.1: `Settings.displayName` and `Settings.why` (strings, default `""`). New `src/shared/profile.ts` holds the limits (24 and 140), `cleanDisplayName`, `cleanWhy` and `withProfileDefaults`. Stored settings from 1.1.0 lack the fields, so they are filled when read: in `getState` (`src/shared/storage.ts`) and in the UI store (`storageStore.ts`, both the first load and change events). Migration from v1 and backup restore also fill and cut them. The backup validator accepts the fields as optional strings (an older backup without them still imports; a non-text value is rejected). Merge import keeps the person's own name and reason when the backup has none. These two fields do not weaken any protection, so `classifyStateMutation` already lets them through without a password.
+- T4.2: the You tab is now, in order: name with a one-letter badge, "Your reason", "What you're protecting" (rows open the matching Rules section), "Today and this week", "Achievements" (each with its condition), then a collapsed "Journal and tasks" holding tasks, reflection and habits. "Open full dashboard" stays at the bottom. Name and reason save when the box loses focus (name also on Enter) through the guarded settings write. New files are under `src/ui/panel/views/profile/`, plus `src/ui/lib/profileSummary.ts` and `profileActions.ts`.
+- T4.2 deviations (decide if you want them changed): (1) No "Focusing since" line: the state holds no install or first-use date and the plan says not to add one. (2) No "Default lock" row: there is no stored default lock (the Focus tab starts at None each time), so any value would be made up. (3) The Password row is not a button: there is no Rules section for it. (4) The old "Best" streak stat was dropped from the compact row (the plan lists focused, goal, streak). (5) Achievements show only Locked or Unlocked: the definitions carry no progress numbers.
+- T4.3: `DEFAULT_BLOCK_MESSAGE` is now one constant in `defaults.ts` (string unchanged, so the fixture and `blockPage.test.ts` still pass). The old block page compared the message with a different string ("You are supposed to be focusing right now."), so the stock line "Stay focused. You've got this." was never hidden; it now is. With no custom message the detail line stays "This page is blocked by your current FocusGate rules." The person's reason shows under it as "Your reason" and the text in quotes. "1 pages" is fixed ("1 page blocked today"). The reason section is now an exported component `BlockedReasonBody` so it can be rendered in a test; the pinned `reason.kind === "session" || reason.kind === "standalone"` text is unchanged.
+- Chart: the week bars are shorter (80 px tall instead of 120) and their day labels are 12 px with a visible colour in dark mode (they were unreadable).
 
 Evidence:
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-11-07 | T4.1 | src/shared/types.ts; defaults.ts; profile.ts (new); migrate.ts; storage.ts; backup.ts; src/ui/hooks/storageStore.ts; tests/shared/profile.test.ts; tests/fixtures/v2-storage.expected.json | RED: profile.test.ts could not import `profile.ts`. GREEN: profile 9 passed, backup 6, migrate 6 (after fixture edit), storageStore 9. Real gates not run | UNVERIFIED |
+| 2026-11-07 | T4.2 | src/ui/panel/views/YouScreen.tsx; src/ui/panel/views/profile/*.tsx (6 new); src/ui/lib/profileSummary.ts; src/ui/lib/profileActions.ts; src/ui/panel/PanelPage.tsx; src/ui/styles.css; tests/ui/profileSummary.test.ts; profileActions.test.ts; youScreen.test.tsx | RED: modules missing, then youScreen 6 failed on the old screen. GREEN: 9 + 4 + 6 passed; foundation, themeTokens, claims still pass. Screenshots overhaul/evidence/phase4/profile-{empty,filled}-{300,400}-{dark,light}.png (static HTML with the real styles.css, no horizontal overflow at 300 or 400 px). First pass showed a tall empty chart, unreadable dark-mode day labels, no expand cue on the journal and a reason box that did not look editable; all fixed and re-shot | UNVERIFIED |
+| 2026-11-07 | T4.3 | src/shared/defaults.ts; src/ui/blocked/BlockedPage.tsx; src/ui/styles.css; tests/ui/blockedWhy.test.tsx | RED: exports missing. GREEN: blockedWhy 8 passed; blockedReason 3, claims 16, blockPage 2 still pass | UNVERIFIED |
+| 2026-11-07 | Phase 4 whole | all of the above, CHANGELOG.md | Stand-in run: 79 test files pass (storage.test.ts excluded). `tsc` list identical to the untouched zip; no new real UI errors (method above) | UNVERIFIED |
 
 ## Phase 5: identity
 
-- [ ] T5.1 Icons
-- [ ] T5.2 Tokens (`node tools/contrast-check.mjs` passes; foundation and theme tests pass)
-- [ ] T5.3 Type
+- [ ] T5.1 Icons (UNVERIFIED: stand-in runner only)
+- [ ] T5.2 Tokens (`node overhaul/tools/contrast-check.mjs` passes; foundation, theme and claims tests pass in the stand-in runner)
+- [ ] T5.3 Type (no font files shipped; see notes)
 - [ ] T5.4 Rows, not stacked cards
 - [ ] T5.5 Dashboard layout and charts
 - [ ] T5.6 Block page layout
@@ -197,10 +209,30 @@ Evidence:
 
 Notes:
 
+- 2026-11-07: Phase 5 written. Same limits as before (no `node_modules`, no network, no built extension). Stand-in runner: all 86 test files outside `tests/shared/storage.test.ts` pass. `tsc` list for `tsconfig.json` identical to the untouched zip; no new real errors in the `src/ui` check (method in Phase 4 notes; the only differences are `key` prop noise from missing React types and `chrome` not found in the new `AboutLine.tsx`, the same class as the existing `protectionStatus.ts`).
+- T5.1: the four app icons, `public/icon.png` (used by the dashboard and block page) and `store-assets/icon-128.png` are now the transparent-corner versions. `public/icon.png` was not named in the plan but is the same logo with the same white corners. `tests/assets/icons.test.ts` decodes each PNG and checks the four corners are transparent and the centre is opaque.
+- T5.2: new colour tokens in all four theme blocks (dark, light, system dark, system light), radii 10 px (card) and 6 px (control). The theme test now also checks `danger-contrast` on `danger` and `warning-contrast` on `warning` at 4.5:1. Amber was moved to where it means "blocking now": the "Always" chip, the lock-level pick and the schedule warning line are no longer amber; the radial glow behind the dashboard was removed; the small bar chart is no longer coloured with the accent.
+- T5.3: `--font-ui` is `Barlow` then the system font, `--font-num` is `Barlow Semi Condensed` then Barlow then the system font. No `.woff2` is bundled (decision D2: the owner has not sent the files), so the system font is what people see until they do. All-caps labels and tracked letters are gone; labels are 13/500 sentence case. Timer, stat values and the block countdown use the number font with tabular digits. Stat values went from 20 to 28 px as the design table says; check they still fit at 300 px.
+- T5.4: in the panel, cards lose their box and become headed groups (24 px apart). Rows are 48 px minimum with a 3 px left bar; the bar is amber on a site that is blocking now (using the plan the row already had), and `ListRow` has a new `blocking` prop. Titles wrap instead of being cut with an ellipsis, chips wrap, and the row wraps its buttons under the text when there is no room. The first screenshot at 300 px showed the `youtube.com` row squeezed to a one-letter-wide column when the chip and the Remove button sat beside it; fixed by letting the row wrap, then re-shot. A new chip tone `strong` is used for the "Always" label (the existing `lock` tone stays amber, as `primitives.test.tsx` pins).
+- T5.5: from 1100 px the Overview has two columns (content and a 340 px rail with the week strip, daily limits and "Times protection was off"). The hero now shows only today. The weekly figure is the chart caption. "Completion rate" and "Total focus time" each appear once. The focus score has its formula written under it (60 goal, 30 tasks, 10 streak). "Protection gaps" is renamed "Times protection was off" with one explaining line. The chart is the new `WeekBars` (full width, weekday labels, value on the tallest and today's bar, one summary sentence for screen readers, each bar focusable with its own minutes). Plan wording for the rail says the status strip's detail; I did not add a second copy of it, since the strip is already shown above the page.
+- T5.6: the block page is left-aligned in a 480 px column with a small FocusGate mark at the top left. The headline is `Blocked by …` (focus session, Block now, schedule, daily limit, your Always list, keyword; allow-only reads `Blocked: not on your allowed list`). The headline, address and end time share an amber bar; then the countdown (session and standalone only), the detail line, your reason, **Close tab** (now the primary button) and **Open new tab**, then the count. The small label above the headline is gone. `reasonLabel` was removed as unused.
+- T5.7: the status strip's bar is a pseudo-element that sweeps from 0 to full height in 280 ms when blocking starts after idle or a break (`shouldSweep`), inside `prefers-reduced-motion: no-preference`. Not on first render. There were no section entrance animations to remove; the sheet, scrim and toast animations (overlays) stay.
+- T5.8: `AboutLine` at the top of the About card: `FocusGate v<manifest version> by TBTechs` and `Your data stays in browser storage.` The sentence did not exist in that card before. The two existing FocusFlow links are unchanged and no link was added.
+- T5.2 to T5.7 test order: the T5.1, T5.3, T5.4, T5.6 tests were seen red first. The T5.5 tests were written first but the three new components were written before I ran them (`weekBars` was run red-then-green; `dashboardStats` was not run red). The T5.7 and T5.8 tests were written with the code and not run red.
+
 Evidence:
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-11-07 | T5.1 | public/icons/*.png; public/icon.png; store-assets/icon-128.png; tests/assets/icons.test.ts | RED: corners opaque. GREEN: 6 files pass | UNVERIFIED |
+| 2026-11-07 | T5.2 | src/ui/styles.css; tests/ui/themeTokens.test.ts | `node overhaul/tools/contrast-check.mjs` passes; foundation 3, themeTokens 4, claims 16 pass | UNVERIFIED |
+| 2026-11-07 | T5.3 | src/ui/styles.css; tests/ui/typography.test.ts | RED then GREEN: 4 passed | UNVERIFIED |
+| 2026-11-07 | T5.4 | src/ui/components/primitives.tsx; src/ui/panel/views/RulesScreen.tsx; FocusScreen.tsx; src/ui/onboarding/OnboardingPage.tsx; src/ui/styles.css; tests/ui/rows.test.tsx | RED: 6 failed. GREEN: 6 passed; primitives, panelRender, claims still pass. Screenshots overhaul/evidence/phase5/p5-rules-{300,400}-{dark,light}.png and p5-you-* (static HTML with the real styles.css; no horizontal overflow) | UNVERIFIED |
+| 2026-11-07 | T5.5 | src/ui/components/WeekBars.tsx (new); src/ui/dashboard/DashboardStats.tsx; src/ui/styles.css; tests/ui/weekBars.test.tsx; tests/ui/dashboardStats.test.tsx | weekBars RED (2 failed on date format and value count; fixed). GREEN: weekBars 7, dashboardStats 6. Screenshots p5-dash-{800,1280}-{dark,light}.png | UNVERIFIED |
+| 2026-11-07 | T5.6 | src/ui/blocked/BlockedPage.tsx; src/ui/styles.css; tests/ui/blockedWhy.test.tsx; tests/ui/blockedReason.test.ts | RED: 5 failed. GREEN: blockedWhy 12, blockedReason 4, claims 16. Screenshots p5-block-{dark,light}.png | UNVERIFIED |
+| 2026-11-07 | T5.7 | src/ui/components/StatusStrip.tsx; src/ui/styles.css; tests/ui/gateAnimation.test.tsx | GREEN: 4 passed. The animation itself has not been seen (static screenshots cannot show it) | UNVERIFIED: needs a browser |
+| 2026-11-07 | T5.8 | src/ui/dashboard/AboutLine.tsx (new); src/ui/dashboard/DashboardSettings.tsx; tests/ui/aboutLine.test.tsx | GREEN: 4 passed; claims 16 pass | UNVERIFIED |
+| 2026-11-07 | Phase 5 whole | all of the above, CHANGELOG.md | Stand-in run: 86 test files pass (storage.test.ts excluded). `tsc` list identical to the untouched zip | UNVERIFIED |
 
 ## Phase 6: accessibility and polish
 
@@ -237,6 +269,9 @@ Evidence:
 | 2026-11-06 | tests/ui/scheduleStatus.test.ts | Added `scheduleStatus` to the import and a new `describe("scheduleStatus")` block. No existing test changed | T2.1 |
 | 2026-11-07 | tests/ui/panelRender.test.tsx, tests/shared/gating.test.ts | Added new cases only (lock explainer, empty state, lock wording). No existing assertion changed | T3.3, T3.4, T3.5 |
 | 2026-11-07 | tests/background/worker.test.ts | Harness only: `tabs.create` with `createdTabs` and a `tabCreate.fails` switch; two new tests. No existing assertion changed | T3.5 |
+| 2026-11-07 | tests/fixtures/v2-storage.expected.json | Added `"displayName": ""` and `"why": ""` to the expected v2 `settings` (migration now fills them). No existing value changed | T4.1 |
+| 2026-11-07 | tests/ui/blockedReason.test.ts | The Phase 2 case that pinned the title `Focus session` now pins `Blocked by focus session` and the other new headlines (T5.6 replaces them) | T5.6 |
+| 2026-11-07 | tests/ui/themeTokens.test.ts | Added contrast checks for `danger-contrast` and `warning-contrast`. No existing assertion changed | T5.2 |
 | 2026-11-06 | tests/release.test.ts | Expected version 1.1.1 changed to 1.0.1, changelog heading [1.1.1] changed to [1.0.1] | D9 (owner: keep v1.0.1 for all phases) |
 
 ## Owner-run checks (things an agent without a browser cannot do)

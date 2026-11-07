@@ -346,17 +346,18 @@ function SitesSection({
               return (
                 <ListRow
                   key={domain}
+                  blocking={blockedNow}
                   swatch={domain.charAt(0).toUpperCase()}
                   title={domain}
                   status={
-                    blockedNow ? <Chip tone="live">Blocked now</Chip> : undefined
+                    blockedNow ? <Chip tone="warning">Blocked now</Chip> : undefined
                   }
                   chips={
                     <>
                       {[...modes].map((siteMode) => (
                         <Chip
                           key={siteMode}
-                          tone={siteMode === "always" ? "lock" : "neutral"}
+                          tone={siteMode === "always" ? "strong" : "neutral"}
                         >
                           {siteMode === "always" ? "Always" : "Focus"}
                         </Chip>
@@ -671,7 +672,7 @@ function KeywordsSection({
                 chips={
                   <>
                     <Chip>{rule.mode}</Chip>
-                    <Chip tone={rule.when === "always" ? "lock" : "neutral"}>
+                    <Chip tone={rule.when === "always" ? "strong" : "neutral"}>
                       {rule.when === "always" ? "Always" : "During blocks"}
                     </Chip>
                   </>

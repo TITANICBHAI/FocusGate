@@ -18,8 +18,18 @@ describe("block page: schedule reason", () => {
     expect(reasonMeta(reason)).toBe(`Ends ${clock(until)}`);
   });
 
-  it("keeps the other reasons as they were", () => {
-    expect(reasonTitle({ kind: "session", until } as never)).toBe("Focus session");
+  it("starts every headline with Blocked by, in sentence case", () => {
+    expect(reasonTitle({ kind: "session", until } as never)).toBe("Blocked by focus session");
+    expect(reasonTitle({ kind: "standalone", until } as never)).toBe("Blocked by Block now");
+    expect(reasonTitle({ kind: "always" } as never)).toBe("Blocked by your Always list");
+    expect(reasonTitle({ kind: "allowance", resetsAt: until } as never)).toBe("Blocked by daily limit");
+    expect(reasonTitle({ kind: "allowOnly" } as never)).toBe("Blocked: not on your allowed list");
+    expect(
+      reasonTitle({ kind: "keyword", keyword: "news", where: "query" } as never),
+    ).toBe("Blocked by keyword “news”");
+  });
+
+  it("keeps the end time line", () => {
     expect(reasonMeta({ kind: "session", until } as never)).toBe(`Ends ${clock(until)}`);
   });
 });

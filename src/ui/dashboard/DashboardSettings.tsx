@@ -1,3 +1,4 @@
+import { AboutLine } from "./AboutLine.tsx";
 import { useEffect, useState } from "react";
 import type { Settings } from "../../shared/types.ts";
 import type { AppState } from "../../shared/types.ts";
@@ -697,6 +698,7 @@ export function DashboardSettings({ state }: { state: AppState }) {
 
       <SectionLabel>About</SectionLabel>
       <Card title="About FocusGate">
+        <AboutLine />
         <p>
           FocusGate helps you plan focus sessions and manage the pages that
           distract you.

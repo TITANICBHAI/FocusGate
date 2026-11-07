@@ -118,6 +118,8 @@
     "theme": "system",
     "fontScale": 1,
     "dailyGoalMin": 120,
+    "displayName": "",
+    "why": "",
     "defaultDurationMin": 25,
     "breaks": {
       "enabled": true,

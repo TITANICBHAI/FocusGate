@@ -420,7 +420,7 @@ export function FocusScreen({
     })}`;
     heroChip =
       state.session.lockLevel !== "none" ? (
-        <Chip tone="lock">
+        <Chip tone="warning">
           {state.session.lockLevel === "commitment" ? "Commit" : "Strict"}
         </Chip>
       ) : undefined;

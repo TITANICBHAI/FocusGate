@@ -70,7 +70,7 @@ function permissionLabel(value: PermissionState): string {
 
 function permissionChip(value: PermissionState) {
   if (value === "available") return <Chip tone="live">Available</Chip>;
-  if (value === "review") return <Chip tone="lock">Needs review</Chip>;
+  if (value === "review") return <Chip tone="strong">Needs review</Chip>;
   if (value === "unavailable") return <Chip tone="neutral">Check unavailable</Chip>;
   return <Chip tone="neutral">Checking</Chip>;
 }

@@ -1,4 +1,5 @@
 import { DEFAULT_STATE } from "../../shared/defaults.ts";
+import { withProfileDefaults } from "../../shared/profile.ts";
 import type { GuardedStateKey } from "../../shared/guardMutations.ts";
 import type { AppState } from "../../shared/types.ts";
 import {
@@ -20,6 +21,13 @@ function setStateKey<K extends StorageKey>(
 ): void {
   target[key] = value;
 }
+/** Settings saved before the profile fields existed get them filled in. */
+function normalizeStored(key: StorageKey, value: unknown): unknown {
+  return key === "settings" && typeof value === "object" && value !== null
+    ? withProfileDefaults(value as AppState["settings"])
+    : value;
+}
+
 export const APP_STATE_KEYS = Object.keys(DEFAULT_STATE) as StorageKey[];
 
 export interface StorageSnapshot<K extends StorageKey = StorageKey> {
@@ -375,7 +383,7 @@ export class StorageStore {
           value === undefined
             ? clone(DEFAULT_STATE[changedKey])
             : clone(value);
-        this.publish(changedKey, resolved, true, null);
+        this.publish(changedKey, normalizeStored(changedKey, resolved), true, null);
       });
     } catch (error) {
       this.backendListenerStarted = false;
@@ -396,7 +404,7 @@ export class StorageStore {
         if (this.getSnapshot(key).version !== versionAtStart) return;
         const resolved =
           value === undefined ? clone(DEFAULT_STATE[key]) : clone(value);
-        this.publish(key, resolved, true, null);
+        this.publish(key, normalizeStored(key, resolved), true, null);
       })
       .catch((error: unknown) => {
         if (this.getSnapshot(key).version !== versionAtStart) return;
