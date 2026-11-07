@@ -4,9 +4,9 @@
 
 ## Overall status
 
-- **Status:** Phases 1 to 6 code and tests written (stopped for the owner); not yet verified with the real npm gates
+- **Status:** Phases 1 to 7 code and tests written (stopped for the owner); not yet verified with the real npm gates
 - **Progress:** 7/39 tasks verified
-- **Current phase:** Phase 0 done; Phases 1 to 6 written, waiting for owner-run checks; Phase 7 not started
+- **Current phase:** Phase 0 done; Phases 1 to 7 written, waiting for owner-run checks (final gate); nothing is left for the agent
 - **Last updated:** 2026-11-07
 
 ## Rules
@@ -43,7 +43,7 @@
 | 4 A real profile | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the You tab and block page | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 3 |
 | 5 Identity | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at every screen in both themes | 0/8 | 2026-11-07 | 2026-11-07 (code) | Phase 4 |
 | 6 Accessibility and polish | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, the --a11y smoke, and try the panel at 200% zoom | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 5 |
-| 7 Release | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 6 |
+| 7 Release | v1.0.1 (no bump) | UNVERIFIED: owner must run the final gate (npm test, typecheck, build, smoke --a11y --engine --slow) and retake store screenshots from dist if wanted | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 6 |
 | **Total** | | | **7/39** | | | |
 
 ## Phase 0: hotfix (v1.0.1)
@@ -260,16 +260,27 @@ Evidence:
 
 ## Phase 7: release
 
-- [ ] T7.1 Keep version 1.0.1 (D9); changelog lines under 1.0.1
-- [ ] T7.2 Refresh store screenshots and README images
-- [ ] T7.3 Final gate: `npm test`, `npm run typecheck`, `npm run build`, `smoke.cjs --a11y --engine --slow`
+- [ ] T7.1 Keep version 1.0.1 (D9); changelog lines under 1.0.1 (UNVERIFIED: owner publishes)
+- [ ] T7.2 Refresh store screenshots and README images (UNVERIFIED: not the built extension, see notes)
+- [ ] T7.3 Final gate: `npm test`, `npm run typecheck`, `npm run build`, `smoke.cjs --a11y --engine --slow` (OWNER-RUN: not run here)
 
 Notes:
+
+- 2026-11-07: Phase 7 written. Same limits as before (no `node_modules`, no network, no built extension, no axe-core).
+- T7.1: `package.json` and `public/manifest.json` are 1.0.1 and were not touched in any phase (D9). `CHANGELOG.md` has one section, `## [1.0.1]`, with one paragraph per phase (user-visible wording; none of *completely, instantly, cannot, always, guaranteed*; the only "phase" is the focus phase feature). `tests/release.test.ts` passes (2). `package-lock.json` still says `1.1.0-dev` (D7: not touched; `npm ci` does not check the root version, but it is worth knowing).
+- T7.2: `store-assets/screenshot-{popup,blocked,onboarding}.{png,jpg}` replaced and `screenshot-{rules,you}.{png,jpg}` added (the store takes up to five). All PNGs are 1280x800, 24-bit RGB (no alpha). Method: the real panel, block page and onboarding code bundled with esbuild (copied from this tree) and opened in Chromium with preseeded browser storage (the UI falls back to `localStorage` outside the extension), real Lucide icons (react-icons' Lucide set), and the real `styles.css` with a Tailwind-preflight-like reset in place of `@import "tailwindcss"`. Dark theme, name Asha, a running 25-minute session for popup and block page. The popup, rules and you shots are the panel at 400x700 placed on a 1280x800 canvas with a shadow. The old JPGs were 1280x720; the new ones are 1280x800 like the PNGs. These are not captures of the built extension, so retake them from `dist` if you want them exact (the build adds the real font files if you supply them, D2). `README.md` has no images, so nothing changed there. `STORE_LISTING.md` lists three screenshots by name; I did not edit it (docs are out of scope), add the two new names if you want them in the listing.
+- T7.3: stand-in run on the final tree: 89 test files pass (577 tests; `tests/shared/storage.test.ts` excluded as before). `tsc` list identical to the untouched zip (83). `contrast-check.mjs`: all pairs meet their target. Real gates were not run.
+- Things seen while taking the screenshots (not fixed, outside the plan):
+  - The onboarding **Continue** button is secondary. Everywhere else the one next step is primary (Close tab, Add site, Start focus).
+  - With no session, the status strip says "The Always list is blocking 3 sites" while the You tab says "Always list: 1 site". The strip counts every domain an entry covers (youtube.com also covers its aliases); the You tab counts entries. Both are defensible but they read as a mismatch.
 
 Evidence:
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-11-07 | T7.1 | none (CHANGELOG.md paragraphs added in earlier phases) | version read from package.json and manifest.json; release test 2 passed; changelog word check | UNVERIFIED |
+| 2026-11-07 | T7.2 | store-assets/screenshot-*.png and .jpg | Looked at each image; 1280x800 RGB. Copies in overhaul/evidence/phase7/ | UNVERIFIED: not the built extension |
+| 2026-11-07 | T7.3 | none | Stand-in run: 89 files pass (577 tests); tsc identical; contrast check passes. smoke --a11y --engine --slow not run | OWNER-RUN |
 
 ## Test edits (only the ones the plan allows)
 
