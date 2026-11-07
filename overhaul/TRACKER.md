@@ -4,9 +4,9 @@
 
 ## Overall status
 
-- **Status:** Phases 1 to 5 code and tests written (stopped for the owner); not yet verified with the real npm gates
+- **Status:** Phases 1 to 6 code and tests written (stopped for the owner); not yet verified with the real npm gates
 - **Progress:** 7/39 tasks verified
-- **Current phase:** Phase 0 done; Phases 1 to 5 written, waiting for owner-run checks; Phase 6 not started
+- **Current phase:** Phase 0 done; Phases 1 to 6 written, waiting for owner-run checks; Phase 7 not started
 - **Last updated:** 2026-11-07
 
 ## Rules
@@ -42,7 +42,7 @@
 | 3 The extension talks | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the panel | 0/5 | 2026-11-06 | 2026-11-07 (code) | T2.1 |
 | 4 A real profile | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at the You tab and block page | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 3 |
 | 5 Identity | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, and look at every screen in both themes | 0/8 | 2026-11-07 | 2026-11-07 (code) | Phase 4 |
-| 6 Accessibility and polish | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 5 |
+| 6 Accessibility and polish | v1.0.1 (no bump) | UNVERIFIED: owner must run npm test, typecheck, build, the --a11y smoke, and try the panel at 200% zoom | 0/3 | 2026-11-07 | 2026-11-07 (code) | Phase 5 |
 | 7 Release | v1.0.1 (no bump) | NOT STARTED | 0/3 | | | Phase 6 |
 | **Total** | | | **7/39** | | | |
 
@@ -236,16 +236,27 @@ Evidence:
 
 ## Phase 6: accessibility and polish
 
-- [ ] T6.1 ARIA fixes (`smoke.cjs --a11y` shows 0 critical or serious)
+- [ ] T6.1 ARIA fixes (UNVERIFIED: `smoke.cjs --a11y` not run; no axe-core here)
 - [ ] T6.2 Shortcuts row
 - [ ] T6.3 Focus, motion, zoom
 
 Notes:
 
+- 2026-11-07: Phase 6 written. Same limits as before (no `node_modules`, no network, no built extension). Stand-in runner: 89 test files pass (577 tests), `tests/shared/storage.test.ts` excluded as before. `tsc` list for `tsconfig.json` identical to the untouched zip (83). The temporary `src/ui` check shows no new real errors (two old `TS7053` ones went away). `contrast-check.mjs`: all pairs meet their target.
+- T6.1: `Toggle` keeps `role="switch"` and `aria-checked` only (`aria-pressed` removed; the CSS now reads `[aria-checked="true"]`, and the Phase 3 extra rule for it was merged). `Segmented` keeps `aria-pressed` only (no `aria-selected`, no second `aria-labelledby`; the group is named once by `aria-label`, and the visible label is `aria-hidden`). `Progress` now requires a `label` and all six call sites pass one ("Daily goal", "<label> progress", "Daily limit used on <domain>"). The editable timer's name is `Edit session length, 25:00` so the visible text is in the name. The panel is split into an exported `PanelChrome`: `<h1>` (visually hidden) "FocusGate"; the three tab buttons sit in a `role="tablist"`; each screen is its own `role="tabpanel"` with `aria-labelledby`, so `<main>` is a plain landmark and every `aria-controls` points at an element that exists. I added arrow, Home and End keys and a roving tabindex to the tab bar (not in the plan; it is what a tablist is expected to do). `Card` titles are `h2` (were `h3`, skipping a level), and so are the four profile section titles; the Tasks title is a hidden `h2` (the dashboard pages keep their own hidden `h1`). The dashboard brand link lost its `aria-label` (it did not match the visible text).
+- T6.2: new `src/ui/dashboard/ShortcutsRow.tsx` (`shortcutRows`, `loadCommands`, `openShortcutsPage`, `ShortcutsList`, `ShortcutsRow`), shown in a new Shortcuts card in settings. It lists each command from `chrome.commands.getAll()` with its key, or `Not set` plus `Not set. Another app or Chrome itself may be using this key.`, and a **Change in Chrome** button that opens `chrome://extensions/shortcuts`. If the browser returns nothing the card says so and still offers the button. `chrome.ts` is untouched. Not seen with the real extension loaded.
+- T6.3: the global `*:focus-visible` ring (2 px accent, 2 px offset) already existed; the only exception was text fields, which used offset 0 and hid the border, now the same ring. No rule removes an outline. The reduced-motion rule already stills every animation, transition and scroll (including pseudo-elements), and the gate sweep is inside `no-preference`; tests now pin both. For zoom: the panel had `min-width: 300px`, which makes a side panel at 200% zoom (about 200 CSS px) scroll sideways. Replaced by `min-width: 0`; segmented controls and the header now wrap. Checked in Chromium on static HTML with the real stylesheet: panel at 300, 200 and 160 px, dashboard settings at 300 and 640 px (200% of 1280), both themes: no horizontal scroll, no control past the right edge. Keyboard Tab shows the 2 px / 2 px accent ring (computed style read back).
+- Test order: all new tests were seen red first (aria: missing export; shortcuts: missing module; focusMotion: 4 failed, then the added wrap and header cases each red before the CSS change).
+- Not checked: the real side panel at real zoom; screen readers; `--a11y` smoke. Owner commands: `npm ci && npm test && npm run typecheck && npm run build`, then `xvfb-run -a node tools/e2e/smoke.cjs dist --a11y`.
+
 Evidence:
 
 | Date | Item | Changed files | Verification | Result |
 |---|---|---|---|---|
+| 2026-11-07 | T6.1 | src/ui/components/primitives.tsx; src/ui/panel/PanelPage.tsx; src/ui/panel/views/profile/*Section.tsx; TasksView.tsx; FocusScreen.tsx; RulesScreen.tsx; src/ui/dashboard/DashboardStats.tsx; DashboardPage.tsx; src/ui/styles.css; tests/ui/aria.test.tsx | RED: missing `PanelChrome` export. GREEN: aria 14 passed; primitives, panelRender, claims, foundation still pass | UNVERIFIED: no axe run |
+| 2026-11-07 | T6.2 | src/ui/dashboard/ShortcutsRow.tsx (new); DashboardSettings.tsx; src/ui/styles.css (`.fg-kbd`); tests/ui/shortcuts.test.tsx | RED: module missing. GREEN: 9 passed | UNVERIFIED: needs the loaded extension |
+| 2026-11-07 | T6.3 | src/ui/styles.css; tests/ui/focusMotion.test.ts; tests/ui/foundation.test.ts; tests/claims.test.ts | RED then GREEN: focusMotion 10 passed; foundation 3; claims 16. Screenshots overhaul/evidence/phase6/p6-{panel-300,panel-200,panel-160,dash-300,dash-640}-{dark,light}.png and p6-focus-400-dark.png; no horizontal overflow | UNVERIFIED: static HTML, not the built extension |
+| 2026-11-07 | Phase 6 whole | all of the above, CHANGELOG.md | Stand-in run: 89 test files pass (577 tests; storage.test.ts excluded). `tsc` list identical to the untouched zip | UNVERIFIED |
 
 ## Phase 7: release
 
@@ -272,6 +283,8 @@ Evidence:
 | 2026-11-07 | tests/fixtures/v2-storage.expected.json | Added `"displayName": ""` and `"why": ""` to the expected v2 `settings` (migration now fills them). No existing value changed | T4.1 |
 | 2026-11-07 | tests/ui/blockedReason.test.ts | The Phase 2 case that pinned the title `Focus session` now pins `Blocked by focus session` and the other new headlines (T5.6 replaces them) | T5.6 |
 | 2026-11-07 | tests/ui/themeTokens.test.ts | Added contrast checks for `danger-contrast` and `warning-contrast`. No existing assertion changed | T5.2 |
+| 2026-11-07 | tests/ui/foundation.test.ts, tests/claims.test.ts (C05) | Both pinned `.fg-panel { min-width: 300px }`. Now they pin `min-width: 0` (and, in foundation, that `300px` is gone from the rule). Test titled "300px floor" renamed | T6.3 (200% zoom of a side panel is under 300 CSS px; the floor forced a sideways scroll) |
+| 2026-11-07 | tests/ui/focusMotion.test.ts, aria.test.tsx, shortcuts.test.tsx | New files only. No existing test changed | T6.1 to T6.3 |
 | 2026-11-06 | tests/release.test.ts | Expected version 1.1.1 changed to 1.0.1, changelog heading [1.1.1] changed to [1.0.1] | D9 (owner: keep v1.0.1 for all phases) |
 
 ## Owner-run checks (things an agent without a browser cannot do)

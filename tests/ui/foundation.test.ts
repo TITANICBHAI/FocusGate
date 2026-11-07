@@ -90,7 +90,11 @@ describe("UI foundation contract", () => {
       expect(styles, token).toContain(`${token}:`);
     }
     expect(styles).toContain(".fg-panel {\n  display: flex;");
-    expect(styles).toContain("min-width: 300px");
+    // T6.3: the panel shrinks with the window (200% zoom of a side panel is
+    // under 300 CSS px) instead of holding a 300px floor and scrolling sideways.
+    const panelRule = styles.slice(styles.indexOf(".fg-panel {"), styles.indexOf("}", styles.indexOf(".fg-panel {")));
+    expect(panelRule).toContain("min-width: 0");
+    expect(panelRule).not.toContain("300px");
     expect(styles).not.toContain("width: 380px");
   });
 

@@ -9,9 +9,9 @@ export function AchievementsSection({ state }: { state: AppState }) {
   ).length;
   return (
     <section className="fg-profile-group" aria-labelledby="profile-achievements-title">
-      <h3 id="profile-achievements-title" className="fg-card__title">
+      <h2 id="profile-achievements-title" className="fg-card__title">
         Achievements
-      </h3>
+      </h2>
       <ul className="fg-achievements" aria-label="Achievements">
         {ACHIEVEMENT_DEFINITIONS.map((definition) => {
           const done = unlocked.has(definition.id);

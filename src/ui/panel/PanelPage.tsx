@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { Shield, Timer, User } from "lucide-react";
 import { describeNow } from "../lib/statusSummary.ts";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
@@ -71,66 +71,127 @@ function PanelShell() {
   }
 
   return (
+    <PanelChrome
+      tab={tab}
+      onTabChange={setTab}
+      header={<AppHeader pill={pillFor(summary, state, now)} onOpenSettings={openSettings} />}
+      strip={
+        <StatusStrip
+          summary={summary}
+          onCta={(target) => {
+            setJump((current) => ({
+              section: target === "schedule" ? "schedule" : "sites",
+              nonce: current.nonce + 1,
+            }));
+            setTab("rules");
+          }}
+        />
+      }
+      panels={{
+        focus: (
+          <FocusScreen
+            state={state}
+            onOpenRules={() => setTab("rules")}
+            onOpenTasks={() => setTab("you")}
+          />
+        ),
+        rules: <RulesScreen state={state} jumpTo={jump} />,
+        you: (
+          <YouScreen
+            state={state}
+            onOpenRules={(section) => {
+              setJump((previous) => ({ section, nonce: previous.nonce + 1 }));
+              setTab("rules");
+            }}
+          />
+        ),
+      }}
+    />
+  );
+}
+
+/**
+ * The panel's frame: header, status line, the three screens and the tab bar.
+ * The tab buttons sit in a tablist and each screen is the tabpanel one of them
+ * controls, so `main` stays a plain landmark. Kept free of storage so a test
+ * can render it.
+ */
+function PanelChrome({
+  tab,
+  onTabChange,
+  header,
+  strip,
+  panels,
+}: {
+  tab: PanelTab;
+  onTabChange: (tab: PanelTab) => void;
+  header: ReactNode;
+  strip: ReactNode;
+  panels: Record<PanelTab, ReactNode>;
+}) {
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number): void {
+    const last = TABS.length - 1;
+    const next =
+      event.key === "ArrowRight"
+        ? index === last ? 0 : index + 1
+        : event.key === "ArrowLeft"
+          ? index === 0 ? last : index - 1
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? last
+              : null;
+    if (next === null) return;
+    event.preventDefault();
+    const target = TABS[next];
+    if (!target) return;
+    onTabChange(target.value);
+    document.getElementById(`panel-${target.value}-tab`)?.focus();
+  }
+
+  return (
     <div className="fg-panel">
-      <AppHeader pill={pillFor(summary, state, now)} onOpenSettings={openSettings} />
-      <StatusStrip
-        summary={summary}
-        onCta={(target) => {
-          setJump((current) => ({
-            section: target === "schedule" ? "schedule" : "sites",
-            nonce: current.nonce + 1,
-          }));
-          setTab("rules");
-        }}
-      />
-      <main
-        className="fg-panel__main"
-        id={`panel-${tab}-panel`}
-        role="tabpanel"
-        aria-labelledby={`panel-${tab}-tab`}
-        tabIndex={0}
-      >
+      <h1 className="fg-sr-only">FocusGate</h1>
+      {header}
+      {strip}
+      <main className="fg-panel__main" tabIndex={0}>
         <div className="fg-stack">
-          <div hidden={tab !== "focus"}>
-            <FocusScreen
-              state={state}
-              onOpenRules={() => setTab("rules")}
-              onOpenTasks={() => setTab("you")}
-            />
-          </div>
-          <div hidden={tab !== "rules"}>
-            <RulesScreen state={state} jumpTo={jump} />
-          </div>
-          <div hidden={tab !== "you"}>
-            <YouScreen
-              state={state}
-              onOpenRules={(section) => {
-                setJump((previous) => ({ section, nonce: previous.nonce + 1 }));
-                setTab("rules");
-              }}
-            />
-          </div>
+          {TABS.map((item) => (
+            <div
+              key={item.value}
+              id={`panel-${item.value}-panel`}
+              role="tabpanel"
+              aria-labelledby={`panel-${item.value}-tab`}
+              hidden={tab !== item.value}
+            >
+              {panels[item.value]}
+            </div>
+          ))}
         </div>
       </main>
-      <nav className="fg-tabbar" aria-label="Panel sections">
-        {TABS.map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            role="tab"
-            id={`panel-${item.value}-tab`}
-            aria-selected={tab === item.value}
-            aria-controls={`panel-${item.value}-panel`}
-            className="fg-tabbar__btn"
-            onClick={() => setTab(item.value)}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
+      <nav className="fg-tabbar" aria-label="Panel">
+        <div role="tablist" aria-label="Panel sections" className="fg-tabbar__list">
+          {TABS.map((item, index) => (
+            <button
+              key={item.value}
+              type="button"
+              role="tab"
+              id={`panel-${item.value}-tab`}
+              aria-selected={tab === item.value}
+              aria-controls={`panel-${item.value}-panel`}
+              tabIndex={tab === item.value ? 0 : -1}
+              className="fg-tabbar__btn"
+              onClick={() => onTabChange(item.value)}
+              onKeyDown={(event) => onKeyDown(event, index)}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </div>
       </nav>
     </div>
   );
 }
 
-export { PanelPage };
+export { PanelPage, PanelChrome };

@@ -34,16 +34,16 @@ export function TodayWeekSection({ state, now }: { state: AppState; now: Date })
 
   return (
     <section className="fg-profile-group" aria-labelledby="profile-today-title">
-      <h3 id="profile-today-title" className="fg-card__title">
+      <h2 id="profile-today-title" className="fg-card__title">
         Today and this week
-      </h3>
+      </h2>
       <div className="fg-stat-row">
         <Stat label="Focused" value={`${Math.round((today?.focusMs ?? 0) / 60_000)}m`} />
         <Stat label="Goal" value={`${Math.round(goalPct * 100)}%`} />
         <Stat label="Streak" value={`${streaks.current}d`} />
       </div>
       <div className="fg-hero__progress">
-        <Progress value={goalPct} />
+        <Progress value={goalPct} label="Daily goal" />
       </div>
       <svg
         role="img"

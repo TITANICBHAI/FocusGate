@@ -102,8 +102,8 @@ export function DashboardStats({
       <div className="fg-hero fg-hero--smallest">
         <div className="fg-hero__time">{formatDuration(today?.focusMs ?? 0)}</div>
         <p className="fg-hero__sub">Today's focus time</p>
-        <div className="fg-hero__goal" aria-label={`Daily goal ${Math.round(goalProgress * 100)}% complete`}>
-          <Progress value={goalProgress} />
+        <div className="fg-hero__goal">
+          <Progress value={goalProgress} label="Daily goal" />
           <p className="fg-hero__sub">
             {Math.round(goalProgress * 100)}% of your {state.settings.dailyGoalMin} min goal
           </p>
@@ -226,6 +226,7 @@ export function DashboardStats({
               row.limitMinutes === null ? undefined : (
                 <div className="fg-usage-cell">
                   <Progress
+                    label={`Daily limit used on ${row.domain}`}
                     value={Math.min(1, row.usedMinutes / Math.max(1, row.limitMinutes))}
                     tone={row.usedMinutes >= row.limitMinutes ? "warn" : "accent"}
                   />

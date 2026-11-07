@@ -83,7 +83,7 @@ function DashboardShell() {
   return (
     <div className="fg-dashboard fg-dashboard--flush">
       <header className="fg-dashboard__header">
-        <a className="fg-dashboard__brand" href="./dashboard.html" aria-label="FocusGate dashboard">
+        <a className="fg-dashboard__brand" href="./dashboard.html">
           <img src="/icon.png" alt="" width="34" height="34" />
           <span>
             <strong>FocusGate</strong>

@@ -971,7 +971,10 @@ function LimitsSection({
                     }
                   />
                   {limitMinutes !== null && (
-                    <Progress value={Math.min(1, usedMinutes / Math.max(1, limitMinutes))} />
+                    <Progress
+                      label={`Daily limit used on ${domain}`}
+                      value={Math.min(1, usedMinutes / Math.max(1, limitMinutes))}
+                    />
                   )}
                   <Toggle
                     label="Also allow during focus sessions and blocks"

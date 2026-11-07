@@ -1,3 +1,4 @@
+import { ShortcutsRow } from "./ShortcutsRow.tsx";
 import { AboutLine } from "./AboutLine.tsx";
 import { useEffect, useState } from "react";
 import type { Settings } from "../../shared/types.ts";
@@ -589,6 +590,11 @@ export function DashboardSettings({ state }: { state: AppState }) {
         <p className="fg-muted">
           These filters apply only to sites that FocusGate supports.
         </p>
+      </Card>
+
+      <SectionLabel>Shortcuts</SectionLabel>
+      <Card title="Keyboard shortcuts">
+        <ShortcutsRow />
       </Card>
 
       <SectionLabel>Protection</SectionLabel>

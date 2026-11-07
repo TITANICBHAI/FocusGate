@@ -10,9 +10,9 @@ export function ReasonSection({
 }) {
   return (
     <section className="fg-profile-group" aria-labelledby="profile-reason-title">
-      <h3 id="profile-reason-title" className="fg-card__title">
+      <h2 id="profile-reason-title" className="fg-card__title">
         Your reason
-      </h3>
+      </h2>
       <InlineText
         id="profile-why"
         label="Your reason"

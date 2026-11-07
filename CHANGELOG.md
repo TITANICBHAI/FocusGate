@@ -16,6 +16,8 @@ The You tab now starts with your name and your own reason for focusing, then wha
 
 FocusGate has a new look. The icon has clean corners, colours are periwinkle with amber only where something is blocking right now, and labels are sentence case with a steadier number font. The side panel uses plain lists with a coloured bar instead of stacked boxes, and long site names and chips no longer overlap on a narrow panel. The dashboard Overview shows today at the top, a full-width week chart, and a side column with your schedules, limits and when protection was off. The block page puts the reason first, left-aligned, with Close tab as the main button. The status bar sweeps once when blocking starts. The About card shows the version.
 
+Screen readers get a cleaner panel. Switches and segmented controls are announced once, in the way each one works, progress bars say what they measure, the tab bar is a proper tab list with the page title above it, and headings no longer skip a level. Settings has a Keyboard shortcuts card that shows the keys Chrome has set for FocusGate, says when one is not set, and has a Change in Chrome button. Every control shows a clear focus ring, including text fields. The side panel now fits narrow windows and 200% zoom without scrolling sideways.
+
 ## [1.1.0] - 2026-10-31
 
 The 1.1.0 release replaces the original (v1) runtime with the v2

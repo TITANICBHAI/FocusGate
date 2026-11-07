@@ -603,7 +603,7 @@ export function FocusScreen({
           <Stat label="Streak" value={`${streaks.current}d`} />
         </div>
         <div className="fg-hero__progress">
-          <Progress value={goalPct} />
+          <Progress value={goalPct} label="Daily goal" />
         </div>
       </Card>
 

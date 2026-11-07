@@ -316,7 +316,7 @@ export function TasksView({ state }: { state: AppState }) {
   return (
     <section className="fg-stack" aria-labelledby="tasks-title">
       <SectionLabel>Tasks</SectionLabel>
-      <h1 id="tasks-title" className="fg-sr-only">Tasks</h1>
+      <h2 id="tasks-title" className="fg-sr-only">Tasks</h2>
       <div className="fg-wrap">
         <Button onClick={() => openEditor()}>Add task</Button>
       </div>

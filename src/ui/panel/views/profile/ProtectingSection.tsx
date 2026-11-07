@@ -17,9 +17,9 @@ export function ProtectingSection({
   const rows = protectionRows(state, now);
   return (
     <section className="fg-profile-group" aria-labelledby="profile-protecting-title">
-      <h3 id="profile-protecting-title" className="fg-card__title">
+      <h2 id="profile-protecting-title" className="fg-card__title">
         What you're protecting
-      </h3>
+      </h2>
       <div className="fg-list">
         {rows.map((row) => {
           const copy = (

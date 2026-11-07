@@ -100,7 +100,7 @@ export function Card({
       {(title || description || actions) && (
         <div className="fg-wrap" style={{ justifyContent: "space-between" }}>
           <div className="fg-stack" style={{ gap: 2 }}>
-            {title && <h3 className="fg-card__title">{title}</h3>}
+            {title && <h2 className="fg-card__title">{title}</h2>}
             {description && <p className="fg-card__desc">{description}</p>}
           </div>
           {actions}
@@ -226,7 +226,6 @@ export function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-pressed={checked}
         aria-label={label}
         aria-describedby={description ? descriptionId : undefined}
         disabled={disabled}
@@ -252,21 +251,19 @@ export function Segmented<T extends string>({
 }) {
   return (
     <div className="fg-field">
-      <span className="fg-field__label" id={`${label}-seg-label`}>
+      <span className="fg-field__label" aria-hidden="true">
         {label}
       </span>
       <div
         className="fg-seg"
         role="group"
         aria-label={label}
-        aria-labelledby={`${label}-seg-label`}
       >
         {options.map((option) => (
           <button
             key={option.value}
             type="button"
             aria-pressed={value === option.value}
-            aria-selected={value === option.value}
             disabled={disabled}
             className="fg-seg__btn"
             onClick={() => onChange(option.value)}
@@ -396,9 +393,12 @@ export function Stat({
 
 export function Progress({
   value,
+  label,
   tone = "accent",
 }: {
   value: number;
+  /** What the bar measures, read out by screen readers. */
+  label: string;
   tone?: "accent" | "break" | "warn";
 }) {
   const safe = Math.max(0, Math.min(1, value));
@@ -412,6 +412,7 @@ export function Progress({
     <div
       className={`fg-progress ${toneClass}`.trim()}
       role="progressbar"
+      aria-label={label}
       aria-valuenow={Math.round(safe * 100)}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -499,7 +500,7 @@ export function HeroTimer({
       }
       role={editable ? "button" : undefined}
       tabIndex={editable ? 0 : undefined}
-      aria-label={editable ? "Edit session length" : undefined}
+      aria-label={editable ? `Edit session length, ${formatClock(seconds)}` : undefined}
     >
       {formatClock(seconds)}
     </div>
@@ -514,7 +515,7 @@ export function HeroTimer({
       {meta && <div className="fg-hero__meta">{meta}</div>}
       {progress !== undefined && (
         <div className="fg-hero__progress">
-          <Progress value={progress} tone={tone} />
+          <Progress value={progress} label={`${label} progress`} tone={tone} />
         </div>
       )}
     </div>

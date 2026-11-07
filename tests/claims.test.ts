@@ -35,13 +35,14 @@ describe("C02 — privacy claims", () => {
 });
 
 describe("C05 — the side panel is a fixed flexible shell", () => {
-  it("styles the panel as a flexible column with a 300px floor", () => {
+  it("styles the panel as a flexible column that shrinks with the window", () => {
     const css = read("src/ui/styles.css");
     const block = css.slice(
       css.indexOf(".fg-panel {"),
       css.indexOf("}", css.indexOf(".fg-panel {")),
     );
-    expect(block).toContain("min-width: 300px");
+    expect(block).toContain("display: flex");
+    expect(block).toContain("min-width: 0");
     expect(css).not.toContain("width: 380px");
   });
 });
