@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import type { ReactNode } from "react";
 import { ready } from "../shared/storage.ts";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 export function mountUiPage(
   page: ReactNode,
@@ -16,7 +17,7 @@ export function mountUiPage(
     !chrome.runtime?.id ||
     import.meta.env.DEV
   ) {
-    root.render(page);
+    root.render(<ErrorBoundary>{page}</ErrorBoundary>);
     return root;
   }
 
@@ -27,7 +28,7 @@ export function mountUiPage(
     </main>,
   );
   void ready()
-    .then(() => root.render(page))
+    .then(() => root.render(<ErrorBoundary>{page}</ErrorBoundary>))
     .catch((error: unknown) => {
       const message =
         error instanceof Error

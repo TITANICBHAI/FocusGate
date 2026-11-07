@@ -7,6 +7,19 @@ import {
 } from "../lib/guardPrompts.ts";
 
 export type StorageKey = keyof AppState;
+
+/** Reply to the worker's "state/write" message. */
+type GuardedWriteReply =
+  | { ok: true }
+  | { ok: false; code?: string; message?: string };
+
+function setStateKey<K extends StorageKey>(
+  target: AppState,
+  key: K,
+  value: AppState[K],
+): void {
+  target[key] = value;
+}
 export const APP_STATE_KEYS = Object.keys(DEFAULT_STATE) as StorageKey[];
 
 export interface StorageSnapshot<K extends StorageKey = StorageKey> {
@@ -142,13 +155,16 @@ export function createBrowserStorageBackend(
     key: GuardedStateKey,
     value: unknown,
     currentPassword?: string,
-  ): Promise<unknown> {
-    return chrome.runtime.sendMessage({
+  ): Promise<GuardedWriteReply> {
+    // The worker's reply crosses a message boundary, so writeGuarded still
+    // checks its shape at runtime before trusting it.
+    const reply: unknown = await chrome.runtime.sendMessage({
       type: "state/write",
       key,
       value,
       ...(currentPassword !== undefined ? { currentPassword } : {}),
     });
+    return reply as GuardedWriteReply;
   }
 
   return {
@@ -305,9 +321,10 @@ export class StorageStore {
     if (this.appStateSnapshot && this.appStateVersion === version) {
       return this.appStateSnapshot;
     }
-    const state = Object.fromEntries(
-      APP_STATE_KEYS.map((key) => [key, this.getSnapshot(key).value]),
-    ) as AppState;
+    const state: AppState = { ...DEFAULT_STATE };
+    for (const key of APP_STATE_KEYS) {
+      setStateKey(state, key, this.getSnapshot(key).value);
+    }
     this.appStateVersion = version;
     this.appStateSnapshot = state;
     return state;

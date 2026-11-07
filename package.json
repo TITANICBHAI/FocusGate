@@ -1,7 +1,7 @@
 {
   "name": "focusgate",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -17,7 +17,8 @@
     "package:all": "npm run build:extension && npm run package:chrome && npm run package:edge && npm run package:firefox && npm run prepare:store",
     "preview": "vite preview",
     "clean": "rm -rf dist build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
+    "e2e:smoke": "node tools/e2e/smoke.cjs dist",
     "test": "vitest run",
     "lint": "tsc --noEmit"
   },

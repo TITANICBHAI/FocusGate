@@ -129,6 +129,7 @@ export interface WorkerBrowserApi {
   runtime: {
     getURL(path: string): string;
     onInstalled: WorkerEventSource<{ reason: string }>;
+    onStartup?: WorkerEventSource<void>;
     onMessage: WorkerEventSource<WorkerMessageEvent>;
   };
   events: {
@@ -363,7 +364,29 @@ export function createWorker(api: WorkerBrowserApi): Worker {
   const handleAlarm = (name: string): Promise<boolean> => alarmHandler(name);
 
   const passwordService = createPasswordActionService({ store, now });
-  const guardedService = createGuardedStateWriteService({ store, now });
+  // UI edits to these keys change what must be blocked, so the network rules
+  // are rebuilt right after the write instead of waiting for the next alarm.
+  const RECONCILE_KEYS: ReadonlySet<string> = new Set([
+    "blockedSites",
+    "alwaysBlockedSites",
+    "exceptions",
+    "keywords",
+    "schedules",
+    "allowances",
+    "aliasExclusions",
+  ]);
+  const guardedService = createGuardedStateWriteService({
+    store,
+    now,
+    afterChange: async (key) => {
+      if (!RECONCILE_KEYS.has(key)) return;
+      try {
+        await reconciler("state-write");
+      } catch (error) {
+        onError("reconcile-after-write", error);
+      }
+    },
+  });
   const standaloneService = createStandaloneActionService({
     store,
     now,
@@ -392,6 +415,7 @@ export function createWorker(api: WorkerBrowserApi): Worker {
       const key =
         destination === "always" ? "alwaysBlockedSites" : "blockedSites";
       await update(key, (latest) => [...new Set([...latest, ...domains])]);
+      await reconciler("quick-block");
     },
     shouldRedirect: async (target) =>
       explainBlock(target.url, await store.readState(), now()) !== null,
@@ -446,6 +470,18 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     }
   };
 
+  // Runs when the browser starts: a session phase may have ended while the
+  // browser was closed, and alarms do not always survive a restart.
+  const startupRecovery = async (): Promise<void> => {
+    await ready();
+    await session.recover();
+    await tasks.reconcile();
+    const state = await store.readState();
+    const at = now();
+    await ensureAlarmsFor(state, computeBlockPlan(state, at), at);
+    await reconciler("startup");
+  };
+
   const start = (): (() => void) => {
     const unbinders: Array<() => void> = [];
 
@@ -453,10 +489,10 @@ export function createWorker(api: WorkerBrowserApi): Worker {
       void handleInstalled(details);
     };
     const onAlarmListener = (name: string): void => {
-      void handleAlarm(name);
+      void handleAlarm(name).catch((error) => onError("alarm", error));
     };
     const onCommandListener = (command: string): void => {
-      void handleCommand(command);
+      void handleCommand(command).catch((error) => onError("command", error));
     };
     const onMessageListener = (event: WorkerMessageEvent): void => {
       void handleMessage(event.message)
@@ -470,6 +506,13 @@ export function createWorker(api: WorkerBrowserApi): Worker {
     api.runtime.onInstalled.addListener(onInstalledListener);
     unbinders.push(() =>
       api.runtime.onInstalled.removeListener(onInstalledListener),
+    );
+    const onStartupListener = (): void => {
+      void startupRecovery().catch((error) => onError("startup", error));
+    };
+    api.runtime.onStartup?.addListener(onStartupListener);
+    unbinders.push(() =>
+      api.runtime.onStartup?.removeListener(onStartupListener),
     );
     api.alarms.onAlarm.addListener(onAlarmListener);
     unbinders.push(() => api.alarms.onAlarm.removeListener(onAlarmListener));

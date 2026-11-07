@@ -1281,3 +1281,121 @@ svg.fg-icon-16 { width: 16px; height: 16px; flex: none; }
 .fg-mr-8 { margin-right: 8px; }
 .fg-w-64 { flex: none; width: 64px; }
 .fg-sheet__footer { margin-top: var(--gap); }
+
+/* Week strip: seven rows, Monday first. Amber spans are hours that block. */
+.fg-strip {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.fg-strip__row,
+.fg-strip__ticks {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.fg-strip__day {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.fg-strip__track {
+  position: relative;
+  display: block;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.fg-strip__span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--warning);
+}
+.fg-strip__now {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.fg-strip__tick-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Schedule list rows: stacked copy so nothing truncates at panel width. */
+.fg-sched__status {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.fg-sched {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0 12px 12px;
+  border-left: 3px solid transparent;
+}
+.fg-list > .fg-sched + .fg-sched { border-top: 1px solid var(--border); }
+.fg-sched.is-on { border-left-color: var(--warning); }
+.fg-sched__copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fg-sched__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.fg-sched__meta,
+.fg-sched__targets {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.fg-sched__warn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--warning);
+}
+.fg-sched__actions { display: flex; align-items: center; gap: 4px; flex: none; }
+.fg-sched__switch { min-height: 0; }
+.fg-sched__switch .fg-toggle__track::before {
+  content: "";
+  position: absolute;
+  inset: -12px -4px;
+}
+.fg-sched__fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.fg-sched__radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 14px;
+}
+.fg-toggle__track[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
+.fg-toggle__track[aria-checked="true"]::after { transform: translateX(16px); background: var(--accent-contrast); }

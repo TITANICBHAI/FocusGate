@@ -10,10 +10,10 @@ import { parseBlockTarget } from "../lib/blockTarget.ts";
 import { ThemeRoot } from "../theme.tsx";
 
 function formatClock(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Newer ICU builds put a narrow no-break space before AM and PM. Use a plain one.
+  return new Date(timestamp)
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    .replace(/[\u202f\u00a0]/g, " ");
 }
 
 function formatRemaining(milliseconds: number): string {
@@ -23,7 +23,7 @@ function formatRemaining(milliseconds: number): string {
   ).padStart(2, "0")}`;
 }
 
-function reasonTitle(
+export function reasonTitle(
   reason: NonNullable<ReturnType<typeof explainBlock>>,
 ): string {
   switch (reason.kind) {
@@ -32,7 +32,7 @@ function reasonTitle(
     case "standalone":
       return "Standalone block";
     case "schedule":
-      return `Schedule: ${reason.name}`;
+      return `Blocked by schedule: ${reason.name}`;
     case "allowance":
       return "Daily limit reached";
     case "always":
@@ -53,7 +53,7 @@ function reasonLabel(
     case "standalone":
       return "Blocked by Block now";
     case "schedule":
-      return "Blocked by schedule";
+      return "Scheduled block";
     case "allowance":
       return "Daily limit reached";
     case "always":
@@ -65,7 +65,7 @@ function reasonLabel(
   }
 }
 
-function reasonMeta(
+export function reasonMeta(
   reason: NonNullable<ReturnType<typeof explainBlock>>,
 ): string | null {
   switch (reason.kind) {
@@ -73,7 +73,7 @@ function reasonMeta(
     case "standalone":
       return `Ends ${formatClock(reason.until)}`;
     case "schedule":
-      return `This schedule ends at ${formatClock(reason.until)}.`;
+      return `Ends ${formatClock(reason.until)}`;
     case "allowance":
       return `Your allowance resets at ${formatClock(reason.resetsAt)}.`;
     case "keyword":

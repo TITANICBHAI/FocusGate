@@ -244,6 +244,8 @@ describe("allowance attention sampler", () => {
   it("meters during-block exemptions, but never credits blocked or always-blocked use", async () => {
     const blockedState = createDefaultState();
     blockedState.session.status = "work";
+    // A live phase: the fixture clock starts at 10_000 and moves to 70_000.
+    blockedState.session.phaseEndsAt = 1_000_000;
     blockedState.blockedSites = ["example.com"];
     blockedState.allowances["example.com"] = {
       mode: "time_budget",

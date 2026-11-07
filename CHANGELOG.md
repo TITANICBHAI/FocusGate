@@ -2,6 +2,14 @@
 
 Notable changes to FocusGate are documented here.
 
+## [1.0.1] - 2026-11-06
+
+Focus sessions and schedules end on time again. The dashboard opens again. "Check a URL" no longer blanks the side panel. A crash now shows a message instead of a blank screen.
+
+Changes you make to your site lists, keywords, schedules and daily limits now reach the blocker straight away instead of at the next alarm. The Alt+Shift+B shortcut blocks the site at once. When the browser starts, FocusGate ends sessions that ran out while it was closed and restores its alarms. A focus phase that has already ended no longer blocks sites or locks your rules.
+
+Schedules now explain themselves. The Schedules screen says what is on now or what starts next, shows your whole week as a strip, and describes each schedule in plain words: which days, which hours and which sites it blocks. You can edit a schedule, pick what it blocks, and start from a Work hours, Study or Sleep template. A schedule that blocks nothing yet is flagged with a quick way to fix it. The block page now says which schedule blocked the site and when it ends.
+
 ## [1.1.0] - 2026-10-31
 
 The 1.1.0 release replaces the original (v1) runtime with the v2

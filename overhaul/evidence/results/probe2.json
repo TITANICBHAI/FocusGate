@@ -1,0 +1,289 @@
+{
+  "steps": {
+    "p0_alarmsAtStart": [
+      {
+        "name": "tick",
+        "in_s": 59,
+        "period": 1
+      },
+      {
+        "name": "boundary",
+        "in_s": 84158
+      },
+      {
+        "name": "weekly_report",
+        "in_s": 548558
+      },
+      {
+        "name": "midnight",
+        "in_s": 84158
+      }
+    ],
+    "p0_commands": [
+      {
+        "name": "_execute_action",
+        "shortcut": ""
+      },
+      {
+        "name": "block-current-site",
+        "shortcut": ""
+      },
+      {
+        "name": "toggle-focus",
+        "shortcut": "Alt+Shift+F"
+      }
+    ],
+    "p3_write": {
+      "ok": true
+    },
+    "p3_dnrAfterWrite": [],
+    "p3_alarmsAfterWrite": [
+      "tick",
+      "boundary",
+      "weekly_report",
+      "midnight"
+    ],
+    "p3_navBeforeReconcile": {
+      "label": "always-site, no reconcile yet",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 2
+    },
+    "p3_sessionStartNone": true,
+    "p3_dnrAfterReconcile": [
+      {
+        "id": 1,
+        "domains": [
+          "news.test"
+        ],
+        "action": "redirect"
+      }
+    ],
+    "p3_navAfterReconcile": {
+      "label": "always-site, after reconcile",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 0
+    },
+    "p3_stop": {
+      "ok": true,
+      "session": {
+        "status": "idle",
+        "sessionId": "",
+        "phaseStartedAt": 0,
+        "phaseEndsAt": 0,
+        "phasePlannedMs": 0,
+        "plannedWorkMs": 0,
+        "extendedMs": 0,
+        "cycle": 0,
+        "lockLevel": "none",
+        "taskId": null,
+        "blockedAttempts": 0,
+        "lastHeartbeatAt": 1793666246957,
+        "gaps": [],
+        "stopChallengeStartedAt": null,
+        "clockSkewDetected": false
+      }
+    },
+    "p2b_write": {
+      "ok": true
+    },
+    "p2b_dnrAfterRemoval": [
+      {
+        "id": 1,
+        "domains": [
+          "news.test"
+        ],
+        "action": "redirect"
+      }
+    ],
+    "p2b_navAfterRemoval": {
+      "label": "site REMOVED from list",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 0
+    },
+    "p2b_afterClickOpen": {
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/"
+    },
+    "p2_write": {
+      "ok": true
+    },
+    "p2_dnrAfterWrite": [
+      {
+        "id": 1,
+        "domains": [
+          "news.test"
+        ],
+        "action": "redirect"
+      }
+    ],
+    "p2_alarmsAfterWrite": [
+      {
+        "name": "tick",
+        "in_s": 50
+      },
+      {
+        "name": "weekly_report",
+        "in_s": 548549
+      },
+      {
+        "name": "midnight",
+        "in_s": 84149
+      },
+      {
+        "name": "boundary",
+        "in_s": 84149
+      }
+    ],
+    "p2_navNoReconcile": {
+      "label": "schedule active, no reconcile",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 0
+    },
+    "p4_start": {
+      "ok": true
+    },
+    "p4_dnrDuring": [
+      {
+        "id": 1,
+        "domains": [
+          "news.test"
+        ],
+        "action": "redirect"
+      }
+    ],
+    "p4_weakenAttempt": {
+      "ok": false,
+      "code": "LOCKED",
+      "message": "Locked until 1793666312930 by your strict session."
+    },
+    "p4_stopAttempt": {
+      "ok": false,
+      "code": "PHRASE_REQUIRED",
+      "message": "Type I GIVE UP to start the 15-second wait.",
+      "waitMs": 15000
+    },
+    "p4_extendAttempt": {
+      "ok": true,
+      "session": {
+        "blockedAttempts": 0,
+        "clockSkewDetected": false,
+        "cycle": 1,
+        "extendedMs": 600000,
+        "gaps": [],
+        "lastHeartbeatAt": 1793666252930,
+        "lockLevel": "strict",
+        "phaseEndsAt": 1793666912930,
+        "phasePlannedMs": 660000,
+        "phaseStartedAt": 1793666252930,
+        "plannedWorkMs": 60000,
+        "sessionId": "f778098f-0d8c-4044-afa2-c75cf82ef5cc",
+        "status": "work",
+        "stopChallengeStartedAt": null,
+        "taskId": null
+      }
+    },
+    "p4_mutations5s": {
+      "mutations": 7,
+      "top": [
+        [
+          "fg-hero__time",
+          5
+        ],
+        [
+          "SPAN",
+          1
+        ],
+        [
+          "fg-progress",
+          1
+        ]
+      ]
+    },
+    "p4_navDuring": {
+      "label": "strict session running",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 0
+    },
+    "p4_after": {
+      "now": 1793666330932,
+      "status": "work",
+      "phaseEndsAt": 1793666912930,
+      "overdue_s": -582,
+      "lockLevel": "strict",
+      "historyLen": 1,
+      "dayStatsKeys": [
+        "2026-11-03"
+      ],
+      "health": {
+        "lastError": null,
+        "lastHeartbeatAt": 1793666240549,
+        "lastReconcileAt": 1793666252962,
+        "ruleCount": 1,
+        "skipped": []
+      }
+    },
+    "p4_weakenAfterEnd": {
+      "ok": false,
+      "code": "LOCKED",
+      "message": "Locked until 1793666912930 by your strict session."
+    },
+    "p4_panelTimerText": "09:41",
+    "p4_navAfterEnd": {
+      "label": "after strict timer ended",
+      "finalUrl": "chrome-extension://<ext>/blocked.html#http://news.test:8123/",
+      "serverHitsDelta": 0
+    },
+    "p4_naturalAlarmErrors": [
+      {
+        "at": 1793666300555,
+        "msg": "name.startsWith is not a function"
+      }
+    ],
+    "p4_alarmsNow": [
+      {
+        "name": "tick",
+        "in_s": 26,
+        "period": 1
+      },
+      {
+        "name": "weekly_report",
+        "in_s": 548465
+      },
+      {
+        "name": "midnight",
+        "in_s": 84065
+      },
+      {
+        "name": "session_phase_end",
+        "in_s": 578
+      },
+      {
+        "name": "boundary",
+        "in_s": 578
+      }
+    ],
+    "p5_startAgain": false,
+    "p5_after": {
+      "history": [
+        {
+          "status": "abandoned",
+          "elapsed_s": 2,
+          "planned_s": 300,
+          "endedAgo_s": 88
+        }
+      ],
+      "dayStats": {
+        "2026-11-03": {
+          "blocks": 1,
+          "blocksByDomain": {
+            "news.test": 1
+          },
+          "dateKey": "2026-11-03",
+          "focusMs": 2009,
+          "sessionsAbandoned": 1,
+          "sessionsCompleted": 0,
+          "tasksCompleted": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,886 @@
+{
+  "notes": [],
+  "extId": "lgkjcoeajlghfpfbagnnnbcddbmbmgnh",
+  "alarmCrash": {
+    "errs": [
+      "name.startsWith is not a function"
+    ],
+    "alarmArgs": [
+      {
+        "type": "object",
+        "keys": [
+          "name",
+          "persistAcrossSessions",
+          "scheduledTime"
+        ]
+      }
+    ]
+  },
+  "fresh": {
+    "storageKeys": [
+      "achievements",
+      "aliasExclusions",
+      "allowances",
+      "alwaysBlockedSites",
+      "backup_v1",
+      "blockedSites",
+      "customPresets",
+      "dayStats",
+      "exceptions",
+      "habitEntries",
+      "habits",
+      "health",
+      "keywordMatches",
+      "keywords",
+      "lastWeeklyReport",
+      "password",
+      "quickBlockMode",
+      "recentBlocks",
+      "schedules",
+      "schemaVersion",
+      "session",
+      "sessionHistory",
+      "settings",
+      "standalone",
+      "tasks",
+      "usage",
+      "weeklyReports"
+    ],
+    "storageBytes": 1670,
+    "health": {
+      "lastError": null,
+      "lastHeartbeatAt": 1793666084684,
+      "lastReconcileAt": 1793666084690,
+      "ruleCount": 0,
+      "skipped": []
+    },
+    "alarms": [
+      {
+        "name": "boundary",
+        "in_s": 84311
+      },
+      {
+        "name": "weekly_report",
+        "in_s": 548711
+      },
+      {
+        "name": "midnight",
+        "in_s": 84311
+      }
+    ],
+    "dnrRules": 0
+  },
+  "tabsOpenAfterInstall": [
+    "about:blank"
+  ],
+  "pages": [
+    {
+      "tag": "panel-400x760-dark",
+      "info": {
+        "title": "FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 400,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Tasks"
+        ],
+        "buttons": 38,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": [
+        {
+          "id": "aria-allowed-attr",
+          "impact": "critical",
+          "n": 3,
+          "help": "Elements must only use supported ARIA attributes",
+          "sample": [
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(1)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"true\""
+            },
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(2)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"false\""
+            }
+          ]
+        },
+        {
+          "id": "aria-allowed-role",
+          "impact": "minor",
+          "n": 1,
+          "help": "ARIA role should be appropriate for the element",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   ARIA role tabpanel is not allowed for given element"
+            }
+          ]
+        },
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "n": 1,
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "sample": [
+            {
+              "target": ".fg-card:nth-child(7) > .fg-hero__progress > .fg-progress[role=\"progressbar\"][aria-valuemin=\"0\"]",
+              "summary": "Fix any of the following: |   aria-label attribute does not exist or is empty |   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty"
+            }
+          ]
+        },
+        {
+          "id": "aria-required-parent",
+          "impact": "critical",
+          "n": 3,
+          "help": "Certain ARIA roles must be contained by particular parents",
+          "sample": [
+            {
+              "target": "#panel-focus-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            },
+            {
+              "target": "#panel-rules-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "impact": "serious",
+          "n": 1,
+          "help": "Elements must have their visible text as part of their accessible name",
+          "sample": [
+            {
+              "target": ".fg-hero__time",
+              "summary": "Fix any of the following: |   Text inside the element is not included in the accessible name"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Document should have one main landmark",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Document does not have a main landmark"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Page should contain a level-one heading",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Page must have a level-one heading"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "n": 1,
+          "help": "All page content should be contained by landmarks",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   Some page content is not contained by landmarks"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "panel-400x760-light",
+      "info": {
+        "title": "FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 400,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Tasks"
+        ],
+        "buttons": 38,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": [
+        {
+          "id": "aria-allowed-attr",
+          "impact": "critical",
+          "n": 3,
+          "help": "Elements must only use supported ARIA attributes",
+          "sample": [
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(1)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"true\""
+            },
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(2)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"false\""
+            }
+          ]
+        },
+        {
+          "id": "aria-allowed-role",
+          "impact": "minor",
+          "n": 1,
+          "help": "ARIA role should be appropriate for the element",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   ARIA role tabpanel is not allowed for given element"
+            }
+          ]
+        },
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "n": 1,
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "sample": [
+            {
+              "target": ".fg-card:nth-child(7) > .fg-hero__progress > .fg-progress[role=\"progressbar\"][aria-valuemin=\"0\"]",
+              "summary": "Fix any of the following: |   aria-label attribute does not exist or is empty |   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty"
+            }
+          ]
+        },
+        {
+          "id": "aria-required-parent",
+          "impact": "critical",
+          "n": 3,
+          "help": "Certain ARIA roles must be contained by particular parents",
+          "sample": [
+            {
+              "target": "#panel-focus-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            },
+            {
+              "target": "#panel-rules-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "impact": "serious",
+          "n": 1,
+          "help": "Elements must have their visible text as part of their accessible name",
+          "sample": [
+            {
+              "target": ".fg-hero__time",
+              "summary": "Fix any of the following: |   Text inside the element is not included in the accessible name"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Document should have one main landmark",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Document does not have a main landmark"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Page should contain a level-one heading",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Page must have a level-one heading"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "n": 1,
+          "help": "All page content should be contained by landmarks",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   Some page content is not contained by landmarks"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "panel-320x640-dark",
+      "info": {
+        "title": "FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 320,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Tasks"
+        ],
+        "buttons": 38,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": [
+        {
+          "id": "aria-allowed-attr",
+          "impact": "critical",
+          "n": 3,
+          "help": "Elements must only use supported ARIA attributes",
+          "sample": [
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(1)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"true\""
+            },
+            {
+              "target": "div[aria-label=\"Session lock\"] > .fg-seg__btn[type=\"button\"]:nth-child(2)",
+              "summary": "Fix all of the following: |   ARIA attribute is not allowed: aria-selected=\"false\""
+            }
+          ]
+        },
+        {
+          "id": "aria-allowed-role",
+          "impact": "minor",
+          "n": 1,
+          "help": "ARIA role should be appropriate for the element",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   ARIA role tabpanel is not allowed for given element"
+            }
+          ]
+        },
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "n": 1,
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "sample": [
+            {
+              "target": ".fg-card:nth-child(7) > .fg-hero__progress > .fg-progress[role=\"progressbar\"][aria-valuemin=\"0\"]",
+              "summary": "Fix any of the following: |   aria-label attribute does not exist or is empty |   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty"
+            }
+          ]
+        },
+        {
+          "id": "aria-required-parent",
+          "impact": "critical",
+          "n": 3,
+          "help": "Certain ARIA roles must be contained by particular parents",
+          "sample": [
+            {
+              "target": "#panel-focus-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            },
+            {
+              "target": "#panel-rules-tab",
+              "summary": "Fix any of the following: |   Required ARIA parent role not present: tablist"
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "impact": "serious",
+          "n": 1,
+          "help": "Elements must have their visible text as part of their accessible name",
+          "sample": [
+            {
+              "target": ".fg-hero__time",
+              "summary": "Fix any of the following: |   Text inside the element is not included in the accessible name"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Document should have one main landmark",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Document does not have a main landmark"
+            }
+          ]
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "n": 1,
+          "help": "Page should contain a level-one heading",
+          "sample": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following: |   Page must have a level-one heading"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "n": 1,
+          "help": "All page content should be contained by landmarks",
+          "sample": [
+            {
+              "target": "#panel-focus-panel",
+              "summary": "Fix any of the following: |   Some page content is not contained by landmarks"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "dash-overview-1280x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-overview-1280x800-light",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-overview-640x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 640,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-rules-1280x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-rules-1280x800-light",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-reports-1280x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-reports-1280x800-light",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-settings-1280x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-settings-1280x800-light",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-data-1280x800-dark",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "dash-data-1280x800-light",
+      "info": {
+        "title": "Dashboard · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1280,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "FocusGate could not start"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [
+        "error: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/mount-C_4Ky5kf.js:83:47930)\n ",
+        "error: FocusGate dashboard crashed: ReferenceError: useState is not defined\n    at Is (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/dashboard-_TT6PeI2.js:4:13050)\n    at ac (chrome-extension://lgkjcoeajlghfpfbagnnnbcddbmbmgnh/assets/"
+      ],
+      "axe": []
+    },
+    {
+      "tag": "blocked-1000x700-dark",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "news.test is no longer blocked"
+        ],
+        "buttons": 2,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "blocked-1000x700-light",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "news.test is no longer blocked"
+        ],
+        "buttons": 2,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "blocked-380x700-dark",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 380,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "news.test is no longer blocked"
+        ],
+        "buttons": 2,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "blocked-380x700-light",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 380,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "news.test is no longer blocked"
+        ],
+        "buttons": 2,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "blocked-nohash-1000x700-dark",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Page unavailable"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "blocked-nohash-1000x700-light",
+      "info": {
+        "title": "Page blocked · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Page unavailable"
+        ],
+        "buttons": 0,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "onboarding-1000x700-dark",
+      "info": {
+        "title": "Welcome · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Make room for focused time"
+        ],
+        "buttons": 5,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "onboarding-1000x700-light",
+      "info": {
+        "title": "Welcome · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 1000,
+        "bodyBg": "rgb(247, 248, 247)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Make room for focused time"
+        ],
+        "buttons": 5,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    },
+    {
+      "tag": "onboarding-380x700-dark",
+      "info": {
+        "title": "Welcome · FocusGate",
+        "lang": "en",
+        "dataTheme": "system",
+        "hScroll": false,
+        "scrollW": 380,
+        "bodyBg": "rgb(11, 13, 12)",
+        "fontFamily": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+        "fontSize": "14px",
+        "h1": [
+          "Make room for focused time"
+        ],
+        "buttons": 5,
+        "imgsNoAlt": 0
+      },
+      "logs": [],
+      "axe": []
+    }
+  ]
+}

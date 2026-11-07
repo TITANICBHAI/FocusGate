@@ -246,7 +246,7 @@ export function Segmented<T extends string>({
   label: string;
   options: readonly { value: T; label: string }[];
   value: T;
-  onChange(value: T): void;
+  onChange: (value: T) => void;
   disabled?: boolean;
 }) {
   return (
@@ -285,14 +285,14 @@ export function Chip({
   removeLabel,
 }: {
   children: ReactNode;
-  tone?: "neutral" | "accent" | "warning" | "danger";
+  tone?: "neutral" | "accent" | "warning" | "danger" | "live" | "lock";
   onRemove?: () => void;
   removeLabel?: string;
 }) {
   const toneClass =
-    tone === "accent"
+    tone === "accent" || tone === "live"
       ? "fg-chip--live"
-      : tone === "warning"
+      : tone === "warning" || tone === "lock"
         ? "fg-chip--lock"
         : tone === "danger"
           ? "fg-chip--danger"
@@ -344,7 +344,7 @@ export function ListRow({
   status,
   actions,
 }: {
-  swatch?: string;
+  swatch?: ReactNode;
   icon?: ReactNode;
   title: ReactNode;
   sub?: ReactNode;

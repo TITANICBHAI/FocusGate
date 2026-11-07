@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { CalendarPlus, ShieldX } from "lucide-react";
 import { normalizeDomain } from "../../../shared/domains.ts";
 import { computeBlockPlan, isBlockingActive } from "../../../shared/plan.ts";

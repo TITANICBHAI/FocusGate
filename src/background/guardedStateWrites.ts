@@ -19,6 +19,8 @@ export interface GuardedStateWriteDependencies {
   store: GuardedStateWriteStore;
   now(): number;
   verifyPassword?: typeof verifyPasswordDefault;
+  /** Runs after a write has been stored, so callers can apply it right away. */
+  afterChange?(key: GuardedStateKey): Promise<void>;
 }
 
 export interface GuardedStateWriteService {
@@ -179,6 +181,7 @@ export function createGuardedStateWriteService(
         await dependencies.store.writeState({
           [input.key]: input.value,
         } as Partial<AppState>);
+        await dependencies.afterChange?.(input.key);
         return { ok: true };
       }),
   };

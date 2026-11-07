@@ -1,0 +1,27 @@
+src/ui/components/AchievementsCard.tsx(31,23 TS2322: Type '"live"' is not assignable to type '"warning" | "danger" | "neutral" | "accen
+src/ui/dashboard/DashboardStats.tsx(118,9 TS2322: Type 'Dispatch<SetStateAction<StatsRange>>' is not assignable to type '(value: string
+src/ui/hooks/storageStore.ts(222,19 TS18046: 'response' is of type 'unknown'.
+src/ui/hooks/storageStore.ts(226,22 TS18046: 'response' is of type 'unknown'.
+src/ui/hooks/storageStore.ts(308,19 TS2352: Conversion of type '{ [k: string]: SessionState | string[] | StandaloneBlock | "always" | P
+src/ui/lib/protectionStatus.ts(37,60 TS2345: Argument of type '{ origins?: string[] | undefined; permissions?: string[] | undefined; }'
+src/ui/lib/protectionStatus.ts(38,58 TS2345: Argument of type '{ origins?: string[] | undefined; permissions?: string[] | undefined; }'
+src/ui/onboarding/OnboardingPage.tsx(72,43 TS2322: Type '"live"' is not assignable to type '"warning" | "danger" | "neutral" | "accent"
+src/ui/onboarding/OnboardingPage.tsx(73,40 TS2322: Type '"lock"' is not assignable to type '"warning" | "danger" | "neutral" | "accent"
+src/ui/panel/views/FocusScreen.tsx(386,17 TS2304: Cannot find name 'ReactNode'.
+src/ui/panel/views/FocusScreen.tsx(389,17 TS2304: Cannot find name 'ReactNode'.
+src/ui/panel/views/FocusScreen.tsx(410,15 TS2322: Type '"lock"' is not assignable to type '"warning" | "danger" | "neutral" | "accent" 
+src/ui/panel/views/FocusScreen.tsx(504,13 TS2322: Type 'Dispatch<SetStateAction<LockLevel>>' is not assignable to type '(value: string)
+src/ui/panel/views/FocusScreen.tsx(673,15 TS2322: Type 'Element' is not assignable to type 'string'.
+src/ui/panel/views/RulesScreen.tsx(66,9 TS2322: Type 'Dispatch<SetStateAction<RuleSection>>' is not assignable to type '(value: string)
+src/ui/panel/views/RulesScreen.tsx(301,13 TS2322: Type 'Dispatch<SetStateAction<SiteMode>>' is not assignable to type '(value: string) 
+src/ui/panel/views/RulesScreen.tsx(347,40 TS2322: Type '"live"' is not assignable to type '"warning" | "danger" | "neutral" | "accent" 
+src/ui/panel/views/RulesScreen.tsx(354,27 TS2322: Type '"neutral" | "lock"' is not assignable to type '"warning" | "danger" | "neutral"
+src/ui/panel/views/RulesScreen.tsx(662,27 TS2322: Type '"neutral" | "lock"' is not assignable to type '"warning" | "danger" | "neutral"
+src/ui/panel/views/RulesScreen.tsx(785,13 TS2322: Type 'Dispatch<SetStateAction<"block" | "hide" | "both">>' is not assignable to type 
+src/ui/panel/views/RulesScreen.tsx(794,13 TS2322: Type 'Dispatch<SetStateAction<"blocks" | "always">>' is not assignable to type '(valu
+src/ui/panel/views/YouScreen.tsx(47,20 TS2345: Argument of type 'Date' is not assignable to parameter of type 'number'.
+src/ui/panel/views/YouScreen.tsx(52,52 TS2345: Argument of type 'Date' is not assignable to parameter of type 'number'.
+src/ui/panel/views/YouScreen.tsx(142,41 TS2322: Type '"neutral" | "live"' is not assignable to type '"warning" | "danger" | "neutral" |
+src/ui/panel/views/YouScreen.tsx(203,24 TS2345: Argument of type '(latest: Record<string, DayStats>) => { [x: string]: DayStats | { not
+src/ui/panel/views/YouScreen.tsx(223,25 TS18047: 'changes.note' is possibly 'null'.
+src/ui/panel/views/YouScreen.tsx(361,25 TS2322: Type '"neutral" | "live"' is not assignable to type '"warning" | "danger" | "neutral" |

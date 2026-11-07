@@ -9,6 +9,7 @@ import {
   TICK_ALARM,
   WEEKLY_REPORT_ALARM,
 } from "../../src/background/alarms.ts";
+import { createDefaultState } from "../../src/shared/defaults.ts";
 import type { AppState } from "../../src/shared/types.ts";
 
 function createSignal<T>() {
@@ -80,6 +81,7 @@ function createHarness(seed: Record<string, unknown> = {}) {
   const sessionArea = new FakeArea();
   const signals = {
     onInstalled: createSignal<{ reason: string }>(),
+    onStartup: createSignal<void>(),
     onAlarm: createSignal<string>(),
     onCommand: createSignal<string>(),
     onMessage: createSignal<WorkerMessageEvent>(),
@@ -97,6 +99,8 @@ function createHarness(seed: Record<string, unknown> = {}) {
     { id: 5, url: "https://x.com/home" },
   ];
   const dnrRules: Array<{ id: number }> = [];
+  let dnrUpdates = 0;
+  const createdAlarms: string[] = [];
   const badgeTitles: string[] = [];
   const notificationMessages: string[] = [];
   const errors: string[] = [];
@@ -154,7 +158,10 @@ function createHarness(seed: Record<string, unknown> = {}) {
     },
     alarms: {
       get: async () => undefined,
-      create: async () => undefined,
+      getAll: async () => [],
+      create: async (name: string) => {
+        createdAlarms.push(name);
+      },
       clear: async () => undefined,
       onAlarm: signals.onAlarm.source,
     },
@@ -184,6 +191,7 @@ function createHarness(seed: Record<string, unknown> = {}) {
     declarativeNetRequest: {
       getDynamicRules: async () => dnrRules,
       updateDynamicRules: async (update) => {
+        dnrUpdates += 1;
         dnrRules.length = 0;
         dnrRules.push(...update.addRules);
       },
@@ -195,6 +203,7 @@ function createHarness(seed: Record<string, unknown> = {}) {
     runtime: {
       getURL: (path) => `chrome-extension://test/${path}`,
       onInstalled: signals.onInstalled.source,
+      onStartup: signals.onStartup.source,
       onMessage: signals.onMessage.source,
     },
     events: {
@@ -214,6 +223,14 @@ function createHarness(seed: Record<string, unknown> = {}) {
     badgeTitles,
     notificationMessages,
     dnrRules,
+    dnrUpdateCount: () => dnrUpdates,
+    createdAlarms,
+    dnrRuleDomains: () =>
+      dnrRules.flatMap(
+        (rule) =>
+          (rule as { condition?: { requestDomains?: string[] } }).condition
+            ?.requestDomains ?? [],
+      ),
     tabs,
     setNow: (value: number) => {
       now = value;
@@ -335,5 +352,101 @@ describe("v2 worker composition (dormant until cutover)", () => {
     expect(harness.notificationMessages.some((message) =>
       message.startsWith("focusgate-weekly_report:"),
     )).toBe(true);
+  });
+
+  it("reports a failing alarm handler through api.onError instead of swallowing it", async () => {
+    harness.worker.start();
+    // Chrome hands alarm listeners an Alarm object. A non-string makes
+    // name.startsWith throw inside the handler, which used to vanish silently.
+    harness.signals.onAlarm.emit({ not: "a string" } as never);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(
+      harness.errors.some((entry) => entry.startsWith("alarm: TypeError")),
+    ).toBe(true);
+  });
+
+  it("reports a failing command handler through api.onError instead of swallowing it", async () => {
+    const tab = harness.tabs[0];
+    if (!tab) throw new Error("harness has no tab");
+    Object.defineProperty(tab, "url", {
+      get(): string {
+        throw new Error("tab exploded");
+      },
+    });
+    harness.worker.start();
+    harness.signals.onCommand.emit("block-current-site");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(harness.errors).toContain("command: Error: tab exploded");
+  });
+
+  it("rebuilds the network rules after a UI write to the Always list", async () => {
+    const response = (await harness.worker.handleMessage({
+      type: "state/write",
+      key: "alwaysBlockedSites",
+      value: ["news.test"],
+    })) as { ok: boolean };
+
+    expect(response.ok).toBe(true);
+    expect(harness.dnrRuleDomains()).toContain("news.test");
+  });
+
+  it("does not rebuild the network rules after a settings write", async () => {
+    const before = harness.dnrUpdateCount();
+    const response = (await harness.worker.handleMessage({
+      type: "state/write",
+      key: "settings",
+      value: { ...createDefaultState().settings, theme: "light" },
+    })) as { ok: boolean; message?: string };
+
+    expect(response).toEqual({ ok: true });
+    expect(harness.dnrUpdateCount()).toBe(before);
+  });
+
+  it("installs a network rule for the tab's site after the quick-block shortcut", async () => {
+    const always = createHarness({
+      schemaVersion: 2,
+      quickBlockMode: "always",
+    });
+    expect(await always.worker.handleCommand("block-current-site")).toBe(true);
+
+    expect(always.dnrRuleDomains()).toContain("x.com");
+    expect(always.dnrRuleDomains()).toContain("twitter.com");
+  });
+
+  it("on browser startup records an expired phase, restores alarms and rebuilds the rules", async () => {
+    const base = createDefaultState();
+    const startup = createHarness({
+      schemaVersion: 2,
+      alwaysBlockedSites: ["example.com"],
+      session: {
+        ...base.session,
+        status: "work",
+        sessionId: "s-expired",
+        phaseStartedAt: 100_000,
+        phaseEndsAt: 500_000,
+        phasePlannedMs: 400_000,
+        plannedWorkMs: 400_000,
+        lockLevel: "none",
+        lastHeartbeatAt: 499_000,
+      },
+    });
+    startup.worker.start();
+
+    startup.signals.onStartup.emit(undefined);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(startup.errors).toEqual([]);
+    const state = await startup.localState();
+    expect(state.session.status).not.toBe("work");
+    expect(state.sessionHistory.length).toBeGreaterThan(0);
+    expect(startup.createdAlarms).toContain(TICK_ALARM);
+    expect(startup.dnrRuleDomains()).toContain("example.com");
+  });
+
+  it("registers and detaches the startup listener with the others", () => {
+    const stop = harness.worker.start();
+    expect(harness.signals.onStartup.count()).toBe(1);
+    stop();
+    expect(harness.signals.onStartup.count()).toBe(0);
   });
 });

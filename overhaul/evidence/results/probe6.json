@@ -1,0 +1,79 @@
+{
+  "steps": {
+    "A_nowIs": "10:34:55",
+    "A_scheduleStart": "10:37",
+    "A_write": {
+      "ok": true
+    },
+    "A_boundaryRightAfterWrite": "00:00:00",
+    "A_boundaryAfterOneTick": "10:37:00",
+    "A_dnrAtStartPlus8s": [
+      {
+        "id": 1,
+        "domains": [
+          "sched.test"
+        ]
+      }
+    ],
+    "A_navAtStartPlus8s": {
+      "label": "schedule window just started",
+      "finalIsBlockPage": true,
+      "serverHitsDelta": 0,
+      "text": "BLOCKED BY SCHEDULE Schedule: Later This schedule ends at 11:07 AM. Stay focused. You've got this. http://sched.test:8124/ 0 pages blocked t"
+    },
+    "B_write": {
+      "ok": true
+    },
+    "B_dnrImmediately": [
+      {
+        "id": 1,
+        "domains": [
+          "sched.test"
+        ]
+      }
+    ],
+    "B_navImmediately": {
+      "label": "always-site just added (UI path)",
+      "finalIsBlockPage": true,
+      "serverHitsDelta": 2,
+      "text": "ALWAYS BLOCKED Always blocked Stay focused. You've got this. http://ghost.test:8124/ 1 pages blocked today Close tab Open new tab"
+    },
+    "C_dnrAfterReconcile": [
+      {
+        "id": 1,
+        "domains": [
+          "ghost.test",
+          "sched.test"
+        ]
+      }
+    ],
+    "C_removeWrite": {
+      "ok": true
+    },
+    "C_dnrRightAfterRemoval": [
+      {
+        "id": 1,
+        "domains": [
+          "ghost.test",
+          "sched.test"
+        ]
+      }
+    ],
+    "C_dnrAfterOneTick": [
+      {
+        "id": 1,
+        "domains": [
+          "ghost.test",
+          "sched.test"
+        ]
+      }
+    ],
+    "C_navAfterRemoval": {
+      "label": "site removed, one tick later",
+      "finalIsBlockPage": true,
+      "serverHitsDelta": 0,
+      "text": "BLOCK ENDED ghost.test is no longer blocked http://ghost.test:8124/ Open ghost.test Open new tab"
+    },
+    "errors": []
+  }
+}

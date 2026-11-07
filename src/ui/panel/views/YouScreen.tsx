@@ -44,12 +44,12 @@ export function YouScreen({
 
   const week = focusMinutesPerDay(
     state.dayStats,
-    localDateKeyOf(new Date(now.getTime() - 6 * 86_400_000)),
+    localDateKeyOf(now.getTime() - 6 * 86_400_000),
     todayKey,
   );
   const weekFocusMinutes = week.reduce((total, point) => total + point.minutes, 0);
   const weekSessions = Object.values(state.dayStats)
-    .filter((day) => day.dateKey >= localDateKeyOf(new Date(now.getTime() - 6 * 86_400_000)) && day.dateKey <= todayKey)
+    .filter((day) => day.dateKey >= localDateKeyOf(now.getTime() - 6 * 86_400_000) && day.dateKey <= todayKey)
     .reduce((total, day) => total + day.sessionsCompleted, 0);
   const chartMax = Math.max(30, ...week.map((point) => point.minutes));
 
@@ -188,6 +188,37 @@ function localDateKeyOf(timestamp: number): string {
   ).padStart(2, "0")}`;
 }
 
+/** Pure update behind the Reflection card: set or clear today's mood and note. */
+export function applyReflection(
+  latest: Record<string, DayStats>,
+  todayKey: string,
+  changes: { mood?: number | null; note?: string | null },
+): Record<string, DayStats> {
+  const current: DayStats =
+    latest[todayKey] ??
+    {
+      dateKey: todayKey,
+      focusMs: 0,
+      sessionsCompleted: 0,
+      sessionsAbandoned: 0,
+      blocks: 0,
+      blocksByDomain: {},
+      tasksCompleted: 0,
+    };
+  return {
+    ...latest,
+    [todayKey]: {
+      ...current,
+      ...(changes.mood !== undefined
+        ? { mood: changes.mood === null ? undefined : changes.mood }
+        : {}),
+      ...(changes.note !== undefined
+        ? { note: changes.note ? changes.note : undefined }
+        : {}),
+    },
+  };
+}
+
 function ReflectionCard({ state }: { state: AppState }) {
   const showToast = useToast();
   const todayKey = localDateKey(new Date());
@@ -200,31 +231,7 @@ function ReflectionCard({ state }: { state: AppState }) {
 
   function saveReflection(changes: { mood?: number | null; note?: string | null }) {
     void uiStorageStore
-      .set("dayStats", (latest) => {
-        const current: DayStats =
-          latest[todayKey] ??
-          {
-            dateKey: todayKey,
-            focusMs: 0,
-            sessionsCompleted: 0,
-            sessionsAbandoned: 0,
-            blocks: 0,
-            blocksByDomain: {},
-            tasksCompleted: 0,
-          };
-        return {
-          ...latest,
-          [todayKey]: {
-            ...current,
-            ...(changes.mood !== undefined
-              ? { mood: changes.mood === null ? undefined : changes.mood }
-              : {}),
-            ...(changes.note !== undefined
-              ? { note: changes.note.length > 0 ? changes.note : undefined }
-              : {}),
-          },
-        };
-      })
+      .set("dayStats", (latest) => applyReflection(latest, todayKey, changes))
       .then(() => showToast("Reflection saved.", "success"))
       .catch((error) =>
         showToast(

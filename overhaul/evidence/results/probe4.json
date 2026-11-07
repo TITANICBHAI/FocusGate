@@ -1,0 +1,27 @@
+{
+  "taskWrite": {
+    "ok": true
+  },
+  "tasksChangedMsg": true,
+  "taskAlarmsAfterTasksChanged": 6,
+  "errorsAfterFiring": [],
+  "afterState": {
+    "weeklyReports": 0,
+    "hasLastWeekly": false,
+    "achievements": 0,
+    "healthErr": null,
+    "notificationIds": []
+  },
+  "alarmsNow": [
+    "tick",
+    "boundary",
+    "task-reminder:t1%3Apre-start%3A10",
+    "task-reminder:t1%3Apre-start%3A5",
+    "task-reminder:t1%3Apre-start%3A1",
+    "task-reminder:t1%3Aat-start%3A0",
+    "task-reminder:t1%3Aalmost-done%3A5",
+    "task-reminder:t1%3Aat-end%3A0",
+    "weekly_report",
+    "midnight"
+  ]
+}

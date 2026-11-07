@@ -1,5 +1,5 @@
-import { Component, useEffect } from "react";
-import type { ErrorInfo, FormEvent, ReactNode } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import type { AppState, WeeklyReport } from "../../shared/types.ts";
 import {
   Button,
@@ -37,45 +37,13 @@ const DASHBOARD_TABS: { value: DashboardTab; label: string }[] = [
   { value: "data", label: "Data" },
 ];
 
-class DashboardErrorBoundary extends Component<
-  { children: ReactNode },
-  { error: Error | null }
-> {
-  state = { error: null as Error | null };
-
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("FocusGate dashboard crashed:", error, info.componentStack);
-  }
-
-  render() {
-    if (this.state.error) {
-      return (
-        <main className="fg-full-page">
-          <div className="fg-full-page__inner">
-            <h1 className="fg-block-headline">FocusGate could not start</h1>
-            <p className="fg-muted">{this.state.error.message}</p>
-            <p className="fg-muted">Reload this page to try again.</p>
-          </div>
-        </main>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 export function DashboardPage() {
   return (
     <StorageGate keys={APP_STATE_KEYS}>
       <ToastProvider>
         <ThemeRoot>
           <GuardPromptHost />
-          <DashboardErrorBoundary>
-            <DashboardShell />
-          </DashboardErrorBoundary>
+          <DashboardShell />
         </ThemeRoot>
       </ToastProvider>
     </StorageGate>

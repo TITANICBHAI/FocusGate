@@ -1,3 +1,4 @@
+import { isWorkPhaseLive } from "./sessionClock.ts";
 import type { LockLevel, SessionState, StandaloneBlock } from "./types.ts";
 
 export type GuardResult =
@@ -112,7 +113,7 @@ function lockSource(state: GuardState): LockSource | null {
     return { level: "standalone", until: state.standalone.until };
   }
   if (
-    state.session.status === "work" &&
+    isWorkPhaseLive(state.session, state.now) &&
     (state.session.lockLevel === "strict" ||
       state.session.lockLevel === "commitment")
   ) {

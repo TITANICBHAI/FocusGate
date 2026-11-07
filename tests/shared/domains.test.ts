@@ -16,6 +16,11 @@ describe("domain and exception helpers", () => {
     expect(normalizeDomain("bücher.example")).toBe("xn--bcher-kva.example");
   });
 
+  it("stores non-ASCII domains as punycode at entry", () => {
+    expect(normalizeDomain("bücher.de")).toBe("xn--bcher-kva.de");
+    expect(normalizeDomain("https://www.Bücher.de/seite")).toBe("xn--bcher-kva.de");
+  });
+
   it("accepts exact local and IP hosts and rejects malformed input", () => {
     expect(normalizeDomain("localhost")).toBe("localhost");
     expect(normalizeDomain("127.0.0.1")).toBe("127.0.0.1");

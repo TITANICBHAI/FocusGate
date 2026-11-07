@@ -5,10 +5,9 @@ import type {
   Allowance,
   AppState,
   KeywordRule,
-  Schedule,
 } from "../../../shared/types.ts";
 import { normalizeDomain, matchesDomain } from "../../../shared/domains.ts";
-import { computeBlockPlan } from "../../../shared/plan.ts";
+import { assessUrl, computeBlockPlan } from "../../../shared/plan.ts";
 import { BUILT_IN_PRESETS } from "../../../shared/presets.ts";
 import {
   Button,
@@ -19,14 +18,13 @@ import {
   ListRow,
   Progress,
   Segmented,
-  Sheet,
-  Toggle,
 } from "../../components/primitives.tsx";
-import { ConfirmDialog, useToast } from "../../components/feedback.tsx";
+import { useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import { weakeningLockReason } from "../../lib/guardState.ts";
 import { aliasesForSiteDisplay } from "../../lib/aliasPresentation.ts";
+import { ScheduleSection } from "./ScheduleSection.tsx";
 
 type RuleSection = "sites" | "keywords" | "schedule" | "limits";
 type SiteMode = "focus" | "always";
@@ -38,8 +36,6 @@ const RULE_SECTIONS: ReadonlyArray<{ value: RuleSection; label: string }> = [
   { value: "schedule", label: "Schedule" },
   { value: "limits", label: "Limits" },
 ];
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function RulesScreen({
   state,
@@ -802,223 +798,6 @@ function KeywordsSection({
 /* ------------------------------------------------------------------ */
 /* Schedule                                                            */
 /* ------------------------------------------------------------------ */
-
-function isClockTime(value: string, allowEndOfDay = false): boolean {
-  if (allowEndOfDay && value === "24:00") return true;
-  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
-}
-
-function ScheduleSection({
-  state,
-  lockedReason,
-}: {
-  state: AppState;
-  lockedReason: string | null;
-}) {
-  const showToast = useToast();
-  const [addOpen, setAddOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("17:00");
-  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [formError, setFormError] = useState("");
-
-  async function addSchedule(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const cleanName = name.trim();
-    if (!cleanName) {
-      setFormError("Enter a name for this schedule.");
-      return;
-    }
-    if (days.length === 0) {
-      setFormError("Choose at least one day.");
-      return;
-    }
-    if (!isClockTime(start) || !isClockTime(end, true)) {
-      setFormError("Use a valid start time and an end time up to 24:00.");
-      return;
-    }
-    const schedule: Schedule = {
-      id: crypto.randomUUID(),
-      name: cleanName,
-      enabled: true,
-      days,
-      start,
-      end,
-      sites: [],
-      keywords: [],
-      useGlobalLists: true,
-    };
-    try {
-      await uiStorageStore.set("schedules", (latest) => [...latest, schedule]);
-      setName("");
-      setAddOpen(false);
-      setFormError("");
-      showToast("Schedule added.", "success");
-    } catch (error) {
-      showToast(storageWriteErrorMessage(error, "The schedule could not be saved."), "error");
-    }
-  }
-
-  async function deleteSchedule() {
-    if (!deleteId) return;
-    try {
-      await uiStorageStore.set("schedules", (latest) =>
-        latest.filter((schedule) => schedule.id !== deleteId),
-      );
-      showToast("Schedule deleted.", "success");
-    } catch (error) {
-      showToast(storageWriteErrorMessage(error, "The schedule could not be deleted."), "error");
-    } finally {
-      setDeleteId(null);
-    }
-  }
-
-  return (
-    <div className="fg-stack">
-      <Card
-        title="Schedules"
-        description="Block your rules on the days and hours you choose."
-        actions={
-          <Button
-            variant="primary"
-            size="dense"
-            onClick={() => {
-              setFormError("");
-              setAddOpen(true);
-            }}
-          >
-            Add schedule
-          </Button>
-        }
-      >
-        {state.schedules.length === 0 ? (
-          <EmptyState
-            title="No schedules"
-            description="Add a schedule to set recurring block hours."
-          />
-        ) : (
-          <div className="fg-list">
-            {state.schedules.map((schedule) => (
-              <ListRow
-                key={schedule.id}
-                title={schedule.name}
-                sub={`${schedule.days.map((day) => WEEKDAYS[day]).join(", ")} · ${schedule.start}–${schedule.end}`}
-                actions={
-                  <>
-                    <Toggle
-                      label={`Enable ${schedule.name}`}
-                      checked={schedule.enabled}
-                      disabled={schedule.enabled && Boolean(lockedReason)}
-                      onCheckedChange={(enabled) => {
-                        void uiStorageStore
-                          .set("schedules", (latest) =>
-                            latest.map((item) =>
-                              item.id === schedule.id ? { ...item, enabled } : item,
-                            ),
-                          )
-                          .catch((error) =>
-                            showToast(
-                              storageWriteErrorMessage(error, "The schedule could not be updated."),
-                              "error",
-                            ),
-                          );
-                      }}
-                    />
-                    <Button
-                      variant="quiet"
-                      size="dense"
-                      disabled={Boolean(lockedReason)}
-                      aria-label={`Delete schedule ${schedule.name}`}
-                      onClick={() => setDeleteId(schedule.id)}
-                    >
-                      Delete
-                    </Button>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Sheet
-        open={addOpen}
-        title="Add a schedule"
-        onClose={() => setAddOpen(false)}
-        footer={
-          <Button variant="primary" wide type="submit" form="schedule-form">
-            Save schedule
-          </Button>
-        }
-      >
-        <form id="schedule-form" className="fg-stack" onSubmit={addSchedule}>
-          <Field id="schedule-name" label="Schedule name">
-            <input
-              id="schedule-name"
-              className="fg-input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
-          </Field>
-          <div className="fg-wrap" role="group" aria-label="Schedule days">
-            {WEEKDAYS.map((day, index) => (
-              <Button
-                key={day}
-                variant={days.includes(index) ? "primary" : "secondary"}
-                size="dense"
-                aria-pressed={days.includes(index)}
-                onClick={() => {
-                  setDays((current) =>
-                    current.includes(index)
-                      ? current.filter((value) => value !== index)
-                      : [...current, index].sort((a, b) => a - b),
-                  );
-                  setFormError("");
-                }}
-              >
-                {day}
-              </Button>
-            ))}
-          </div>
-          <div className="fg-wrap">
-            <Field id="schedule-start" label="Start">
-              <input
-                id="schedule-start"
-                className="fg-input"
-                type="time"
-                value={start}
-                onChange={(event) => setStart(event.target.value)}
-              />
-            </Field>
-            <Field id="schedule-end" label="End" helper="24:00 means midnight.">
-              <input
-                id="schedule-end"
-                className="fg-input"
-                type="time"
-                value={end}
-                onChange={(event) => setEnd(event.target.value)}
-              />
-            </Field>
-          </div>
-          {formError && <p className="fg-field__error" role="alert">{formError}</p>}
-        </form>
-      </Sheet>
-
-      <ConfirmDialog
-        open={deleteId !== null}
-        title="Delete this schedule?"
-        message="This removes its recurring schedule and list associations."
-        confirmLabel="Delete schedule"
-        danger
-        onCancel={() => setDeleteId(null)}
-        onConfirm={() => void deleteSchedule()}
-      />
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Limits (allowances)                                                 */

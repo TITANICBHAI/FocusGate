@@ -1,3 +1,4 @@
+import { isWorkPhaseLive } from "./sessionClock.ts";
 import {
   expandAliases,
   matchException,
@@ -230,7 +231,7 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
       reason: { kind: "standalone", until: state.standalone.until },
     });
   }
-  if (state.session.status === "work") {
+  if (isWorkPhaseLive(state.session, nowMs)) {
     contexts.push({
       sites: state.blockedSites,
       reason: { kind: "session", until: state.session.phaseEndsAt },
@@ -307,7 +308,7 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   const keywords: string[] = [];
   const hideWords: string[] = [];
   const blockContextActive =
-    state.session.status === "work" ||
+    isWorkPhaseLive(state.session, nowMs) ||
     standaloneActive(state, nowMs) ||
     schedules.length > 0;
   for (const rule of state.keywords) {
@@ -325,7 +326,7 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   }
 
   const task =
-    state.session.status === "work" && state.session.taskId !== null
+    isWorkPhaseLive(state.session, nowMs) && state.session.taskId !== null
       ? state.tasks.find((candidate) => candidate.id === state.session.taskId)
       : undefined;
 
@@ -334,7 +335,7 @@ export function computeBlockPlan(state: AppState, nowMs: number): BlockPlan {
   // the task, and a non-empty list allows only those domains.
   const taskAllowOnly = task?.allowOnly ?? null;
   let allowOnly: string[] | null = null;
-  if (state.session.status === "work") {
+  if (isWorkPhaseLive(state.session, nowMs)) {
     if (taskAllowOnly !== null) {
       allowOnly =
         taskAllowOnly.length > 0 ? expandAliases(taskAllowOnly) : null;

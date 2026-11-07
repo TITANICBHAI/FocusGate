@@ -34,8 +34,10 @@ export function getBrowserProtectionApi(): ProtectionApi | null {
       : undefined,
     permissions: chrome.permissions
       ? {
-          contains: (query) => chrome.permissions.contains(query),
-          request: (query) => chrome.permissions.request(query),
+          contains: (query) =>
+            chrome.permissions.contains(query as chrome.permissions.Permissions),
+          request: (query) =>
+            chrome.permissions.request(query as chrome.permissions.Permissions),
         }
       : undefined,
     optionalHostPermissions: manifest.optional_host_permissions ?? [],

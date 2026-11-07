@@ -17,7 +17,7 @@ import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 
 export function HabitsCard({ state }: { state: AppState }) {
   const showToast = useToast();
-  const todayKey = localDateKey(Date.now());
+  const todayKey = localDateKey(new Date());
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("📌");
 

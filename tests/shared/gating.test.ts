@@ -194,3 +194,27 @@ describe("Appendix E.4 guard matrix", () => {
     });
   });
 });
+
+describe("lock source and elapsed phases", () => {
+  const now = 1_000_000;
+  const stateFor = (phaseEndsAt: number): GuardState => ({
+    session: {
+      ...createDefaultState().session,
+      status: "work",
+      lockLevel: "strict",
+      phaseEndsAt,
+    },
+    standalone: createDefaultState().standalone,
+    hasPassword: false,
+    now,
+  });
+
+  it("reports no lock when a strict work phase has already elapsed", () => {
+    expect(guard("remove_site", stateFor(now - 1))).toEqual({ result: "allow" });
+  });
+
+  it("reports the lock while the strict phase still has time left", () => {
+    const decision = guard("remove_site", stateFor(now + 60_000));
+    expect(decision.result).toBe("locked");
+  });
+});

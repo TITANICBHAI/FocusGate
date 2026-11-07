@@ -10,7 +10,10 @@ const password: PasswordState = {
   hash: "hash",
 };
 
-function setup(initial: AppState = createDefaultState()) {
+function setup(
+  initial: AppState = createDefaultState(),
+  afterChange?: (key: string) => Promise<void>,
+) {
   let state = structuredClone(initial);
   const store = {
     readState: vi.fn(async () => structuredClone(state)),
@@ -25,6 +28,7 @@ function setup(initial: AppState = createDefaultState()) {
     store,
     now: () => 1_000,
     verifyPassword,
+    afterChange,
   });
   return {
     service,
@@ -217,5 +221,36 @@ describe("background guarded state writes", () => {
       }),
     ).resolves.toMatchObject({ ok: false, code: "INVALID_STATE_WRITE" });
     expect(context.store.writeState).not.toHaveBeenCalled();
+  });
+
+  it("calls afterChange once with the key after a successful write", async () => {
+    const afterChange = vi.fn(async () => undefined);
+    const context = setup(createDefaultState(), afterChange);
+
+    await expect(
+      context.service.write({ key: "blockedSites", value: ["example.com"] }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(afterChange).toHaveBeenCalledTimes(1);
+    expect(afterChange).toHaveBeenCalledWith("blockedSites");
+  });
+
+  it("does not call afterChange when the write is refused", async () => {
+    const initial = createDefaultState();
+    initial.blockedSites = ["example.com"];
+    initial.session = {
+      ...initial.session,
+      status: "work",
+      lockLevel: "strict",
+      phaseEndsAt: 9_000,
+    };
+    const afterChange = vi.fn(async () => undefined);
+    const context = setup(initial, afterChange);
+
+    await expect(
+      context.service.write({ key: "blockedSites", value: [] }),
+    ).resolves.toMatchObject({ ok: false, code: "LOCKED" });
+
+    expect(afterChange).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  Chip,
   Field,
   IconButton,
   PasswordField,
@@ -112,5 +113,23 @@ describe("accessible UI primitives", () => {
     expect(markup).toContain('aria-describedby="');
     expect(markup).toContain('aria-label="Close dialog"');
     expect(markup).toContain("Confirm change");
+  });
+});
+
+describe("Chip tones", () => {
+  it("styles the live and lock tones the panel screens ask for", () => {
+    expect(renderToStaticMarkup(<Chip tone="live">On</Chip>)).toContain(
+      "fg-chip fg-chip--live",
+    );
+    expect(renderToStaticMarkup(<Chip tone="lock">Strict</Chip>)).toContain(
+      "fg-chip fg-chip--lock",
+    );
+  });
+
+  it("keeps the accent, warning, danger and neutral tones unchanged", () => {
+    expect(renderToStaticMarkup(<Chip tone="accent">A</Chip>)).toContain("fg-chip--live");
+    expect(renderToStaticMarkup(<Chip tone="warning">W</Chip>)).toContain("fg-chip--lock");
+    expect(renderToStaticMarkup(<Chip tone="danger">D</Chip>)).toContain("fg-chip--danger");
+    expect(renderToStaticMarkup(<Chip>N</Chip>)).toContain('class="fg-chip"');
   });
 });

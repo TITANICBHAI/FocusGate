@@ -64,7 +64,7 @@ interface ChromeLike {
     ): void;
     clear(name: string): boolean | Promise<boolean>;
     getAll(): Promise<Array<{ name: string; scheduledTime: number }>>;
-    onAlarm: ChromeEvent<string>;
+    onAlarm: ChromeEvent<{ name: string; scheduledTime: number }>;
   };
   notifications: {
     create(id: string, options: unknown): string | Promise<string>;
@@ -124,6 +124,7 @@ interface ChromeLike {
   runtime: {
     getURL(path: string): string;
     onInstalled: ChromeEvent<{ reason: string }>;
+    onStartup: ChromeEvent<void>;
     onMessage: ChromeMessageEvent;
   };
 }
@@ -138,7 +139,7 @@ function chromeApi(): ChromeLike {
   return chrome;
 }
 
-function adaptEvent<TArgument, TEvent>(
+export function adaptEvent<TArgument, TEvent>(
   event: ChromeEvent<TEvent>,
   project: (argument: TEvent) => TArgument,
 ): WorkerEventSource<TArgument> {
@@ -167,12 +168,15 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
 
   const api: WorkerBrowserApi = {
     now: () => Date.now(),
+    onError: (effect, error) => {
+      console.error("[FocusGate]", effect, error);
+    },
     alarms: {
       get: (name) => chrome.alarms.get(name),
       create: (name, info) => chrome.alarms.create(name, info),
       clear: (name) => chrome.alarms.clear(name),
       getAll: async () => await chrome.alarms.getAll(),
-      onAlarm: chrome.alarms.onAlarm,
+      onAlarm: adaptEvent(chrome.alarms.onAlarm, (alarm) => alarm.name),
     },
     notifications: {
       create: (id, options) => chrome.notifications.create(id, options),
@@ -231,6 +235,9 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
     runtime: {
       getURL: (path) => chrome.runtime.getURL(path),
       onInstalled: chrome.runtime.onInstalled,
+      onStartup: adaptEvent(chrome.runtime.onStartup, () => {
+        // No payload: chrome.runtime.onStartup carries nothing.
+      }),
       onMessage: {
         addListener(listener: (event: WorkerMessageEvent) => void) {
           chrome.runtime.onMessage.addListener(

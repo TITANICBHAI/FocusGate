@@ -496,3 +496,54 @@ describe("block planning", () => {
     ).toEqual(["global.example"]);
   });
 });
+
+describe("an elapsed work phase is not live", () => {
+  const now = 1_000_000;
+  const workSession = (phaseEndsAt: number) => ({
+    ...createDefaultState().session,
+    status: "work" as const,
+    lockLevel: "strict" as const,
+    phaseEndsAt,
+  });
+
+  it("has no session reasons once phaseEndsAt has passed", () => {
+    const state = stateWith({
+      blockedSites: ["example.com"],
+      session: workSession(now - 1),
+    });
+    const plan = computeBlockPlan(state, now);
+    expect(plan.blocked.size).toBe(0);
+    expect(explainBlock("https://example.com", state, now)).toBeNull();
+  });
+
+  it("treats the exact end time as elapsed", () => {
+    const state = stateWith({
+      blockedSites: ["example.com"],
+      session: workSession(now),
+    });
+    expect(computeBlockPlan(state, now).blocked.size).toBe(0);
+  });
+
+  it("still blocks while the phase has time left", () => {
+    const state = stateWith({
+      blockedSites: ["example.com"],
+      session: workSession(now + 60_000),
+    });
+    expect(explainBlock("https://example.com", state, now)?.kind).toBe("session");
+  });
+
+  it("does not hold always-when-blocks keywords or allow-only after the phase ends", () => {
+    const base = createDefaultState();
+    const state = stateWith({
+      keywords: [{ text: "news", mode: "block", when: "blocks" }],
+      settings: {
+        ...base.settings,
+        allowOnly: { enabled: true, domains: ["docs.example"] },
+      },
+      session: workSession(now - 1),
+    });
+    const plan = computeBlockPlan(state, now);
+    expect(plan.keywords).toEqual([]);
+    expect(plan.allowOnly).toBeNull();
+  });
+});
