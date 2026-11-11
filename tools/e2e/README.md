@@ -53,3 +53,7 @@ Observed in Chromium on Linux with Playwright. Not run on Windows.
 
 - The commands line it prints (`commands: toggle-focus=…, block-current-site=…`) shows which keyboard shortcuts Chromium actually assigned. On Linux `block-current-site` showed `UNASSIGNED`. Whether Windows does the same is not known; see T6.2.
 - If you change the crash screen's wording (T0.4), the script already looks for both `could not start` and `hit a problem`.
+
+## Run it on GitHub instead of your PC
+
+`.github/workflows/e2e-smoke.yml` does the same thing on a GitHub runner: it builds the extension, installs Playwright and axe-core outside the repo, and runs `smoke.cjs dist --a11y --engine --slow` under `xvfb-run`. It runs on pushes to `main`/`master` and on pull requests (about 4 to 5 minutes). To run it by hand: Actions tab, **Browser smoke test**, **Run workflow**, and optionally change the flags. The PASS and FAIL lines appear in the run summary, and the full log is attached as the `smoke-log-<sha>` artifact.

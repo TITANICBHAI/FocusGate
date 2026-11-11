@@ -42,6 +42,33 @@ function setup(
 }
 
 describe("background guarded state writes", () => {
+  it("says password, in those words, when it refuses a weakening write", async () => {
+    const initial = createDefaultState();
+    initial.alwaysBlockedSites = ["example.com"];
+    initial.password = password;
+    const context = setup(initial);
+
+    await expect(
+      context.service.write({ key: "alwaysBlockedSites", value: [] }),
+    ).resolves.toEqual({
+      ok: false,
+      code: "PASSWORD_REQUIRED",
+      message: "Enter your current password to continue.",
+    });
+    await expect(
+      context.service.write({
+        key: "alwaysBlockedSites",
+        value: [],
+        currentPassword: "wrong",
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      code: "BAD_PASSWORD",
+      message: "That password is not correct.",
+    });
+    expect(context.store.writeState).not.toHaveBeenCalled();
+  });
+
   it("requires and verifies the password before a weakening write", async () => {
     const initial = createDefaultState();
     initial.blockedSites = ["example.com"];

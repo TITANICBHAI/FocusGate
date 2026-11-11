@@ -53,6 +53,14 @@ describe("StatusStrip", () => {
     ).toContain("fg-nowline--break");
   });
 
+  it("marks standing rules in the blocking colour, not the idle one", () => {
+    const html = render(stateWith({ alwaysBlockedSites: ["example.com"] }));
+    expect(html).toContain("fg-nowline--standing");
+    expect(html).not.toContain("fg-nowline--idle");
+    expect(html).toContain("Blocking 1 site.");
+    expect(html).not.toContain("Nothing is blocking");
+  });
+
   it("shows a quiet call to action, never a primary button", () => {
     const html = render(stateWith());
     expect(html).toContain("Add sites");
@@ -94,11 +102,43 @@ describe("header pill", () => {
     ).toEqual({ label: "Break", tone: "break" });
   });
 
-  it("says Blocking while only the Always list is blocking", () => {
+  it("says Blocking, in the blocking colour, while only the Always list is blocking", () => {
     expect(pill(stateWith({ alwaysBlockedSites: ["example.com"] }))).toEqual({
       label: "Blocking",
-      tone: "idle",
+      tone: "standing",
     });
+  });
+
+  it("says Blocking for a keyword that is on all the time, and for a site past its limit", () => {
+    expect(
+      pill(stateWith({ keywords: [{ text: "gossip", mode: "block", when: "always" }] })),
+    ).toEqual({ label: "Blocking", tone: "standing" });
+    expect(
+      pill(
+        stateWith({
+          allowances: { "example.com": { mode: "time_budget", limitMin: 1, duringBlocks: false } },
+          usage: {
+            "example.com": {
+              dateKey: "2026-11-03",
+              usedMs: 60_000,
+              opens: 0,
+              windowStartMs: 0,
+              lastActiveAt: NOW,
+            },
+          },
+        }),
+      ),
+    ).toEqual({ label: "Blocking", tone: "standing" });
+  });
+
+  it("says Not blocking when a limit is only watching", () => {
+    expect(
+      pill(
+        stateWith({
+          allowances: { "example.com": { mode: "time_budget", limitMin: 30, duringBlocks: false } },
+        }),
+      ),
+    ).toEqual({ label: "Not blocking", tone: "idle" });
   });
 
   it("renders as visible text in the header, with a lock mark only when locked", () => {

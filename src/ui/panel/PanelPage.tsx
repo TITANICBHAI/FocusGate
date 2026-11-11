@@ -9,9 +9,11 @@ import { GuardPromptHost } from "../components/GuardPromptHost.tsx";
 import { ToastProvider } from "../components/feedback.tsx";
 import { AppHeader } from "../components/primitives.tsx";
 import { StatusStrip, pillFor } from "../components/StatusStrip.tsx";
+import type { AppState } from "../../shared/types.ts";
 import { FocusScreen } from "./views/FocusScreen.tsx";
 import { RulesScreen } from "./views/RulesScreen.tsx";
 import type { RuleSection } from "./views/RulesScreen.tsx";
+import { SetupOffer } from "./views/SetupOffer.tsx";
 import { YouScreen } from "./views/YouScreen.tsx";
 import { ThemeRoot } from "../theme.tsx";
 
@@ -89,7 +91,7 @@ function PanelShell() {
       }
       panels={{
         focus: (
-          <FocusScreen
+          <FocusPanel
             state={state}
             onOpenRules={() => setTab("rules")}
             onOpenTasks={() => setTab("you")}
@@ -110,11 +112,31 @@ function PanelShell() {
   );
 }
 
+/** The Focus tab: the one-time setup offer for a new person, then the Focus screen. */
+function FocusPanel({
+  state,
+  onOpenRules,
+  onOpenTasks,
+}: {
+  state: AppState;
+  onOpenRules(): void;
+  onOpenTasks(): void;
+}) {
+  return (
+    <>
+      <SetupOffer state={state} />
+      <FocusScreen state={state} onOpenRules={onOpenRules} onOpenTasks={onOpenTasks} />
+    </>
+  );
+}
+
 /**
  * The panel's frame: header, status line, the three screens and the tab bar.
- * The tab buttons sit in a tablist and each screen is the tabpanel one of them
- * controls, so `main` stays a plain landmark. Kept free of storage so a test
- * can render it.
+ * The status line is the first thing in the scrolling area, so it moves away
+ * with the content instead of hovering over it; the header pill keeps the
+ * state in view. The tab buttons sit in a tablist and each screen is the
+ * tabpanel one of them controls, so `main` stays a plain landmark. Kept free
+ * of storage so a test can render it.
  */
 function PanelChrome({
   tab,
@@ -153,8 +175,8 @@ function PanelChrome({
     <div className="fg-panel">
       <h1 className="fg-sr-only">FocusGate</h1>
       {header}
-      {strip}
       <main className="fg-panel__main" tabIndex={0}>
+        <div className="fg-panel__strip">{strip}</div>
         <div className="fg-stack">
           {TABS.map((item) => (
             <div
@@ -194,4 +216,4 @@ function PanelChrome({
   );
 }
 
-export { PanelPage, PanelChrome };
+export { PanelPage, PanelChrome, FocusPanel };

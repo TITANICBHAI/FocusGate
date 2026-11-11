@@ -12,6 +12,15 @@ describe("shouldSweep: when the gate closes", () => {
     expect(shouldSweep("break", "focus")).toBe(true);
   });
 
+  it("sweeps when a standing rule starts blocking, and not when it joins a session", () => {
+    expect(shouldSweep("idle", "standing")).toBe(true);
+    expect(shouldSweep("break", "standing")).toBe(true);
+    expect(shouldSweep("standing", "focus")).toBe(false);
+    expect(shouldSweep("standing", "locked")).toBe(false);
+    expect(shouldSweep("standing", "idle")).toBe(false);
+    expect(shouldSweep("standing", "standing")).toBe(false);
+  });
+
   it("does not sweep on first render, or when nothing starts", () => {
     expect(shouldSweep(undefined, "focus")).toBe(false);
     expect(shouldSweep("idle", "idle")).toBe(false);

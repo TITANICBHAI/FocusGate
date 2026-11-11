@@ -1,50 +1,23 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { guard } from "../../shared/gating.ts";
-import { generatePassword } from "../../shared/password.ts";
 import type { AppState } from "../../shared/types.ts";
+import { PasswordPicker } from "../components/PasswordPicker.tsx";
 import { Button, Card, PasswordField } from "../components/primitives.tsx";
 import { sendPasswordMessage } from "../lib/passwordActions.ts";
-
-function passwordGuidance(value: string): string {
-  if (!value) {
-    return "Use 8–64 characters. A longer, unique passphrase is recommended.";
-  }
-  if (value.length < 8) {
-    return `Add ${8 - value.length} more character${8 - value.length === 1 ? "" : "s"} to meet the minimum.`;
-  }
-  if (value.length < 16) {
-    return "This meets the minimum. A longer, unique password is recommended.";
-  }
-  return "Good length. Avoid reusing this password on other accounts.";
-}
-
-export function passwordFormDisabled(
-  password: string,
-  confirmation: string,
-  busy: boolean,
-  locked: boolean,
-): boolean {
-  return (
-    busy ||
-    locked ||
-    password.length < 8 ||
-    password.length > 64 ||
-    password !== confirmation
-  );
-}
+import { emptyPasswordDraft, passwordDraftError } from "../lib/passwordDraft.ts";
+import type { PasswordDraft } from "../lib/passwordDraft.ts";
 
 export function PasswordSettings({ state }: { state: AppState }) {
   const hasPassword = state.password !== null;
   const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmation, setConfirmation] = useState("");
+  const [draft, setDraft] = useState<PasswordDraft>(emptyPasswordDraft);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const decision = guard("change_password", {
     session: state.session,
     standalone: state.standalone,
-    hasPassword,
+    hasPassword: hasPassword,
     now: Date.now(),
   });
   const lockReason =
@@ -53,35 +26,28 @@ export function PasswordSettings({ state }: { state: AppState }) {
           decision.until ?? Date.now(),
         ).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
       : "";
+  const locked = Boolean(lockReason);
+  const draftError = passwordDraftError(draft);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    if (newPassword.length < 8 || newPassword.length > 64) {
-      setMessage("Use a password between 8 and 64 characters.");
-      return;
-    }
-    if (newPassword !== confirmation) {
-      setMessage("The new passwords do not match.");
+    if (draftError) {
+      setMessage(draftError);
       return;
     }
 
     setBusy(true);
     const result = await sendPasswordMessage({
       type: "password/set",
-      ...(hasPassword ? { currentPassword } : {}),
-      newPassword,
+      ...(hasPassword ? { currentPassword: currentPassword } : {}),
+      newPassword: draft.password,
     });
     setBusy(false);
-    setMessage(
-      result.ok
-        ? "Password saved."
-        : result.message || "The password could not be saved.",
-    );
+    setMessage(result.ok ? "Password saved." : result.message || "The password could not be saved.");
     if (result.ok) {
       setCurrentPassword("");
-      setNewPassword("");
-      setConfirmation("");
+      setDraft(emptyPasswordDraft());
     }
   }
 
@@ -90,34 +56,36 @@ export function PasswordSettings({ state }: { state: AppState }) {
     setBusy(true);
     const result = await sendPasswordMessage({
       type: "password/remove",
-      currentPassword,
+      currentPassword: currentPassword,
     });
     setBusy(false);
-    setMessage(
-      result.ok
-        ? "Password removed."
-        : result.message || "The password could not be removed.",
-    );
+    setMessage(result.ok ? "Password removed." : result.message || "The password could not be removed.");
     if (result.ok) setCurrentPassword("");
   }
 
-  function generate() {
-    try {
-      const generated = generatePassword();
-      setNewPassword(generated);
-      setConfirmation(generated);
-      setMessage("Generated password filled in both fields. Save it somewhere safe.");
-    } catch {
-      setMessage("A secure password could not be generated in this browser.");
-    }
-  }
+  const saveLabel = draft.generated
+    ? hasPassword
+      ? "I have saved it, change password"
+      : "I have saved it, set password"
+    : hasPassword
+      ? "Change password"
+      : "Set password";
 
   return (
-    <Card title="Password protection">
+    <Card title="Password">
       <p className="fg-muted">
-        A password is needed to weaken protection and can confirm ending a Strict
-        session early. It does not prevent this extension from being disabled or
+        A password is needed to remove or relax your rules, to end a Strict session early and to
+        reset your data. It does not prevent this extension from being disabled or
         removed.
+      </p>
+      <ul className="fg-password-covers">
+        <li>Removing or loosening sites, keywords, schedules and limits</li>
+        <li>Ending a Strict session early</li>
+        <li>Changing or removing the password, and resetting your data</li>
+      </ul>
+      <p className="fg-muted">
+        During a Strict or Commit session, or a Block now window, these stay locked even with
+        the password.
       </p>
       {hasPassword && (
         <PasswordField
@@ -126,54 +94,24 @@ export function PasswordSettings({ state }: { state: AppState }) {
           helper="Paste is disabled for this verification field."
           value={currentPassword}
           onChange={setCurrentPassword}
+          disabled={busy || locked}
           blockPaste
         />
       )}
       <form className="fg-stack" onSubmit={(event) => void submit(event)}>
-        <PasswordField
-          id="new-password"
-          label={hasPassword ? "New password" : "Password"}
-          helper={passwordGuidance(newPassword)}
-          value={newPassword}
-          onChange={setNewPassword}
-          autoComplete="new-password"
-          maxLength={64}
+        <PasswordPicker
+          idPrefix="settings-password"
+          draft={draft}
+          onChange={setDraft}
+          passwordLabel={hasPassword ? "New password" : "Password"}
+          disabled={busy || locked}
         />
-        <PasswordField
-          id="confirm-password"
-          label="Confirm password"
-          helper="Re-enter the password to confirm it."
-          value={confirmation}
-          onChange={setConfirmation}
-          autoComplete="new-password"
-          maxLength={64}
-        />
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={generate}
-          disabled={busy || Boolean(lockReason)}
-        >
-          Generate (recommended)
-        </Button>
-        <Button
-          type="submit"
-          disabled={passwordFormDisabled(
-            newPassword,
-            confirmation,
-            busy,
-            Boolean(lockReason),
-          )}
-        >
-          {busy ? "Saving…" : hasPassword ? "Change password" : "Set password"}
+        <Button type="submit" variant="primary" disabled={busy || locked || draftError !== null}>
+          {busy ? "Saving…" : saveLabel}
         </Button>
       </form>
       {hasPassword && (
-        <Button
-          variant="danger"
-          onClick={() => void removePassword()}
-          disabled={busy || Boolean(lockReason)}
-        >
+        <Button variant="danger" onClick={() => void removePassword()} disabled={busy || locked}>
           Remove password
         </Button>
       )}

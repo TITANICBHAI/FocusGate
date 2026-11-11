@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { FocusScreen, strictStopSummary } from "../../src/ui/panel/views/FocusScreen.tsx";
+import {
+  FocusScreen,
+  LockHint,
+  strictStopSummary,
+} from "../../src/ui/panel/views/FocusScreen.tsx";
 import { ToastProvider } from "../../src/ui/components/feedback.tsx";
 import { createDefaultState } from "../../src/shared/defaults.ts";
 import type { AppState } from "../../src/shared/types.ts";
@@ -60,21 +64,59 @@ describe("panel focus screen render", () => {
     expect(html.match(/fg-btn--primary/g) ?? []).toHaveLength(0);
   });
 
-  it("idle: explains all three locks and marks the selected one", () => {
+  it("idle: explains only the chosen lock, beside an info button that says it is open", () => {
     const html = renderFocus(createDefaultState());
-    const second = "You can add rules, but not remove or relax them until the session ends.";
     expect(html).toContain("You can stop any time with a confirmation.");
     expect(html).toContain("You can add, change or remove rules at any time.");
-    expect(html).toContain(
+    expect(html).not.toContain("I GIVE UP");
+    expect(html).not.toContain("There is no early-stop action.");
+    expect(html).not.toContain("not remove or relax them");
+    expect(html.match(/role="note"/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain("What each lock means");
+    expect(html).toMatch(/Session lock[\s\S]*aria-label="What does this lock do\?"[\s\S]*fg-seg/);
+    expect(html).toMatch(/aria-label="What does this lock do\?"[^>]*aria-expanded="true"|aria-expanded="true"[^>]*aria-label="What does this lock do\?"/);
+    expect(html).toContain('aria-label="Hide this hint"');
+  });
+
+  it("explains each lock on its own, with the rules for adding and removing", () => {
+    const open = { open: true, id: "lock-hint", toggle: () => undefined };
+    const hint = (level: "none" | "strict" | "commitment", hasPassword = false) =>
+      renderToStaticMarkup(
+        <LockHint level={level} hasPassword={hasPassword} info={open} onHide={() => undefined} />,
+      );
+    const noRemoving = "You can add rules, but not remove or relax them until the session ends.";
+
+    const none = hint("none");
+    expect(none).toContain("None.");
+    expect(none).toContain("You can stop any time with a confirmation.");
+    expect(none).toContain("You can add, change or remove rules at any time.");
+    expect(none).not.toContain("I GIVE UP");
+
+    const strict = hint("strict");
+    expect(strict).toContain("Strict.");
+    expect(strict).toContain(
       "Stopping early needs the phrase “I GIVE UP” and a 15-second wait. You can still disable or remove the extension.",
     );
-    expect(html).toContain(
+    expect(strict).toContain(noRemoving);
+
+    expect(hint("strict", true)).toContain("Stopping early needs your password.");
+
+    const commit = hint("commitment");
+    expect(commit).toContain("Commit.");
+    expect(commit).toContain(
       "There is no early-stop action. You can still disable or remove the extension.",
     );
-    expect(html.split(second).length - 1).toBe(2);
+    expect(commit).toContain(noRemoving);
+    expect(commit).not.toContain("I GIVE UP");
+  });
 
-    expect(html.match(/aria-current="true"/g) ?? []).toHaveLength(1);
-    expect(html).toMatch(/aria-current="true"[^>]*>(?:(?!<\/li>)[\s\S])*You can stop any time/);
+  it("shows no hint at all once it is hidden", () => {
+    const closed = { open: false, id: "lock-hint", toggle: () => undefined };
+    expect(
+      renderToStaticMarkup(
+        <LockHint level="strict" hasPassword={false} info={closed} onHide={() => undefined} />,
+      ),
+    ).toBe("");
   });
 
   it("builds the strict stop sentence from one place", () => {

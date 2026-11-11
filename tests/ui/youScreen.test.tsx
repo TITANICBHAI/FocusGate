@@ -58,7 +58,7 @@ describe("profile screen", () => {
     const html = render(filled());
     expect(html).toContain('aria-label="Focus list, 3 sites. Open in Rules."');
     expect(html).toContain('aria-label="Schedules, No schedules yet. Open in Rules."');
-    expect(html).toContain("Password");
+    expect(html).toMatch(/>Password</);
     expect(html).not.toContain('aria-label="Password, Not set. Open in Rules."');
   });
 

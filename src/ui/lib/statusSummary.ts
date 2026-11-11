@@ -5,8 +5,14 @@ import { isWorkPhaseLive } from "../../shared/sessionClock.ts";
 import type { AppState } from "../../shared/types.ts";
 import { weakeningLockReason } from "./guardState.ts";
 import { scheduleStatus } from "./scheduleStatus.ts";
+import { statusLine } from "./scheduleSummary.ts";
 
-export type StatusTone = "idle" | "focus" | "schedule" | "locked" | "break";
+/**
+ * `standing` is blocking that needs no session: the Always list, keywords that
+ * are on all the time, and sites past their limit. It is amber like the rest
+ * of "blocking now", but it has no timer and no lock.
+ */
+export type StatusTone = "idle" | "standing" | "focus" | "schedule" | "locked" | "break";
 
 export interface StatusSummary {
   tone: StatusTone;
@@ -19,6 +25,13 @@ export interface StatusSummary {
 }
 
 const sites = (count: number): string => `${count} ${count === 1 ? "site" : "sites"}`;
+const keywords = (count: number): string => `${count} ${count === 1 ? "keyword" : "keywords"}`;
+
+/** "a", "a and b", "a, b and c". */
+function joinAnd(parts: readonly string[]): string {
+  if (parts.length <= 1) return parts.join("");
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
 
 function nothingConfigured(state: AppState): boolean {
   return (
@@ -42,13 +55,26 @@ export function describeNow(
   const canEdit: StatusSummary["canEdit"] =
     weakeningLockReason(state, nowMs) === null ? "all" : "stricter-only";
 
+  // A limit either ran out (the site is blocked now) or is still watching.
   const secondary: string[] = [];
+  let limitsReached = 0;
+  let limitsWatching = 0;
   for (const domain of Object.keys(state.allowances)) {
     const normalized = normalizeDomain(domain);
-    if (normalized && plan.blocked.get(normalized)?.kind === "allowance") {
+    if (!normalized) continue;
+    if (plan.blocked.get(normalized)?.kind === "allowance") {
       secondary.push(`${normalized} reached its daily limit.`);
+      limitsReached += 1;
+    } else {
+      limitsWatching += 1;
     }
   }
+  // Count what the person added, not every address an entry covers: one
+  // youtube.com entry also blocks youtu.be, and the You tab counts entries too.
+  const alwaysCount = state.alwaysBlockedSites.filter(
+    (entry) => normalizeDomain(entry) !== null,
+  ).length;
+  const keywordCount = plan.keywords.length;
 
   const make = (
     tone: StatusTone,
@@ -109,6 +135,15 @@ export function describeNow(
         `Schedule is on: ${status.schedule.name}, blocking until ${time(status.endsAt)}.`,
       );
     }
+    // A break opens the Focus list. The Always list and keywords do not stop.
+    if (alwaysCount > 0) {
+      secondary.push(`The Always list is still blocking ${sites(alwaysCount)}.`);
+    }
+    if (keywordCount > 0) {
+      secondary.push(
+        `${keywords(keywordCount)} ${keywordCount === 1 ? "is" : "are"} still blocking pages.`,
+      );
+    }
     return make(
       "break",
       "On a break.",
@@ -133,25 +168,54 @@ export function describeNow(
     );
   }
 
-  const alwaysCount = [...plan.blocked.values()].filter(
-    (reason) => reason.kind === "always",
-  ).length;
-  if (alwaysCount > 0) {
-    return make(
-      "idle",
-      `The Always list is blocking ${sites(alwaysCount)}.`,
-      "Start a focus session to block your Focus list too.",
+  // Rules that are set up but not blocking yet are worth a line each, so the
+  // strip never reads as if they were not there.
+  const waiting: string[] = [];
+  if (limitsWatching > 0) {
+    waiting.push(`Limits are watching ${sites(limitsWatching)}.`);
+  }
+  const duringBlocks = state.keywords.filter((rule) => rule.when !== "always").length;
+  if (duringBlocks > 0) {
+    waiting.push(
+      `${keywords(duringBlocks)} ${duringBlocks === 1 ? "applies" : "apply"} only during focus sessions and schedules.`,
     );
   }
+  secondary.push(...waiting);
 
-  return make(
-    "idle",
-    "Nothing is blocking right now.",
-    "Start a focus session, or add a schedule to block automatically.",
-    state.schedules.length === 0
-      ? { label: "Add a schedule", target: "schedule" }
-      : undefined,
-  );
+  // Nothing session-like is running, yet the Always list, keywords that are on
+  // all the time and sites past their limit can all be blocking.
+  if (blockedCount + keywordCount > 0) {
+    const standingSites = alwaysCount + limitsReached;
+    const what = [
+      ...(standingSites > 0 ? [sites(standingSites)] : []),
+      ...(keywordCount > 0 ? [keywords(keywordCount)] : []),
+    ];
+    const from = [
+      ...(alwaysCount > 0 ? ["Always list"] : []),
+      ...(keywordCount > 0 ? ["keywords"] : []),
+      ...(limitsReached > 0 ? ["limits"] : []),
+    ];
+    if (state.blockedSites.length > 0) {
+      secondary.push("Start a focus session to block your Focus list too.");
+    }
+    return make("standing", `Blocking ${joinAnd(what)}.`, `From your ${joinAnd(from)}.`);
+  }
+
+  const headline = "Nothing is blocking right now.";
+  if (state.schedules.length > 0) {
+    return make("idle", headline, statusLine(status, nowMs, locale));
+  }
+  return state.blockedSites.length > 0
+    ? make(
+        "idle",
+        headline,
+        "Start a focus session, or add a schedule to block automatically.",
+        { label: "Add a schedule", target: "schedule" },
+      )
+    : make("idle", headline, "Add sites to your Focus list to block them in a session.", {
+        label: "Add sites",
+        target: "rules",
+      });
 }
 
 /** The labelled pill in the header: what is happening, in a word or two. */

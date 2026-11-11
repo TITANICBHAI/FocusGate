@@ -1,0 +1,10 @@
+PASS panel: nudge shown
+PASS panel: opens Settings in a new tab :: [{"url":"chrome-extension://t/dashboard.html#settings"}]
+PASS panel: hiding removes it
+PASS panel: stays hidden after a reload
+PASS panel: no page errors
+PASS dashboard: nudge shown on Rules
+PASS dashboard: Set a password switches to the Settings tab
+PASS dashboard: no page errors
+
+8 passed, 0 failed

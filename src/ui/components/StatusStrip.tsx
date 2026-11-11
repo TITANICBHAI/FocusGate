@@ -12,11 +12,11 @@ export function pillFor(
 ): HeaderPill {
   if (summary.tone === "break") return { label: "Break", tone: "break" };
   if (summary.tone === "idle") {
-    // The Always list and keywords can block while nothing else is running.
-    return {
-      label: isBlockingActive(state, nowMs) ? "Blocking" : "Not blocking",
-      tone: "idle",
-    };
+    // describeNow reports the Always list, keywords and limits as "standing".
+    // This keeps the pill honest if a caller passes a summary from before.
+    return isBlockingActive(state, nowMs)
+      ? { label: "Blocking", tone: "standing" }
+      : { label: "Not blocking", tone: "idle" };
   }
   return { label: "Blocking", tone: summary.tone };
 }
@@ -30,7 +30,8 @@ type Tone = StatusSummary["tone"];
 export function shouldSweep(previous: Tone | undefined, next: Tone): boolean {
   if (previous === undefined) return false;
   const wasOff = previous === "idle" || previous === "break";
-  const nowOn = next === "focus" || next === "locked" || next === "schedule";
+  const nowOn =
+    next === "focus" || next === "locked" || next === "schedule" || next === "standing";
   return wasOff && nowOn;
 }
 

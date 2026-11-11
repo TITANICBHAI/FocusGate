@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Settings2 } from "lucide-react";
+import { Eye, EyeOff, Info, Lock, Settings2, X } from "lucide-react";
 import type { HeaderPill } from "../lib/statusSummary.ts";
 import {
   Children,
@@ -79,6 +79,58 @@ export function IconButton({
       className={`fg-btn fg-btn--quiet fg-btn--icon fg-btn--dense ${className}`.trim()}
       {...props}
     />
+  );
+}
+
+export interface InfoState {
+  open: boolean;
+  id: string;
+  toggle(): void;
+}
+
+/** Open or closed, for an "i" button and the note it controls. */
+export function useInfoState(defaultOpen = false): InfoState {
+  const [open, setOpen] = useState(defaultOpen);
+  const id = useId();
+  return { open, id, toggle: () => setOpen((value) => !value) };
+}
+
+/** An "i" button. The note it opens is part of the page, never a tooltip. */
+export function InfoButton({ label, info }: { label: string; info: InfoState }) {
+  return (
+    <IconButton
+      label={label}
+      aria-expanded={info.open}
+      aria-controls={info.id}
+      onClick={info.toggle}
+    >
+      <Info aria-hidden="true" />
+    </IconButton>
+  );
+}
+
+/** The note an `InfoButton` opens. It can offer a button that hides it for good. */
+export function InfoNote({
+  info,
+  children,
+  onDismiss,
+  dismissLabel = "Dismiss",
+}: {
+  info: InfoState;
+  children: ReactNode;
+  onDismiss?(): void;
+  dismissLabel?: string;
+}) {
+  if (!info.open) return null;
+  return (
+    <div id={info.id} className="fg-info-note" role="note">
+      <div className="fg-info-note__body">{children}</div>
+      {onDismiss && (
+        <IconButton label={dismissLabel} onClick={onDismiss}>
+          <X aria-hidden="true" />
+        </IconButton>
+      )}
+    </div>
   );
 }
 
@@ -242,18 +294,31 @@ export function Segmented<T extends string>({
   value,
   onChange,
   disabled = false,
+  labelAction,
 }: {
   label: string;
   options: readonly { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   disabled?: boolean;
+  /** A small control beside the visible label, such as an "i" button. */
+  labelAction?: ReactNode;
 }) {
+  const visibleLabel = (
+    <span className="fg-field__label" aria-hidden="true">
+      {label}
+    </span>
+  );
   return (
     <div className="fg-field">
-      <span className="fg-field__label" aria-hidden="true">
-        {label}
-      </span>
+      {labelAction ? (
+        <div className="fg-info-row">
+          {visibleLabel}
+          {labelAction}
+        </div>
+      ) : (
+        visibleLabel
+      )}
       <div
         className="fg-seg"
         role="group"
@@ -644,6 +709,8 @@ export function PasswordField({
   blockPaste = false,
   maxLength,
   autoFocus = false,
+  disabled = false,
+  secretName = "password",
 }: {
   id: string;
   label: string;
@@ -655,6 +722,9 @@ export function PasswordField({
   blockPaste?: boolean;
   maxLength?: number;
   autoFocus?: boolean;
+  disabled?: boolean;
+  /** What the show-or-hide button says it reveals: "Hide password", "Show password". */
+  secretName?: string;
 }) {
   const [visible, setVisible] = useState(true);
   return (
@@ -668,11 +738,13 @@ export function PasswordField({
           placeholder={placeholder}
           maxLength={maxLength}
           autoFocus={autoFocus}
+          disabled={disabled}
           onPaste={blockPaste ? preventPasswordPaste : undefined}
           onChange={(event) => onChange(event.target.value)}
         />
         <IconButton
-          label={visible ? "Hide password" : "Show password"}
+          label={visible ? `Hide ${secretName}` : `Show ${secretName}`}
+          disabled={disabled}
           onClick={() => setVisible((shown) => !shown)}
         >
           {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}

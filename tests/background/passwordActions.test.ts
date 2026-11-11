@@ -54,10 +54,17 @@ function setup(initialPassword: PasswordState = null) {
 }
 
 describe("background password actions", () => {
-  it("sets a password only within the 8–64 character policy", async () => {
+  it("sets a password only within the 8–28 character policy", async () => {
     const context = setup();
     await expect(
-      context.service.setPassword({ newPassword: "short" }),
+      context.service.setPassword({ newPassword: "x".repeat(7) }),
+    ).resolves.toEqual({
+      ok: false,
+      code: "INVALID_PASSWORD",
+      message: "Use a password between 8 and 28 characters.",
+    });
+    await expect(
+      context.service.setPassword({ newPassword: "x".repeat(29) }),
     ).resolves.toMatchObject({ ok: false, code: "INVALID_PASSWORD" });
     expect(context.hashPassword).not.toHaveBeenCalled();
     expect(context.store.writeState).not.toHaveBeenCalled();
@@ -68,6 +75,39 @@ describe("background password actions", () => {
     expect(context.hashPassword).toHaveBeenCalledWith("correct horse battery");
     expect(context.store.writeState).toHaveBeenCalledWith({ password: NEXT });
     expect(context.getState().password).toEqual(NEXT);
+  });
+
+  it("accepts a password of exactly 8 and exactly 28 characters", async () => {
+    for (const length of [8, 28]) {
+      const context = setup();
+      const newPassword = "x".repeat(length);
+      await expect(context.service.setPassword({ newPassword })).resolves.toEqual({
+        ok: true,
+        passwordSet: true,
+      });
+      expect(context.hashPassword).toHaveBeenCalledWith(newPassword);
+    }
+  });
+
+  it("asks for and checks the current password in words that say password", async () => {
+    const context = setup(CURRENT);
+    await expect(
+      context.service.setPassword({ newPassword: "replacement secret" }),
+    ).resolves.toEqual({
+      ok: false,
+      code: "PASSWORD_REQUIRED",
+      message: "Enter your current password to continue.",
+    });
+    await expect(
+      context.service.setPassword({
+        currentPassword: "wrong",
+        newPassword: "replacement secret",
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      code: "BAD_PASSWORD",
+      message: "That password is not correct.",
+    });
   });
 
   it("requires background verification before changing or removing a password", async () => {

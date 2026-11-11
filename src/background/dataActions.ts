@@ -124,7 +124,7 @@ export function createDataActionService(
             current.password,
           );
           if (!verification.valid) {
-            return rejected("BAD_PASSWORD", "That password did not match.");
+            return rejected("BAD_PASSWORD", "That password is not correct.");
           }
         }
 
@@ -154,7 +154,7 @@ export function createDataActionService(
             latest.password,
           );
           if (!verification.valid) {
-            return rejected("BAD_PASSWORD", "That password did not match.");
+            return rejected("BAD_PASSWORD", "That password is not correct.");
           }
         }
 

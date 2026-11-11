@@ -1,0 +1,83 @@
+src/content/v2.ts(421,24): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/staged/TimerView.tsx(1,37): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+src/staged/TimerView.tsx(2,32): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+src/staged/TimerView.tsx(68,12): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(68,12): error TS2875: This JSX tag requires the module path 'react/jsx-runtime' to exist, but none could be found. Make sure you have types for the appropriate package installed.
+src/staged/TimerView.tsx(68,43): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(68,62): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(68,66): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(72,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(73,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(74,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(74,48): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(75,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(81,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(82,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(84,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(85,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(93,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(94,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(94,55): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(96,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(101,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(103,7): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(106,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(107,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(109,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(114,26): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/staged/TimerView.tsx(116,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(117,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(118,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(118,33): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(120,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(128,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(130,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(131,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(137,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(138,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(140,11): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(141,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(143,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(146,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(150,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(151,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(153,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(161,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(163,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(168,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(174,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(180,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(188,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(190,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(192,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(194,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(196,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(198,23): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(202,36): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/staged/TimerView.tsx(206,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(209,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(211,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(213,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(214,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(225,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(226,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(232,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(233,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(234,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(238,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(242,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(244,9): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/TimerView.tsx(246,5): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+src/staged/useSession.ts(1,50): error TS2307: Cannot find module 'react' or its corresponding type declarations.
+src/staged/useSession.ts(46,16): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(46,43): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(54,10): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(60,14): error TS7006: Parameter 'stored' implicitly has an 'any' type.
+src/staged/useSession.ts(68,14): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(69,13): error TS7006: Parameter 'changes' implicitly has an 'any' type.
+src/staged/useSession.ts(69,22): error TS7006: Parameter 'areaName' implicitly has an 'any' type.
+src/staged/useSession.ts(77,5): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(80,7): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(92,18): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(92,45): error TS2304: Cannot find name 'chrome'.
+src/staged/useSession.ts(102,30): error TS2304: Cannot find name 'chrome'.

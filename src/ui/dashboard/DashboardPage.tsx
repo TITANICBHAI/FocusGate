@@ -24,21 +24,13 @@ import { sendDataActionMessage } from "../lib/dataActions.ts";
 import { RulesScreen } from "../panel/views/RulesScreen.tsx";
 import type { RuleSection } from "../panel/views/RulesScreen.tsx";
 import { StatusStrip, pillFor } from "../components/StatusStrip.tsx";
+import { DASHBOARD_TABS, tabFromHash } from "../lib/dashboardTabs.ts";
+import type { DashboardTab } from "../lib/dashboardTabs.ts";
 import { describeNow } from "../lib/statusSummary.ts";
 import { DashboardSettings } from "./DashboardSettings.tsx";
 import { DashboardStats } from "./DashboardStats.tsx";
 import { HabitsCard } from "./HabitsCard.tsx";
 import { ThemeRoot } from "../theme.tsx";
-
-type DashboardTab = "overview" | "rules" | "reports" | "settings" | "data";
-
-const DASHBOARD_TABS: { value: DashboardTab; label: string }[] = [
-  { value: "overview", label: "Overview" },
-  { value: "rules", label: "Rules" },
-  { value: "reports", label: "Reports" },
-  { value: "settings", label: "Settings" },
-  { value: "data", label: "Data" },
-];
 
 export function DashboardPage() {
   return (
@@ -69,15 +61,15 @@ function DashboardShell() {
   const pill = pillFor(summary, state, now);
 
   // The panel gear links to dashboard.html#settings — honor the deep link.
+  // Also follows later changes, so a link inside the dashboard can switch tabs.
   useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (
-      (["overview", "rules", "reports", "settings", "data"] as const).some(
-        (value) => value === hash,
-      )
-    ) {
-      setTab(hash as DashboardTab);
-    }
+    const follow = () => {
+      const next = tabFromHash(window.location.hash);
+      if (next) setTab(next);
+    };
+    follow();
+    window.addEventListener("hashchange", follow);
+    return () => window.removeEventListener("hashchange", follow);
   }, []);
 
   return (
@@ -335,7 +327,7 @@ function BackupPanel({ state }: { state: AppState }) {
         <Card title="Your browser data">
           <p className="fg-muted">
             Your data stays in browser storage. Backups never contain your
-            password record, active session, standalone block, usage ledger, or
+            password, active session, standalone block, usage ledger, or
             enforcement health.
           </p>
         </Card>
@@ -420,7 +412,7 @@ function BackupPanel({ state }: { state: AppState }) {
         description={
           preview?.mode === "merge"
             ? "Existing data will be kept. Only new or stricter settings will be added; exceptions and history are skipped."
-            : "This backup will be restored into the empty state. Passwords and live runtime state are never imported."
+            : "This backup will be restored into the empty state. Your password and live runtime state are never imported."
         }
         onClose={() => setImportOpen(false)}
         actions={

@@ -24,10 +24,20 @@
   --warning: #ffb23e;
   --warning-contrast: #2b1b00;
   --info: #5cc8e8;
+  --accent-soft: #1d2550;
+  --accent-edge: #39448f;
+  --break-soft: #123628;
+  --break-edge: #21694d;
+  --warning-soft: #3a2a0c;
+  --warning-edge: #7a5516;
+  --danger-soft: #3b1719;
+  --danger-edge: #7d3236;
 
   /* type (no font files are bundled yet; the stack falls back to the system font) */
   --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-num: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  /* a generated password: every character is easy to tell apart */
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   /* shape & depth */
   --radius-card: 10px;
@@ -51,21 +61,29 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f6f7fb;
+  --bg: #e8ebfc;
   --surface: #ffffff;
-  --surface-2: #eceff6;
-  --border: #c9d0e0;
+  --surface-2: #dfe4f7;
+  --border: #bfc7e8;
   --text: #131a2b;
-  --text-muted: #52607a;
-  --text-subtle: #5b6882;
+  --text-muted: #4a5873;
+  --text-subtle: #525f78;
   --accent: #4349c9;
   --accent-contrast: #ffffff;
-  --break: #0b7a53;
+  --break: #0a704c;
   --danger: #b42318;
   --danger-contrast: #ffffff;
-  --warning: #9a5800;
+  --warning: #8f5200;
   --warning-contrast: #ffffff;
   --info: #0a6b8a;
+  --accent-soft: #d5dafb;
+  --accent-edge: #a3acee;
+  --break-soft: #d2eee0;
+  --break-edge: #86c9a8;
+  --warning-soft: #fae8c2;
+  --warning-edge: #deb460;
+  --danger-soft: #fbe1de;
+  --danger-edge: #ec9d95;
   --shadow-pop: 0 8px 24px rgba(19, 26, 43, 0.14);
   --scrim: rgba(19, 26, 43, 0.32);
 }
@@ -87,26 +105,42 @@
   --warning: #ffb23e;
   --warning-contrast: #2b1b00;
   --info: #5cc8e8;
+  --accent-soft: #1d2550;
+  --accent-edge: #39448f;
+  --break-soft: #123628;
+  --break-edge: #21694d;
+  --warning-soft: #3a2a0c;
+  --warning-edge: #7a5516;
+  --danger-soft: #3b1719;
+  --danger-edge: #7d3236;
 }
 
 @media (prefers-color-scheme: light) {
   :root[data-theme="system"] {
     color-scheme: light;
-    --bg: #f6f7fb;
+    --bg: #e8ebfc;
     --surface: #ffffff;
-    --surface-2: #eceff6;
-    --border: #c9d0e0;
+    --surface-2: #dfe4f7;
+    --border: #bfc7e8;
     --text: #131a2b;
-    --text-muted: #52607a;
-    --text-subtle: #5b6882;
+    --text-muted: #4a5873;
+    --text-subtle: #525f78;
     --accent: #4349c9;
     --accent-contrast: #ffffff;
-    --break: #0b7a53;
+    --break: #0a704c;
     --danger: #b42318;
     --danger-contrast: #ffffff;
-    --warning: #9a5800;
+    --warning: #8f5200;
     --warning-contrast: #ffffff;
     --info: #0a6b8a;
+    --accent-soft: #d5dafb;
+    --accent-edge: #a3acee;
+    --break-soft: #d2eee0;
+    --break-edge: #86c9a8;
+    --warning-soft: #fae8c2;
+    --warning-edge: #deb460;
+    --danger-soft: #fbe1de;
+    --danger-edge: #ec9d95;
     --shadow-pop: 0 8px 24px rgba(19, 26, 43, 0.14);
     --scrim: rgba(19, 26, 43, 0.32);
   }
@@ -382,6 +416,38 @@ textarea:focus-visible {
   flex: 1;
 }
 
+/* Choosing a password. A generated password is shown large and in plain sight so it can
+   be read, copied or written down: only a scrambled copy is ever kept. */
+.fg-password-picker__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fg-password-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  text-align: center;
+}
+.fg-password-reveal__label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.fg-password-reveal__value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .fg-modal-backdrop {
   position: fixed;
   z-index: 100;
@@ -597,6 +663,13 @@ button { font: inherit; color: inherit; }
   padding-bottom: calc(var(--gutter) + var(--tabbar-h));
 }
 .fg-panel__main > .fg-stack { max-width: 480px; margin: 0 auto; }
+/* The status line scrolls with the content. It is a block in the flow, never pinned. */
+.fg-panel__strip { max-width: 480px; margin: 0 auto 16px; }
+.fg-panel__strip .fg-nowline {
+  border: 1px solid var(--nowline-edge);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
 
 .fg-full-page__inner {
   max-width: 460px;
@@ -617,8 +690,8 @@ button { font: inherit; color: inherit; }
   gap: 4px var(--gap);
   min-height: var(--header-h);
   padding: 0 var(--gutter);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--surface);
+  border-top: 3px solid var(--accent);
   border-bottom: 1px solid var(--border);
 }
 .fg-wordmark {
@@ -712,12 +785,12 @@ button { font: inherit; color: inherit; }
   width: 28px;
   height: 28px;
   border-radius: var(--radius-ctl);
-  background: var(--surface-2);
+  background: var(--accent-soft);
   display: grid;
   place-items: center;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--accent);
   overflow: hidden;
 }
 .fg-row__copy { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -784,9 +857,9 @@ button { font: inherit; color: inherit; }
   overflow-wrap: anywhere;
 }
 .fg-chip--strong { border-color: var(--text-muted); color: var(--text); }
-.fg-chip--live { border-color: var(--accent); color: var(--accent); }
-.fg-chip--lock { border-color: var(--warning); color: var(--warning); }
-.fg-chip--danger { border-color: var(--danger); color: var(--danger); }
+.fg-chip--live { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.fg-chip--lock { border-color: var(--warning); background: var(--warning-soft); color: var(--warning); }
+.fg-chip--danger { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
 .fg-chip__btn {
   border: 0;
   background: none;
@@ -806,29 +879,32 @@ button { font: inherit; color: inherit; }
   height: 22px;
   padding: 0 8px;
   border-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent-edge);
+  background: var(--surface);
   font-size: 12px;
   font-weight: 500;
   line-height: 1;
   color: var(--text-muted);
   white-space: nowrap;
 }
+.fg-pill--standing,
 .fg-pill--focus,
 .fg-pill--schedule,
-.fg-pill--locked { border-color: var(--warning); color: var(--text); }
-.fg-pill--break { border-color: var(--break); color: var(--text); }
+.fg-pill--locked { border-color: var(--warning); background: var(--warning-soft); color: var(--text); }
+.fg-pill--break { border-color: var(--break); background: var(--break-soft); color: var(--text); }
 .fg-pill__lock { display: inline-flex; }
 .fg-pill__lock svg { width: 12px; height: 12px; }
 
 /* status strip: one calm sentence about what is happening now */
 .fg-nowline {
-  --nowline-bar: var(--border);
+  --nowline-bar: var(--accent-edge);
+  --nowline-edge: var(--accent-edge);
   position: relative;
   display: grid;
   gap: 2px;
   padding: 10px 12px 10px 15px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--nowline-edge);
 }
 .fg-nowline::before {
   content: "";
@@ -840,10 +916,19 @@ button { font: inherit; color: inherit; }
   background: var(--nowline-bar);
   transform-origin: top;
 }
-.fg-nowline--break { --nowline-bar: var(--break); }
+.fg-nowline--break {
+  --nowline-bar: var(--break);
+  --nowline-edge: var(--break-edge);
+  background: var(--break-soft);
+}
+.fg-nowline--standing,
 .fg-nowline--focus,
 .fg-nowline--schedule,
-.fg-nowline--locked { --nowline-bar: var(--warning); }
+.fg-nowline--locked {
+  --nowline-bar: var(--warning);
+  --nowline-edge: var(--warning-edge);
+  background: var(--warning-soft);
+}
 @media (prefers-reduced-motion: no-preference) {
   .fg-nowline--sweep::before { animation: fg-gate-close 280ms ease-out; }
 }
@@ -939,7 +1024,7 @@ button { font: inherit; color: inherit; }
   flex: 1 1 auto;
   min-height: 28px;
   padding: 0 8px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: calc(var(--radius-ctl) - 2px);
   background: none;
   color: var(--text-muted);
@@ -947,9 +1032,10 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .fg-seg__btn[aria-pressed="true"] {
-  background: var(--surface);
+  background: var(--accent-soft);
+  border-color: var(--accent-edge);
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
 }
 
 /* toggle */
@@ -1149,14 +1235,17 @@ html.fg-in-panel .fg-toast-host { bottom: calc(var(--tabbar-h) + var(--gutter));
 .fg-block-inner {
   text-align: left;
   max-width: 480px;
-  margin: 0 auto;
-  padding-top: 12vh;
+  margin: 10vh auto 0;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--warning-edge);
+  border-radius: var(--radius-card);
 }
 .fg-block-brand {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 40px;
+  margin: 0 0 24px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-muted);
@@ -1247,7 +1336,7 @@ button.fg-row:hover {
 }
 button.fg-row[aria-pressed="true"] {
   border-color: var(--accent);
-  background: var(--surface-2);
+  background: var(--accent-soft);
 }
 .fg-onboard-actions {
   display: flex;
@@ -1457,31 +1546,35 @@ svg.fg-icon-16 { width: 16px; height: 16px; flex: none; }
   min-height: 36px;
   font-size: 14px;
 }
-.fg-toggle__track[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
-.fg-toggle__track[aria-checked="true"]::after { transform: translateX(16px); background: var(--accent-contrast); }
 
-/* Lock explainer: all three locks stay visible, the chosen one is marked. */
-.fg-lock-list {
-  display: grid;
+/* An "i" button beside a label, and the note it opens. The note is plain
+   content in the page, so it works with a keyboard and a screen reader. */
+.fg-info-row { display: flex; align-items: center; gap: 4px; }
+.fg-info-note {
+  display: flex;
+  align-items: flex-start;
   gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.fg-lock-list__row {
-  display: grid;
-  gap: 2px;
-  padding-left: 9px;
-  border-left: 3px solid transparent;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-ctl);
   font-size: 13px;
-  line-height: 18px;
+  line-height: 1.45;
+}
+.fg-info-note__body { flex: 1; min-width: 0; }
+.fg-info-note__actions { margin-top: 8px; }
+.fg-setup-offer { margin-bottom: var(--gap); }
+.fg-setup-offer__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fg-password-covers {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
   color: var(--text-muted);
 }
-.fg-lock-list__row strong { font-weight: 600; }
-.fg-lock-list__row[aria-current="true"] {
-  border-left-color: var(--accent);
-  color: var(--text);
-}
+.fg-info-note__list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.fg-toggle__track[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
+.fg-toggle__track[aria-checked="true"]::after { transform: translateX(16px); background: var(--accent-contrast); }
 
 /* ---------- profile (You tab) ---------- */
 
@@ -1646,4 +1739,87 @@ svg.fg-icon-16 { width: 16px; height: 16px; flex: none; }
   background: var(--surface-2);
   color: var(--text);
   white-space: nowrap;
+}
+
+/* ---------- colour layer (Phase 8) ----------
+   The owner found the product colourless. Colour now lives in solid, tinted surfaces that mean
+   something, not only in thin marks: lavender for the brand and for notes, sand for blocking,
+   mint for open and on a break, rose for danger. Every value is a token, there are no gradients,
+   and amber is still only for blocking. */
+
+/* hovering a button or a quiet action leans toward the brand wash */
+.fg-btn--secondary:not(:disabled):hover { background: var(--accent-soft); border-color: var(--accent-edge); }
+.fg-btn--quiet:not(:disabled):hover { background: var(--accent-soft); }
+
+/* tinted containers keep their own buttons readable */
+.fg-info-note .fg-btn--secondary,
+.fg-setup-offer .fg-btn--secondary,
+.fg-nowline .fg-btn--secondary,
+.fg-hero .fg-btn--secondary { background: var(--surface); }
+
+/* notes and hints */
+.fg-info-note {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
+  padding: 9px 11px;
+}
+
+/* the setup offer is a welcome card, so it is not flattened like the other panel cards */
+.fg-panel__main .fg-setup-offer {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+/* the timer sits on a tinted dial plate that follows the state of the session */
+.fg-panel__main .fg-hero,
+.fg-dash__main .fg-hero {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--radius-card);
+  padding: 12px 16px 14px;
+}
+.fg-panel__main .fg-hero--break,
+.fg-dash__main .fg-hero--break { background: var(--break-soft); border-color: var(--break-edge); }
+.fg-panel__main .fg-hero--warn,
+.fg-dash__main .fg-hero--warn { background: var(--warning-soft); border-color: var(--warning-edge); }
+
+/* tab bar: the open tab is washed and its icon takes the brand colour */
+.fg-tabbar__btn:not([aria-selected="true"]):hover { background: var(--surface-2); }
+.fg-tabbar__btn[aria-selected="true"] { background: var(--accent-soft); }
+.fg-tabbar__btn[aria-selected="true"] svg { color: var(--accent); }
+
+/* dashboard: paper rail and header, the open section washed */
+.fg-dash__rail { background: var(--surface); }
+.fg-dash__rail .fg-btn[aria-current="page"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-edge);
+  font-weight: 600;
+}
+.fg-dashboard--flush .fg-dashboard__header {
+  background: var(--surface);
+  border-top: 3px solid var(--accent);
+}
+
+/* block page: the gate is closed, so the page is sand and the message sits on paper (see .fg-block-inner) */
+.fg-full-page:has(.fg-block-inner) { background: var(--warning-soft); }
+
+/* setup: the steps sit on paper, and the step's one action is the primary button */
+.fg-full-page__inner.fg-onboard-card {
+  max-width: 520px;
+  margin-top: 4vh;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+/* the profile circle takes the brand wash */
+.fg-badge {
+  background: var(--accent-soft);
+  border-color: var(--accent-edge);
+  color: var(--accent);
 }

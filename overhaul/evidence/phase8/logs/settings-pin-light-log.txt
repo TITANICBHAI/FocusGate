@@ -1,0 +1,11 @@
+PASS no PIN: the PIN card is there
+PASS generating shows six digits  :: 005445
+PASS the save button says it was saved
+PASS saves exactly that PIN  :: [{"type":"password/set","newPassword":"005445"}]
+PASS says PIN saved, and the reveal is gone
+PASS no page errors
+PASS a wrong current PIN is explained
+PASS the right one removes it
+PASS no page errors
+
+9 passed, 0 failed

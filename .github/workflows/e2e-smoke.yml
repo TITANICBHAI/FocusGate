@@ -1,0 +1,89 @@
+name: Browser smoke test
+
+# Loads the real built extension in Chromium and checks it: every screen renders,
+# accessibility (axe), a short focus session finishes, and edits reach the blocker.
+# About 4 to 5 minutes. Run it by hand from the Actions tab (Run workflow) to pick
+# other flags, or let it run on pushes and pull requests.
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      flags:
+        description: 'Smoke test flags (any of --a11y --engine --slow)'
+        required: false
+        default: '--a11y --engine --slow'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Smoke test the built extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          rm -f package-lock.json
+          npm install --no-audit --no-fund --save-exact vite@6.4.3 esbuild@0.25.12
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Install Playwright and axe-core (outside the repo)
+        run: |
+          mkdir -p /tmp/fg-e2e
+          cd /tmp/fg-e2e
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.49.1 axe-core@4.10.2
+          npx playwright install --with-deps chromium
+          command -v xvfb-run >/dev/null || sudo apt-get install -y xvfb
+
+      - name: Run smoke test
+        env:
+          NODE_PATH: /tmp/fg-e2e/node_modules
+          SMOKE_FLAGS: ${{ inputs.flags || '--a11y --engine --slow' }}
+        run: |
+          set -o pipefail
+          # shellcheck disable=SC2086
+          xvfb-run -a node tools/e2e/smoke.cjs dist $SMOKE_FLAGS 2>&1 | tee /tmp/smoke.log
+
+      - name: Summarise the result
+        if: always()
+        run: |
+          {
+            echo "### Smoke test"
+            echo '```'
+            grep -aE "^PASS |^  FAIL |SMOKE CRASHED|commands:" /tmp/smoke.log || tail -20 /tmp/smoke.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -aE "^  FAIL " /tmp/smoke.log | while IFS= read -r line; do
+            echo "::error::${line//%/%25}"
+          done || true
+
+      - name: Keep the smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-log-${{ github.sha }}
+          path: /tmp/smoke.log
+          if-no-files-found: ignore
+          retention-days: 14

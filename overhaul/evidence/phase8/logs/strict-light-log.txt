@@ -1,0 +1,38 @@
+PASS A none: starts at once  :: [{"type":"session/start","durationMin":25,"lockLevel":"none"}]
+PASS A none: no dialog
+PASS A none: no page errors
+PASS B sheet opens with its title
+PASS B nothing sent yet
+PASS B main button is off until a PIN is chosen
+PASS B a six-digit PIN is shown  :: 938611
+PASS B says to write it down
+PASS B Copy PIN puts the PIN on the clipboard  :: 938611
+PASS B the button says Copied
+PASS B main button now says it was saved, and is on
+PASS B sends the PIN first, then starts Strict  :: [{"type":"password/set","newPassword":"938611"},{"type":"session/start","durationMin":25,"lockLevel":"strict"}]
+PASS B sheet closed
+PASS B no page errors
+PASS C a mismatch is explained
+PASS C and the main button stays off
+PASS C a match is said
+PASS C skipping sends only the start  :: [{"type":"session/start","durationMin":25,"lockLevel":"strict"}]
+PASS C no page errors
+PASS D asks whether to use the PIN
+PASS D one click starts Strict with no PIN message  :: [{"type":"session/start","durationMin":25,"lockLevel":"strict"}]
+PASS D no page errors
+PASS E fields appear
+PASS E main button off while empty
+PASS E main button on when filled
+PASS E a wrong current PIN is explained in the sheet
+PASS E and no session started  :: [{"type":"password/set","currentPassword":"0000","newPassword":"5555"}]
+PASS E the message clears when the PIN is edited
+PASS E the right current PIN changes it, then starts  :: [{"type":"password/set","currentPassword":"0000","newPassword":"5555"},{"type":"password/set","currentPassword":"1111","newPassword":"5555"},{"type":"session/start","durationMin":25,"lockLevel":"strict"}]
+PASS E no page errors
+PASS F Cancel closes it and sends nothing
+PASS F Escape closes it and sends nothing
+PASS F it can be opened again, from a clean form
+PASS F no page errors
+PASS G the sheet fits the panel or scrolls inside itself  :: {"box":{"x":0,"y":126,"width":400,"height":574},"info":{"sh":605,"ch":573,"ov":"auto","bw":false}}
+PASS G no sideways scroll
+
+36 passed, 0 failed

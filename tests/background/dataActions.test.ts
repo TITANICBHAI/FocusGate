@@ -202,6 +202,31 @@ describe("background backup and reset actions", () => {
     expect(context.getState()).toEqual(createDefaultState());
   });
 
+  it("asks for the password, in those words, before resetting protected data", async () => {
+    const current = createDefaultState();
+    current.blockedSites = ["example.com"];
+    current.password = password;
+    const context = setup(current);
+
+    await expect(
+      context.service.resetData({ confirm: RESET_CONFIRMATION_PHRASE }),
+    ).resolves.toMatchObject({
+      ok: false,
+      code: "PASSWORD_REQUIRED",
+      message: "Enter your current password to reset data.",
+    });
+    await expect(
+      context.service.resetData({
+        confirm: RESET_CONFIRMATION_PHRASE,
+        password: "wrong",
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      code: "BAD_PASSWORD",
+      message: "That password is not correct.",
+    });
+  });
+
   it("requires a correct current password to reset protected data", async () => {
     const current = createDefaultState();
     current.blockedSites = ["example.com"];

@@ -5,6 +5,7 @@ import {
   checkProtection as checkBrowserProtection,
   getBrowserProtectionApi,
 } from "../lib/protectionStatus.ts";
+import { PasswordPicker } from "../components/PasswordPicker.tsx";
 import { Button, Card, Chip, Field, ListRow } from "../components/primitives.tsx";
 import { StorageGate } from "../components/StorageGate.tsx";
 import { APP_STATE_KEYS } from "../hooks/storageStore.ts";
@@ -12,6 +13,10 @@ import { uiStorageStore } from "../hooks/storageStore.ts";
 import { useAppState } from "../hooks/useStorage.ts";
 import { ThemeRoot } from "../theme.tsx";
 import { sendPasswordMessage } from "../lib/passwordActions.ts";
+import { emptyPasswordDraft, passwordDraftError } from "../lib/passwordDraft.ts";
+import type { PasswordDraft } from "../lib/passwordDraft.ts";
+import { markSetupHandled } from "../lib/setupOffer.ts";
+import { SetupDone } from "./SetupDone.tsx";
 
 type Goal = "social" | "gaming" | "web" | "deep";
 type PermissionState = "checking" | "available" | "review" | "unavailable";
@@ -98,13 +103,15 @@ function OnboardingFlow() {
     GOAL_PRESETS.social,
   );
   const [customDomains, setCustomDomains] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [passwordDraft, setPasswordDraft] = useState<PasswordDraft>(emptyPasswordDraft);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [protection, setProtection] = useState(EMPTY_PROTECTION);
   const [protectionMessage, setProtectionMessage] = useState("");
   const [checkingProtection, setCheckingProtection] = useState(false);
+  // Both fields empty means "skip": a password is optional.
+  const wantsPassword = passwordDraft.password !== "" || passwordDraft.confirmation !== "";
+  const passwordError = wantsPassword ? passwordDraftError(passwordDraft) : null;
 
   useEffect(() => {
     let active = true;
@@ -166,22 +173,15 @@ function OnboardingFlow() {
       setStep(1);
       return;
     }
-    if (state.password && (password || passwordConfirm)) {
+    if (state.password && wantsPassword) {
       setError("A password is already set. Password changes are managed in Settings.");
       setStep(2);
       return;
     }
-    if (password || passwordConfirm) {
-      if (password.length < 8 || password.length > 64) {
-        setError("Use 8 to 64 characters, or leave both password fields empty.");
-        setStep(2);
-        return;
-      }
-      if (password !== passwordConfirm) {
-        setError("The passwords do not match.");
-        setStep(2);
-        return;
-      }
+    if (wantsPassword && passwordError) {
+      setError(passwordError);
+      setStep(2);
+      return;
     }
 
     setSaving(true);
@@ -196,16 +196,17 @@ function OnboardingFlow() {
         ...latest,
         dailyGoalMin,
       }));
-      if (password) {
+      if (wantsPassword) {
         const result = await sendPasswordMessage({
           type: "password/set",
-          newPassword: password,
+          newPassword: passwordDraft.password,
         });
         if (!result.ok) {
           throw new Error(result.message || "The password could not be saved.");
         }
       }
       setStep(4);
+      markSetupHandled();
     } catch {
       setError("FocusGate could not save setup. Your selected sites can be saved again by retrying.");
     } finally {
@@ -259,15 +260,9 @@ function OnboardingFlow() {
 
   function continueFromPassword() {
     setError("");
-    if (password || passwordConfirm) {
-      if (password.length < 8 || password.length > 64) {
-        setError("Use 8 to 64 characters, or leave both password fields empty.");
-        return;
-      }
-      if (password !== passwordConfirm) {
-        setError("The passwords do not match.");
-        return;
-      }
+    if (wantsPassword && passwordError) {
+      setError(passwordError);
+      return;
     }
     setStep(3);
   }
@@ -279,7 +274,7 @@ function OnboardingFlow() {
 
   return (
     <main className="fg-full-page">
-      <div className="fg-full-page__inner">
+      <div className="fg-full-page__inner fg-onboard-card">
         <header className="fg-onboard-head">
           <img src="/icon.png" alt="" width="36" height="36" />
           <span>FocusGate setup</span>
@@ -333,7 +328,9 @@ function OnboardingFlow() {
               </select>
             </Field>
             <div className="fg-onboard-actions">
-              <Button wide onClick={() => setStep(1)}>Continue</Button>
+              <Button wide variant="primary" onClick={() => setStep(1)}>
+                Continue
+              </Button>
             </div>
           </section>
         )}
@@ -385,6 +382,7 @@ function OnboardingFlow() {
             <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(0)}>Back</Button>
               <Button
+                variant="primary"
                 onClick={() => {
                   const custom = parseCustomDomains();
                   if (custom.invalid.length) {
@@ -403,10 +401,11 @@ function OnboardingFlow() {
 
         {step === 2 && (
           <section className="fg-stack" aria-labelledby="onboarding-password">
-            <h1 id="onboarding-password">Password protection is optional</h1>
+            <h1 id="onboarding-password">A password is optional</h1>
             <p className="fg-muted">
-              A password adds friction when ending a Strict session early. It does
-              not stop you from disabling or removing the extension.
+              A password is needed to remove or relax your rules and to end a Strict session
+              early. It does not stop you from disabling or removing the extension. You can
+              skip this and add one later in Settings.
             </p>
             {state.password ? (
               <Card title="Password already set">
@@ -416,34 +415,27 @@ function OnboardingFlow() {
               </Card>
             ) : (
               <>
-                <Field
-                  id="onboarding-password-value"
-                  label="Password"
-                  helper="Use 8 to 64 characters, or leave both fields empty to skip."
-                  error={step === 2 ? error : undefined}
-                >
-                  <input
-                    id="onboarding-password-value"
-                    type="password"
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                  />
-                </Field>
-                <Field id="onboarding-password-confirm" label="Confirm password">
-                  <input
-                    id="onboarding-password-confirm"
-                    type="password"
-                    autoComplete="new-password"
-                    value={passwordConfirm}
-                    onChange={(event) => setPasswordConfirm(event.target.value)}
-                  />
-                </Field>
+                <PasswordPicker
+                  idPrefix="onboarding-password"
+                  draft={passwordDraft}
+                  onChange={(next) => {
+                    setPasswordDraft(next);
+                    setError("");
+                  }}
+                />
+                {error && (
+                  <p className="fg-field__error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <p className="fg-muted">Leave both fields empty to skip.</p>
               </>
             )}
             <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(1)}>Back</Button>
-              <Button onClick={continueFromPassword}>Continue</Button>
+              <Button variant="primary" onClick={continueFromPassword}>
+                {passwordDraft.generated ? "I have saved it, continue" : "Continue"}
+              </Button>
             </div>
           </section>
         )}
@@ -494,7 +486,7 @@ function OnboardingFlow() {
             {error && <p className="fg-field__error" role="alert">{error}</p>}
             <div className="fg-onboard-actions">
               <Button variant="secondary" onClick={() => setStep(2)}>Back</Button>
-              <Button onClick={() => void saveSetup()} disabled={saving}>
+              <Button variant="primary" onClick={() => void saveSetup()} disabled={saving}>
                 {saving ? "Saving…" : "Save setup"}
               </Button>
             </div>
@@ -502,27 +494,13 @@ function OnboardingFlow() {
         )}
 
         {step === 4 && (
-          <section className="fg-stack" aria-labelledby="onboarding-done">
-            <h1 id="onboarding-done">Your setup is saved</h1>
-            <p className="fg-muted">
-              {selectedCount} sites were added to your Focus list. Your daily goal
-              is {dailyGoalMin} minutes.
-            </p>
-            <Card title="What happens next">
-              <p className="fg-muted">
-                Open the FocusGate side panel to start a focus session. Blocking
-                depends on your configured rules and browser permissions.
-              </p>
-            </Card>
-            <div className="fg-onboard-actions">
-              <Button wide onClick={() => void openFocusGate()}>
-                Open FocusGate in the side panel
-              </Button>
-            </div>
-            {protectionMessage && (
-              <p className="fg-muted" role="status">{protectionMessage}</p>
-            )}
-          </section>
+          <SetupDone
+            siteCount={selectedCount}
+            dailyGoalMin={dailyGoalMin}
+            generatedPassword={wantsPassword && passwordDraft.generated ? passwordDraft.password : null}
+            message={protectionMessage}
+            onOpenPanel={() => void openFocusGate()}
+          />
         )}
       </div>
     </main>

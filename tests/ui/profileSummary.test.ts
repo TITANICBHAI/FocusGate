@@ -64,7 +64,7 @@ describe("protectionRows", () => {
     expect(row?.value).toBe("Set");
   });
 
-  it("points each rule row at its Rules section; Password has none", () => {
+  it("points each rule row at its Rules section; password has none", () => {
     const sections = Object.fromEntries(
       protectionRows(createDefaultState(), NOW).map((row) => [row.label, row.section]),
     );

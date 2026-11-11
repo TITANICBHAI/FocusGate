@@ -14,8 +14,10 @@ import {
 } from "../../components/primitives.tsx";
 import { useToast } from "../../components/feedback.tsx";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
+import { openExtensionPage } from "../../lib/extensionPages.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import { saveProfileFieldDefault } from "../../lib/profileActions.ts";
+import { SETUP_PAGE } from "../../lib/setupOffer.ts";
 import type { ProfileField } from "../../lib/profileActions.ts";
 import { AchievementsSection } from "./profile/AchievementsSection.tsx";
 import { ProfileHeader } from "./profile/ProfileHeader.tsx";
@@ -78,26 +80,42 @@ export function YouScreen({
       </details>
 
       <Card>
-        <ListRow
-          title="Open full dashboard"
-          sub="Stats, reports, settings, and your data in a full tab."
-          actions={
-            <Button
-              variant="quiet"
-              size="dense"
-              onClick={() => {
-                if (typeof chrome !== "undefined" && chrome.tabs?.create) {
-                  void chrome.tabs.create({
-                    url: chrome.runtime.getURL("dashboard.html"),
-                  });
-                }
-              }}
-            >
-              <ExternalLink aria-hidden="true" className="fg-icon-16" />
-              Open
-            </Button>
-          }
-        />
+        <div className="fg-list">
+          <ListRow
+            title="Run setup"
+            sub="Pick sites to block, set a password and check browser access, in a full tab."
+            actions={
+              <Button
+                variant="quiet"
+                size="dense"
+                onClick={() => void openExtensionPage(SETUP_PAGE)}
+              >
+                <ExternalLink aria-hidden="true" className="fg-icon-16" />
+                Open setup
+              </Button>
+            }
+          />
+          <ListRow
+            title="Open full dashboard"
+            sub="Stats, reports, settings, and your data in a full tab."
+            actions={
+              <Button
+                variant="quiet"
+                size="dense"
+                onClick={() => {
+                  if (typeof chrome !== "undefined" && chrome.tabs?.create) {
+                    void chrome.tabs.create({
+                      url: chrome.runtime.getURL("dashboard.html"),
+                    });
+                  }
+                }}
+              >
+                <ExternalLink aria-hidden="true" className="fg-icon-16" />
+                Open
+              </Button>
+            }
+          />
+        </div>
       </Card>
 
       {/* density is applied by the host surface; kept for the shared-view rule */}

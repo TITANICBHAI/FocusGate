@@ -4,6 +4,20 @@ import type {
 } from "./types.ts";
 
 export const PBKDF2_ITERATIONS = 600_000;
+/**
+ * One password guards everything. A password someone types is 8 to 28
+ * characters: long enough to be hard to guess, short enough to keep in a
+ * password manager. Only choosing a password is limited like this. Checking
+ * one is not, so a longer password saved under the earlier 8 to 64 rule still
+ * unlocks.
+ */
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 28;
+/**
+ * A generated password is 20 to 28 characters, from an alphabet with no
+ * look-alikes (no 0, 1, I, O, i, l or o). That is hard to guess and hard to
+ * type in a hurry, and it still fits the limits above.
+ */
 export const PASSWORD_ALPHABET =
   "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 export const GENERATED_PASSWORD_MIN_LENGTH = 20;
@@ -68,8 +82,11 @@ export async function hashPassword(
   password: string,
   iterations = PBKDF2_ITERATIONS,
 ): Promise<PasswordRecord> {
-  if (password.length < 8 || password.length > 64) {
-    throw new RangeError("Password must be between 8 and 64 characters.");
+  if (
+    password.length < PASSWORD_MIN_LENGTH ||
+    password.length > PASSWORD_MAX_LENGTH
+  ) {
+    throw new RangeError(passwordLengthMessage());
   }
   const salt = cryptoApi().getRandomValues(new Uint8Array(16));
   const hash = await derive(password, salt, iterations);
@@ -122,6 +139,15 @@ function randomInteger(maxExclusive: number): number {
   return sample[0]! % maxExclusive;
 }
 
+function passwordLengthMessage(): string {
+  return `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters.`;
+}
+
+/**
+ * A random password of 20 to 28 characters, drawn with the browser's secure
+ * random source. Bytes that would favour some characters are thrown away, so
+ * every character of the alphabet is equally likely.
+ */
 export function generatePassword(): string {
   const crypto = cryptoApi();
   const length =

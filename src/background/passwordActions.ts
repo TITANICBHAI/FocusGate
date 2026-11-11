@@ -1,6 +1,8 @@
 import { guard } from "../shared/gating.ts";
 import {
   hashPassword as hashPasswordDefault,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   verifyPassword as verifyPasswordDefault,
 } from "../shared/password.ts";
 import type {
@@ -127,13 +129,13 @@ export function createPasswordActionService(
       if (nextPassword !== null) {
         if (
           typeof nextPassword !== "string" ||
-          nextPassword.length < 8 ||
-          nextPassword.length > 64
+          nextPassword.length < PASSWORD_MIN_LENGTH ||
+          nextPassword.length > PASSWORD_MAX_LENGTH
         ) {
           return {
             ok: false,
             code: "INVALID_PASSWORD",
-            message: "Use a password between 8 and 64 characters.",
+            message: `Use a password between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters.`,
           };
         }
         try {

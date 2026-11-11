@@ -105,6 +105,14 @@ describe("panel structure", () => {
     expect(main.match(/role="tabpanel"/g) ?? []).toHaveLength(3);
   });
 
+  it("puts the status strip inside the scrolling area, before the first tab panel", () => {
+    const before = html.slice(0, html.indexOf("<main"));
+    const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+    expect(before).not.toContain("strip");
+    expect(main).toContain("strip");
+    expect(main.indexOf("strip")).toBeLessThan(main.indexOf('role="tabpanel"'));
+  });
+
   it("links every tab to a panel that exists, and back", () => {
     for (const name of ["focus", "rules", "you"]) {
       expect(html).toContain(`aria-controls="panel-${name}-panel"`);

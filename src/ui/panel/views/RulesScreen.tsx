@@ -26,6 +26,7 @@ import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import { weakeningLockReason } from "../../lib/guardState.ts";
 import { aliasesForSiteDisplay } from "../../lib/aliasPresentation.ts";
+import { PasswordNudge } from "./PasswordNudge.tsx";
 import { ScheduleSection } from "./ScheduleSection.tsx";
 
 export type RuleSection = "sites" | "keywords" | "schedule" | "limits";
@@ -61,6 +62,7 @@ export function RulesScreen({
   return (
     <div className="fg-stack">
       <UrlCheckRow state={state} />
+      <PasswordNudge state={state} density={density} />
       {lockedReason && (
         <p id="lock-reason" className="fg-field__helper" role="status">
           {lockedReason} Additions that strengthen protection remain available.

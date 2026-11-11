@@ -4,6 +4,8 @@ import {
   Chip,
   Field,
   IconButton,
+  InfoButton,
+  InfoNote,
   PasswordField,
   ProgressRing,
   Segmented,
@@ -42,6 +44,23 @@ describe("accessible UI primitives", () => {
 
     expect(markup).toContain('aria-describedby="password-helper"');
     expect(markup).toContain('id="password-helper"');
+  });
+
+  it("names the show-or-hide button for the password it hides, or for another secret when told to", () => {
+    const render = (secretName?: string) =>
+      renderToStaticMarkup(
+        <PasswordField
+          id="password"
+          label="Password"
+          value=""
+          onChange={() => undefined}
+          {...(secretName ? { secretName } : {})}
+        />,
+      );
+
+    expect(render()).toContain('aria-label="Hide password"');
+    expect(render()).not.toMatch(/aria-label="[^"]*\bPIN\b/);
+    expect(render("recovery phrase")).toContain('aria-label="Hide recovery phrase"');
   });
 
   it("connects a toggle's description to its switch", () => {
@@ -95,6 +114,28 @@ describe("accessible UI primitives", () => {
     expect(markup).toMatch(/aria-pressed="false"[^>]*>Always<\/button>/);
   });
 
+  it("puts an action beside a segmented control's label only when one is given", () => {
+    const options = [
+      { value: "a", label: "A" },
+      { value: "b", label: "B" },
+    ];
+    const plain = renderToStaticMarkup(
+      <Segmented label="Pick" options={options} value="a" onChange={() => undefined} />,
+    );
+    expect(plain).not.toContain("fg-info-row");
+    const withAction = renderToStaticMarkup(
+      <Segmented
+        label="Pick"
+        options={options}
+        value="a"
+        onChange={() => undefined}
+        labelAction={<button type="button">More</button>}
+      />,
+    );
+    expect(withAction).toMatch(/fg-info-row[^>]*>[\s\S]*Pick[\s\S]*More[\s\S]*fg-seg/);
+    expect(withAction).toContain('role="group" aria-label="Pick"');
+  });
+
   it("renders a named modal dialog with an accessible close control", () => {
     const markup = renderToStaticMarkup(
       <Modal
@@ -113,6 +154,41 @@ describe("accessible UI primitives", () => {
     expect(markup).toContain('aria-describedby="');
     expect(markup).toContain('aria-label="Close dialog"');
     expect(markup).toContain("Confirm change");
+  });
+});
+
+describe("info button and note", () => {
+  const closed = { open: false, id: "tip", toggle: () => undefined };
+  const open = { open: true, id: "tip", toggle: () => undefined };
+
+  it("gives the button a name, its state and the note it controls", () => {
+    const markup = renderToStaticMarkup(<InfoButton label="What does this mean?" info={closed} />);
+    expect(markup).toContain('aria-label="What does this mean?"');
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('aria-controls="tip"');
+    expect(renderToStaticMarkup(<InfoButton label="x" info={open} />)).toContain(
+      'aria-expanded="true"',
+    );
+  });
+
+  it("shows the note only while it is open, as a real element and not a tooltip", () => {
+    expect(renderToStaticMarkup(<InfoNote info={closed}>Hello</InfoNote>)).toBe("");
+    const markup = renderToStaticMarkup(<InfoNote info={open}>Hello</InfoNote>);
+    expect(markup).toContain('id="tip"');
+    expect(markup).toContain('role="note"');
+    expect(markup).toContain("Hello");
+    expect(markup).not.toContain("title=");
+  });
+
+  it("adds a dismiss button only when the note can be dismissed", () => {
+    const plain = renderToStaticMarkup(<InfoNote info={open}>Hello</InfoNote>);
+    expect(plain).not.toContain("Dismiss");
+    const dismissible = renderToStaticMarkup(
+      <InfoNote info={open} onDismiss={() => undefined} dismissLabel="Hide this hint">
+        Hello
+      </InfoNote>,
+    );
+    expect(dismissible).toContain('aria-label="Hide this hint"');
   });
 });
 

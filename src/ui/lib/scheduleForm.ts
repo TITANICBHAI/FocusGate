@@ -7,6 +7,29 @@ import { weakeningLockReason } from "./guardState.ts";
 /** What a schedule blocks: the Focus list, its own sites, or both. */
 export type SiteTarget = "list" | "own" | "both";
 
+/** The choices in the form, with the sentence the "i" button shows for each. */
+export const TARGET_CHOICES: ReadonlyArray<{
+  value: SiteTarget;
+  label: string;
+  help: string;
+}> = [
+  {
+    value: "list",
+    label: "My Focus list",
+    help: "Blocks the sites on your Focus list. You keep that list in Rules, then Sites.",
+  },
+  {
+    value: "own",
+    label: "Only these sites",
+    help: "Blocks only the sites you type in this schedule. Your Focus list is not used.",
+  },
+  {
+    value: "both",
+    label: "My Focus list and these sites",
+    help: "Blocks your Focus list and the sites you type in this schedule.",
+  },
+];
+
 export interface ScheduleDraft {
   name: string;
   days: number[];

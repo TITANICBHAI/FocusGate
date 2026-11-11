@@ -158,6 +158,20 @@ describe("background-owned session service", () => {
     expect(harness.notices.map(({ kind }) => kind)).toContain("session_locked");
   });
 
+  it("tells a wrong Strict password it is wrong, in those words", async () => {
+    const initial = createDefaultState();
+    initial.password = { algo: "sha256-legacy", hash: "fixture" };
+    const harness = createHarness(initial);
+    await harness.service.start({ durationMin: 1, lockLevel: "strict" });
+
+    expect(await harness.service.stop({ password: "wrong" })).toMatchObject({
+      ok: false,
+      code: "BAD_PASSWORD",
+      message: "That password is not correct.",
+    });
+    expect(harness.getState().session.status).toBe("work");
+  });
+
   it("checks Strict passwords in the service and stops only after verification", async () => {
     const initial = createDefaultState();
     initial.password = { algo: "sha256-legacy", hash: "fixture" };

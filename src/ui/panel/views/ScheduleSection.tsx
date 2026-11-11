@@ -8,7 +8,10 @@ import {
   Chip,
   EmptyState,
   Field,
+  InfoButton,
+  InfoNote,
   Sheet,
+  useInfoState,
 } from "../../components/primitives.tsx";
 import { ConfirmDialog, useToast } from "../../components/feedback.tsx";
 import { WeekStrip } from "../../components/WeekStrip.tsx";
@@ -16,12 +19,13 @@ import { uiStorageStore } from "../../hooks/storageStore.ts";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import {
   SCHEDULE_TEMPLATES,
+  TARGET_CHOICES,
   blocksNothing,
   draftFromSchedule,
   emptyDraft,
   planScheduleSave,
 } from "../../lib/scheduleForm.ts";
-import type { ScheduleDraft, SiteTarget } from "../../lib/scheduleForm.ts";
+import type { ScheduleDraft } from "../../lib/scheduleForm.ts";
 import { scheduleStatus } from "../../lib/scheduleStatus.ts";
 import {
   describeTargets,
@@ -40,16 +44,6 @@ const DAY_BUTTONS = [
   { day: 6, label: "Sat" },
   { day: 0, label: "Sun" },
 ] as const;
-
-const DAY_PRESETS: ReadonlyArray<{ label: string; days: number[] }> = [
-  { label: "Weekdays", days: [1, 2, 3, 4, 5] },
-  { label: "Weekends", days: [0, 6] },
-  { label: "Every day", days: [0, 1, 2, 3, 4, 5, 6] },
-];
-
-function sameDays(a: readonly number[], b: readonly number[]): boolean {
-  return a.length === b.length && [...a].sort().join() === [...b].sort().join();
-}
 
 function isOnNow(schedule: Schedule, nowMs: number): boolean {
   try {
@@ -239,13 +233,20 @@ function ScheduleRow({
   );
 }
 
-const TARGET_OPTIONS: ReadonlyArray<{ value: SiteTarget; label: string }> = [
-  { value: "list", label: "My Focus list" },
-  { value: "own", label: "Only these sites" },
-  { value: "both", label: "My Focus list and these sites" },
-];
+/** What each "What should it block?" choice does, shown by the "i" button. */
+export function TargetHelp() {
+  return (
+    <ul className="fg-info-note__list">
+      {TARGET_CHOICES.map((choice) => (
+        <li key={choice.value}>
+          <strong>{choice.label}.</strong> {choice.help}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-function ScheduleSheet({
+export function ScheduleSheet({
   state,
   editingId,
   initial,
@@ -262,6 +263,7 @@ function ScheduleSheet({
   const [draft, setDraft] = useState<ScheduleDraft>(initial);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const targetInfo = useInfoState();
   const editing = editingId !== null;
   const patch = (changes: Partial<ScheduleDraft>) => {
     setDraft((current) => ({ ...current, ...changes }));
@@ -360,19 +362,6 @@ function ScheduleSheet({
               Days
             </span>
             <div className="fg-wrap">
-              {DAY_PRESETS.map((preset) => (
-                <Button
-                  key={preset.label}
-                  variant="secondary"
-                  size="dense"
-                  aria-pressed={sameDays(draft.days, preset.days)}
-                  onClick={() => patch({ days: [...preset.days] })}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-            <div className="fg-wrap">
               {DAY_BUTTONS.map(({ day, label }) => {
                 const on = draft.days.includes(day);
                 return (
@@ -422,9 +411,17 @@ function ScheduleSheet({
             </p>
           )}
 
-          <fieldset className="fg-sched__fieldset">
-            <legend className="fg-field__label">What should it block?</legend>
-            {TARGET_OPTIONS.map((option) => (
+          <div className="fg-sched__fieldset" role="group" aria-labelledby="schedule-target-label">
+            <div className="fg-info-row">
+              <span className="fg-field__label" id="schedule-target-label">
+                What should it block?
+              </span>
+              <InfoButton label="What do these choices mean?" info={targetInfo} />
+            </div>
+            <InfoNote info={targetInfo}>
+              <TargetHelp />
+            </InfoNote>
+            {TARGET_CHOICES.map((option) => (
               <label key={option.value} className="fg-sched__radio">
                 <input
                   type="radio"
@@ -444,7 +441,7 @@ function ScheduleSheet({
                 </span>
               </label>
             ))}
-          </fieldset>
+          </div>
 
           {usesOwnSites && (
             <Field

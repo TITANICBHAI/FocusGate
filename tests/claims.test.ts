@@ -99,10 +99,12 @@ describe("C29/C30 — password and lock copy", () => {
 });
 
 describe("C31 — password generator and legacy upgrade", () => {
-  it("generates 20–28 character passwords from crypto.getRandomValues", () => {
+  it("generates 20–28 character passwords from crypto.getRandomValues, and takes typed ones of 8–28", () => {
     const password = read("src/shared/password.ts");
     expect(password).toContain("GENERATED_PASSWORD_MIN_LENGTH = 20");
     expect(password).toContain("GENERATED_PASSWORD_MAX_LENGTH = 28");
+    expect(password).toMatch(/const PASSWORD_MIN_LENGTH = 8\b/);
+    expect(password).toMatch(/const PASSWORD_MAX_LENGTH = 28\b/);
     expect(password).toContain("crypto.getRandomValues");
     // The legacy verify/upgrade path is behaviour-tested in
     // tests/shared/password.test.ts (WP6.AC3).

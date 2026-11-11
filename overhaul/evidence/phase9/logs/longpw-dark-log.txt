@@ -1,0 +1,14 @@
+PASS 400px: 28 characters (WWW...) never run past the sheet or the page  :: {"text":28,"lines":1,"width":302,"scrollW":302,"clientW":302,"docScrollW":400,"innerW":400,"font":"ui-monospace","wrap":"anywhere","right":351}
+PASS 400px: 28 characters (mmm...) never run past the sheet or the page  :: {"text":28,"lines":1,"width":302,"scrollW":302,"clientW":302,"docScrollW":400,"innerW":400,"font":"ui-monospace","wrap":"anywhere","right":351}
+PASS 400px: 28 characters (kT7...) never run past the sheet or the page  :: {"text":28,"lines":1,"width":302,"scrollW":302,"clientW":302,"docScrollW":400,"innerW":400,"font":"ui-monospace","wrap":"anywhere","right":351}
+PASS 400px: no page errors
+PASS 320px: 28 characters (WWW...) never run past the sheet or the page  :: {"text":28,"lines":2,"width":262,"scrollW":262,"clientW":262,"docScrollW":320,"innerW":320,"font":"ui-monospace","wrap":"anywhere","right":291}
+PASS 320px: 28 characters (mmm...) never run past the sheet or the page  :: {"text":28,"lines":2,"width":262,"scrollW":262,"clientW":262,"docScrollW":320,"innerW":320,"font":"ui-monospace","wrap":"anywhere","right":291}
+PASS 320px: 28 characters (kT7...) never run past the sheet or the page  :: {"text":28,"lines":2,"width":262,"scrollW":262,"clientW":262,"docScrollW":320,"innerW":320,"font":"ui-monospace","wrap":"anywhere","right":291}
+PASS 320px: no page errors
+PASS 200px: 28 characters (WWW...) never run past the sheet or the page  :: {"text":28,"lines":3,"width":142,"scrollW":142,"clientW":142,"docScrollW":200,"innerW":200,"font":"ui-monospace","wrap":"anywhere","right":171}
+PASS 200px: 28 characters (mmm...) never run past the sheet or the page  :: {"text":28,"lines":3,"width":142,"scrollW":142,"clientW":142,"docScrollW":200,"innerW":200,"font":"ui-monospace","wrap":"anywhere","right":171}
+PASS 200px: 28 characters (kT7...) never run past the sheet or the page  :: {"text":28,"lines":3,"width":142,"scrollW":142,"clientW":142,"docScrollW":200,"innerW":200,"font":"ui-monospace","wrap":"anywhere","right":171}
+PASS 200px: no page errors
+
+12 passed, 0 failed

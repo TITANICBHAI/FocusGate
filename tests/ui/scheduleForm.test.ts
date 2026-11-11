@@ -3,6 +3,7 @@ import { createDefaultState } from "../../src/shared/defaults.ts";
 import type { AppState, Schedule } from "../../src/shared/types.ts";
 import {
   SCHEDULE_TEMPLATES,
+  TARGET_CHOICES,
   blocksNothing,
   draftFromSchedule,
   emptyDraft,
@@ -32,6 +33,22 @@ function stateWith(schedules: Schedule[], overrides: Partial<AppState> = {}): Ap
 }
 
 const newId = () => "new-id";
+
+describe("target choices", () => {
+  it("lists the three targets in order, each with a plain sentence that says what it blocks", () => {
+    expect(TARGET_CHOICES.map((choice) => choice.value)).toEqual(["list", "own", "both"]);
+    expect(TARGET_CHOICES.map((choice) => choice.label)).toEqual([
+      "My Focus list",
+      "Only these sites",
+      "My Focus list and these sites",
+    ]);
+    for (const choice of TARGET_CHOICES) {
+      expect(choice.help.endsWith(".")).toBe(true);
+      expect(choice.help.length).toBeLessThanOrEqual(110);
+    }
+    expect(TARGET_CHOICES[1]?.help).toContain("Your Focus list is not used");
+  });
+});
 
 describe("targets", () => {
   it("maps stored fields to a target and back", () => {

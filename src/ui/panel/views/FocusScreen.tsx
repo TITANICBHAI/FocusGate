@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { CalendarPlus, ShieldX } from "lucide-react";
 import { normalizeDomain } from "../../../shared/domains.ts";
@@ -24,13 +24,18 @@ import {
   EmptyState,
   Field,
   HeroTimer,
+  InfoButton,
+  InfoNote,
   ListRow,
   Progress,
   Segmented,
   Sheet,
   Stat,
 } from "../../components/primitives.tsx";
+import type { InfoState } from "../../components/primitives.tsx";
 import { Modal, useToast } from "../../components/feedback.tsx";
+import { useHiddenHints } from "../../hooks/useHiddenHints.ts";
+import { useStrictPassword } from "../../hooks/useStrictPassword.tsx";
 import { sendSessionMessage } from "../../lib/sessionActions.ts";
 import { sendStandaloneMessage } from "../../lib/standaloneActions.ts";
 import { blockScopeSummary } from "../../lib/blockSummary.ts";
@@ -62,11 +67,35 @@ const REMOVAL_RULE: Record<LockLevel, string> = {
   commitment: "You can add rules, but not remove or relax them until the session ends.",
 };
 
-/** The Strict stop sentence, shared by the lock explainer and the stop dialog. */
+/** The Strict stop sentence, shared by the lock hint and the stop dialog. */
 export function strictStopSummary(hasPassword: boolean): string {
   return hasPassword
     ? "Stopping early needs your password. You can still disable or remove the extension."
     : "Stopping early needs the phrase “I GIVE UP” and a 15-second wait. You can still disable or remove the extension.";
+}
+
+/**
+ * What the chosen lock means. Only the chosen one is shown, so the person is
+ * not asked to read three paragraphs, and it can be hidden for good.
+ */
+export function LockHint({
+  level,
+  hasPassword,
+  info,
+  onHide,
+}: {
+  level: LockLevel;
+  hasPassword: boolean;
+  info: InfoState;
+  onHide(): void;
+}) {
+  const label = LOCK_OPTIONS.find((option) => option.value === level)?.label ?? level;
+  const stopRule = level === "strict" ? strictStopSummary(hasPassword) : LOCK_SUMMARY[level];
+  return (
+    <InfoNote info={info} onDismiss={onHide} dismissLabel="Hide this hint">
+      <strong>{label}.</strong> {`${stopRule} ${REMOVAL_RULE[level]}`}
+    </InfoNote>
+  );
 }
 
 function standaloneSiteEntries(value: string): string[] {
@@ -106,6 +135,15 @@ export function FocusScreen({
   );
   const [durationError, setDurationError] = useState("");
   const [lockLevel, setLockLevel] = useState<LockLevel>("none");
+  const hints = useHiddenHints();
+  const strictPassword = useStrictPassword(state.password !== null);
+  const lockHintId = useId();
+  const lockHintKey = `lock-${lockLevel}`;
+  const lockInfo: InfoState = {
+    open: !hints.isHidden(lockHintKey),
+    id: lockHintId,
+    toggle: () => hints.setHidden(lockHintKey, !hints.isHidden(lockHintKey)),
+  };
   const [stopOpen, setStopOpen] = useState(false);
   const [stopCredential, setStopCredential] = useState("");
   const [waitReady, setWaitReady] = useState(true);
@@ -239,6 +277,7 @@ export function FocusScreen({
     }
     const durationMin = validDuration();
     if (durationMin === null) return;
+    if (!(await strictPassword.ask(lockLevel))) return;
     const reply = await sendSessionMessage({
       type: "session/start",
       durationMin,
@@ -257,6 +296,7 @@ export function FocusScreen({
       showToast("End the current session before starting a task.", "info");
       return;
     }
+    if (!(await strictPassword.ask(focusTask.lockLevel))) return;
     const reply = await sendSessionMessage({
       type: "session/start",
       durationMin: taskDurationForStart(focusTask, Date.now()),
@@ -515,25 +555,14 @@ export function FocusScreen({
             options={LOCK_OPTIONS}
             value={lockLevel}
             onChange={setLockLevel}
+            labelAction={<InfoButton label="What does this lock do?" info={lockInfo} />}
           />
-          <ul className="fg-lock-list" aria-label="What each lock means">
-            {LOCK_OPTIONS.map((option) => {
-              const stopRule =
-                option.value === "strict"
-                  ? strictStopSummary(hasPassword)
-                  : LOCK_SUMMARY[option.value];
-              return (
-                <li
-                  key={option.value}
-                  className="fg-lock-list__row"
-                  aria-current={lockLevel === option.value ? "true" : undefined}
-                >
-                  <strong>{option.label}</strong>
-                  <span>{`${stopRule} ${REMOVAL_RULE[option.value]}`}</span>
-                </li>
-              );
-            })}
-          </ul>
+          <LockHint
+            level={lockLevel}
+            hasPassword={hasPassword}
+            info={lockInfo}
+            onHide={() => hints.setHidden(lockHintKey, true)}
+          />
           <Button
             variant="primary"
             size="jumbo"
@@ -857,6 +886,8 @@ export function FocusScreen({
           )}
         </form>
       </Sheet>
+
+      {strictPassword.sheet}
 
       {/* density is applied by the host surface; kept for the shared-view rule */}
       <span hidden data-density={density} />

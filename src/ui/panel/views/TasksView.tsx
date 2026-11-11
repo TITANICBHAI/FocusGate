@@ -20,6 +20,7 @@ import {
 import { ConfirmDialog, Modal, useToast } from "../../components/feedback.tsx";
 import { sendSessionMessage } from "../../lib/sessionActions.ts";
 import { uiStorageStore } from "../../hooks/storageStore.ts";
+import { useStrictPassword } from "../../hooks/useStrictPassword.tsx";
 import { storageWriteErrorMessage } from "../../lib/guardPrompts.ts";
 import {
   generateRecurringForToday,
@@ -58,6 +59,7 @@ function notifyTasksChanged(): void {
 
 export function TasksView({ state }: { state: AppState }) {
   const showToast = useToast();
+  const strictPassword = useStrictPassword(state.password !== null);
   const [addOpen, setAddOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -248,6 +250,8 @@ export function TasksView({ state }: { state: AppState }) {
       showToast("End the current session before starting a task.", "info");
       return;
     }
+    // Ask before anything changes, so cancelling leaves the task as it was.
+    if (!(await strictPassword.ask(task.lockLevel))) return;
     try {
       if (task.completed) {
         await uiStorageStore.set("tasks", (latest) =>
@@ -651,6 +655,8 @@ export function TasksView({ state }: { state: AppState }) {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => void removeTask()}
       />
+
+      {strictPassword.sheet}
     </section>
   );
 }
