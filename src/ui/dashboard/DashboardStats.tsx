@@ -3,10 +3,13 @@ import {
   aggregateStats,
   calculateFocusScore,
   calculateStreaks,
+  dayGoalProgress,
   focusMinutesPerDay,
   formatDuration,
   getFocusInsights,
+  goalFocusMs,
   lastNDaysRange,
+  stoppedEarlyText,
   todayAllowanceUsage,
 } from "../../shared/stats.ts";
 import { localDateKey } from "../../shared/time.ts";
@@ -71,14 +74,14 @@ export function DashboardStats({
     (task) => task.scheduledDate === todayKey,
   ).length;
   const focusScore = calculateFocusScore({
-    focusMs: today?.focusMs ?? 0,
+    focusMs: goalFocusMs(today),
     dailyGoalMin: state.settings.dailyGoalMin,
     tasksCompleted: today?.tasksCompleted ?? 0,
     tasksPlanned: tasksPlannedToday,
     streak: streaks.current,
   });
-  const goalMs = Math.max(1, state.settings.dailyGoalMin) * 60_000;
-  const goalProgress = Math.min(1, (today?.focusMs ?? 0) / goalMs);
+  const goalProgress = dayGoalProgress(today, state.settings.dailyGoalMin);
+  const stoppedLine = stoppedEarlyText(today);
 
   const weekRange = lastNDaysRange(now, 7);
   const chart = focusMinutesPerDay(state.dayStats, weekRange.startDateKey, weekRange.endDateKey);
@@ -107,6 +110,7 @@ export function DashboardStats({
           <p className="fg-hero__sub">
             {Math.round(goalProgress * 100)}% of your {state.settings.dailyGoalMin} min goal
           </p>
+          {stoppedLine && <p className="fg-hero__sub">{stoppedLine}</p>}
         </div>
       </div>
 

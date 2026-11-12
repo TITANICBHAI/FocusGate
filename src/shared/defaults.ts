@@ -69,6 +69,7 @@ export const DEFAULT_STATE: AppState = {
       achievements: true,
       endOfDay: false,
       allowanceAlerts: true,
+      chime: true,
     },
     reminders: {
       preStartMin: [10, 5, 1],

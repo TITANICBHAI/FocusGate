@@ -1,0 +1,13 @@
+Done card pairs not covered by contrast-check.mjs, computed with the WCAG formula from the tokens in src/ui/styles.css
+target: 4.5 for text, 3 for the ring stroke
+
+PASS light pill text on mint      #131a2b on #d2eee0  14.08  (target 4.5)
+PASS dark  pill text on mint      #e9edf6 on #123628  11.31  (target 4.5)
+PASS light ring stroke on card    #0a704c on #ffffff  6.11  (target 3.0)
+PASS dark  ring stroke on card    #4bd6a0 on #151c2b  9.27  (target 3.0)
+PASS light ring percent on card   #131a2b on #ffffff  17.35  (target 4.5)
+PASS dark  ring percent on card   #e9edf6 on #151c2b  14.53  (target 4.5)
+PASS light muted line on card     #4a5873 on #ffffff  7.16  (target 4.5)
+PASS dark  muted line on card     #9aa6bd on #151c2b  6.95  (target 4.5)
+
+all pairs meet their target

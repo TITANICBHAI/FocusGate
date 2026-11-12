@@ -306,7 +306,7 @@ function isSettings(value: unknown): value is Settings {
       "achievements",
       "endOfDay",
       "allowanceAlerts",
-    ]) &&
+    ], ["chime"]) &&
     Object.values(notifications).every((item) => typeof item === "boolean") &&
     isRecord(reminders) &&
     hasKeys(reminders, [
@@ -402,10 +402,11 @@ function isDayStats(value: unknown): value is DayStats {
         "blocksByDomain",
         "tasksCompleted",
       ],
-      ["mood", "note"],
+      ["mood", "note", "stoppedMs"],
     ) &&
     isString(value.dateKey, 10) &&
     isFiniteNumber(value.focusMs) &&
+    (value.stoppedMs === undefined || isFiniteNumber(value.stoppedMs)) &&
     isFiniteNumber(value.sessionsCompleted) &&
     isFiniteNumber(value.sessionsAbandoned) &&
     isFiniteNumber(value.blocks) &&

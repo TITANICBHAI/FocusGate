@@ -34,10 +34,39 @@ describe("session notifications", () => {
           type: "basic",
           iconUrl: "focusgate.png",
           title: "FocusGate",
-          message: "25 min done — nice work.",
+          message: "Nice. 25 min done.",
         },
       },
     ]);
+  });
+});
+
+describe("the session-end notice wording", () => {
+  async function messageFor(notice: SessionNotice): Promise<string | undefined> {
+    const created: string[] = [];
+    await showSessionNotice({ create: (_id, options) => void created.push(options.message) }, notice);
+    return created[0];
+  }
+
+  it("is warm and says how long the break is when one has started", async () => {
+    expect(await messageFor({ kind: "session_completed", elapsedMs: 25 * 60_000, breakMin: 5 })).toBe(
+      "Nice. 25 min done. Take 5.",
+    );
+  });
+
+  it("leaves out the break when there is none", async () => {
+    expect(await messageFor({ kind: "session_completed", elapsedMs: 45 * 60_000 })).toBe("Nice. 45 min done.");
+  });
+
+  it("puts the debrief after the warm part", async () => {
+    expect(
+      await messageFor({
+        kind: "session_completed",
+        elapsedMs: 25 * 60_000,
+        breakMin: 5,
+        debrief: { blockedAttempts: 0, headline: "Clean session — no blocked attempts" },
+      }),
+    ).toBe("Nice. 25 min done. Take 5. Clean session — no blocked attempts.");
   });
 });
 

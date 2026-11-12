@@ -1,3 +1,4 @@
+import { goalFocusMs } from "./stats.ts";
 import type { AchievementRecord, DayStats, SessionRecord } from "./types.ts";
 
 export interface AchievementDefinition {
@@ -73,7 +74,7 @@ export function evaluateAchievements(input: AchievementInput): AchievementRecord
   if (cleanSessions.length >= 10) unlock("RESISTANCE_10");
 
   for (const day of Object.values(input.dayStats)) {
-    if (day.focusMs >= 60 * MINUTE_MS && day.blocks === 0) {
+    if (goalFocusMs(day) >= 60 * MINUTE_MS && day.blocks === 0) {
       unlock("QUIET_WIN");
       break;
     }

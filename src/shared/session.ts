@@ -212,15 +212,15 @@ export function addRecordToDayStats(
     blocksByDomain: {},
     tasksCompleted: 0,
   };
-  const focusMs =
-    record.status === "interrupted"
-      ? 0
-      : Math.max(0, record.elapsedMs - coveredGapMs(record));
+  const focusMs = countedFocusMs(record);
+  const stoppedMs =
+    record.status === "abandoned" ? (current.stoppedMs ?? 0) + focusMs : current.stoppedMs;
   return {
     ...dayStats,
     [dateKey]: {
       ...current,
       focusMs: current.focusMs + focusMs,
+      ...(stoppedMs === undefined ? {} : { stoppedMs }),
       sessionsCompleted:
         current.sessionsCompleted + (record.status === "completed" ? 1 : 0),
       sessionsAbandoned:
@@ -289,6 +289,13 @@ function appendMissedTimeGap(
     }
   }
   return { ...session, gaps: merged };
+}
+
+/** The focused minutes a record adds to the day: none if interrupted, and not the time the browser was closed. */
+export function countedFocusMs(record: SessionRecord): number {
+  return record.status === "interrupted"
+    ? 0
+    : Math.max(0, record.elapsedMs - coveredGapMs(record));
 }
 
 function coveredGapMs(record: SessionRecord): number {

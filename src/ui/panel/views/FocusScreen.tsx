@@ -9,7 +9,8 @@ import {
   taskWindowEnd,
   taskWindowStart,
 } from "../../../shared/taskScheduling.ts";
-import { calculateStreaks } from "../../../shared/stats.ts";
+import { buildDoneCard, shouldChime } from "../../../shared/celebration.ts";
+import { calculateStreaks, dayGoalProgress, stoppedEarlyText } from "../../../shared/stats.ts";
 import type { AppState, LockLevel } from "../../../shared/types.ts";
 import {
   fromLocalDateTimeInput,
@@ -33,12 +34,16 @@ import {
   Stat,
 } from "../../components/primitives.tsx";
 import type { InfoState } from "../../components/primitives.tsx";
+import { DoneCardView } from "../../components/DoneCard.tsx";
 import { Modal, useToast } from "../../components/feedback.tsx";
 import { useHiddenHints } from "../../hooks/useHiddenHints.ts";
 import { useStrictPassword } from "../../hooks/useStrictPassword.tsx";
 import { sendSessionMessage } from "../../lib/sessionActions.ts";
 import { sendStandaloneMessage } from "../../lib/standaloneActions.ts";
 import { blockScopeSummary } from "../../lib/blockSummary.ts";
+import { playChime } from "../../lib/chime.ts";
+import { markDoneChimed, markDoneDismissed, readDoneSeen } from "../../lib/doneSeen.ts";
+import { STOP_EARLY_NOTICE } from "../../lib/stopNotice.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;
 const STANDALONE_EXPIRY_PRESETS = [
@@ -222,8 +227,28 @@ export function FocusScreen({
 
   const today = state.dayStats[todayKey];
   const streaks = calculateStreaks(state.sessionHistory, new Date(now));
-  const goalMs = Math.max(1, state.settings.dailyGoalMin) * 60_000;
-  const goalPct = Math.min(1, (today?.focusMs ?? 0) / goalMs);
+  const goalPct = dayGoalProgress(today, state.settings.dailyGoalMin);
+  const stoppedLine = stoppedEarlyText(today);
+
+  // The card for the session that just ended. It rings the chime once, when it
+  // is fresh and the setting is on, and stays until it is dismissed.
+  const [doneSeen, setDoneSeen] = useState(() => readDoneSeen());
+  const card = buildDoneCard(state, now);
+  const showDoneCard = card !== null && doneSeen.dismissed !== card.recordId;
+  const chimeEnabled = state.settings.notifications.chime;
+  useEffect(() => {
+    if (!card || card.kind !== "completed") return;
+    const ring = shouldChime({
+      enabled: chimeEnabled,
+      recordId: card.recordId,
+      endedAt: card.endedAt,
+      now: Date.now(),
+      chimedId: readDoneSeen().chimed,
+    });
+    if (!ring) return;
+    setDoneSeen(markDoneChimed(card.recordId));
+    playChime();
+  }, [card?.recordId, card?.kind, card?.endedAt, chimeEnabled]);
 
   const standaloneUntil = fromLocalDateTimeInput(standaloneUntilText);
   const standaloneEntries = useMemo(
@@ -497,6 +522,12 @@ export function FocusScreen({
 
   return (
     <div className="fg-stack">
+      {card && showDoneCard && (
+        <DoneCardView
+          card={card}
+          onDismiss={() => setDoneSeen(markDoneDismissed(card.recordId))}
+        />
+      )}
       <HeroTimer
         label={heroLabel}
         seconds={heroSeconds}
@@ -634,6 +665,7 @@ export function FocusScreen({
         <div className="fg-hero__progress">
           <Progress value={goalPct} label="Daily goal" />
         </div>
+        {stoppedLine && <p className="fg-hero__meta">{stoppedLine}</p>}
       </Card>
 
       <Card
@@ -774,6 +806,7 @@ export function FocusScreen({
         }
       >
         <form id="stop-session-form" className="fg-stack" onSubmit={submitStop}>
+          <p className="fg-card__desc">{STOP_EARLY_NOTICE}</p>
           {state.session.lockLevel !== "none" && (
             <Field
               id="stop-credential"

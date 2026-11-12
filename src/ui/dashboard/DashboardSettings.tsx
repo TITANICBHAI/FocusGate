@@ -6,6 +6,7 @@ import type { AppState } from "../../shared/types.ts";
 import { Button, Card, Field, SectionLabel, Toggle } from "../components/primitives.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
+import { clearHiddenHints } from "../lib/hiddenHints.ts";
 import { PasswordSettings } from "../settings/PasswordSettings.tsx";
 import { storageWriteErrorMessage } from "../lib/guardPrompts.ts";
 import { CONTENT_FILTER_OPTIONS } from "../../content/sites.ts";
@@ -400,7 +401,9 @@ export function DashboardSettings({ state }: { state: AppState }) {
 
       <SectionLabel>Alerts</SectionLabel>
       <Card title="Notifications">
-        {Object.entries(state.settings.notifications).map(([key, enabled]) => (
+        {Object.entries(state.settings.notifications)
+          .filter(([key]) => key !== "chime")
+          .map(([key, enabled]) => (
           <Toggle
             key={key}
             label={notificationLabel(key)}
@@ -422,6 +425,19 @@ export function DashboardSettings({ state }: { state: AppState }) {
             }}
           />
         ))}
+        <Toggle
+          label="Soft chime when a session ends"
+          checked={state.settings.notifications.chime}
+          onCheckedChange={(value) =>
+            void updateSettings(
+              (current) => ({
+                ...current,
+                notifications: { ...current.notifications, chime: value },
+              }),
+              "Chime setting saved.",
+            )
+          }
+        />
       </Card>
       <Card title="Task reminder timing">
         <Field
@@ -592,6 +608,17 @@ export function DashboardSettings({ state }: { state: AppState }) {
         </p>
       </Card>
 
+      <Card title="Hidden messages">
+        <p className="fg-card__desc">Bring back the tips and notes you hid with an X or Not now.</p>
+        <Button
+          onClick={() => {
+            clearHiddenHints();
+            showToast("Hidden messages are back.", "success");
+          }}
+        >
+          Show hidden messages
+        </Button>
+      </Card>
       <SectionLabel>Shortcuts</SectionLabel>
       <Card title="Keyboard shortcuts">
         <ShortcutsRow />

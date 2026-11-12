@@ -115,7 +115,10 @@ export interface SessionRecord {
 
 export interface DayStats {
   dateKey: string;
+  /** Every focused minute of the day, minutes of sessions stopped early included. */
   focusMs: number;
+  /** The part of focusMs that came from sessions stopped early. It does not count toward the goal. */
+  stoppedMs?: number;
   sessionsCompleted: number;
   sessionsAbandoned: number;
   blocks: number;
@@ -177,6 +180,8 @@ export interface Settings {
     endOfDay: boolean;
     /** WP7-B7: heads-up and exhaustion alerts for time-budget allowances. */
     allowanceAlerts: boolean;
+    /** A soft chime in the open panel when a session ends. Not a system notification. */
+    chime: boolean;
   };
   reminders: {
     preStartMin: number[];

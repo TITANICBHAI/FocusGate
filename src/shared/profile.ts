@@ -18,13 +18,18 @@ export function cleanWhy(value: unknown): string {
 }
 
 /**
- * Settings stored before the profile fields existed lack them. This fills
- * both fields and cuts over-long values, leaving every other setting as is.
+ * Settings stored before the profile fields and the chime existed lack them.
+ * This fills them (the chime is on) and cuts over-long text, leaving every
+ * other setting as is.
  */
 export function withProfileDefaults(settings: Settings): Settings {
   return {
     ...settings,
     displayName: cleanDisplayName(settings.displayName),
     why: cleanWhy(settings.why),
+    notifications: {
+      ...settings.notifications,
+      chime: typeof settings.notifications?.chime === "boolean" ? settings.notifications.chime : true,
+    },
   };
 }

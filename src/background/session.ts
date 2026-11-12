@@ -233,9 +233,14 @@ export function createSessionService(
       const lateBy = now - latest.endedAt;
       if (lateBy <= MAX_LATE_NOTIFICATION_MS) {
         if (latest.status === "completed") {
+          const breakStarted =
+            after.settings.breaks.enabled &&
+            (after.session.status === "shortBreak" || after.session.status === "longBreak");
+          const breakMin = Math.round(after.session.phasePlannedMs / 60_000);
           await notifyIfEnabled(after, {
             kind: "session_completed",
             elapsedMs: latest.elapsedMs,
+            ...(breakStarted && breakMin >= 1 ? { breakMin } : {}),
             debrief: sessionDebrief(latest),
           });
         } else if (latest.status === "interrupted") {

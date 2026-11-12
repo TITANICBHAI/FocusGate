@@ -1,4 +1,9 @@
-import { calculateStreaks, focusMinutesPerDay } from "../../../../shared/stats.ts";
+import {
+  calculateStreaks,
+  dayGoalProgress,
+  focusMinutesPerDay,
+  stoppedEarlyText,
+} from "../../../../shared/stats.ts";
 import { localDateKey } from "../../../../shared/time.ts";
 import { sessionDebrief } from "../../../../shared/debrief.ts";
 import type { AppState } from "../../../../shared/types.ts";
@@ -14,8 +19,8 @@ export function TodayWeekSection({ state, now }: { state: AppState; now: Date })
   const weekStartKey = keyOf(now.getTime() - 6 * 86_400_000);
   const today = state.dayStats[todayKey];
   const streaks = calculateStreaks(state.sessionHistory, now);
-  const goalMs = Math.max(1, state.settings.dailyGoalMin) * 60_000;
-  const goalPct = Math.min(1, (today?.focusMs ?? 0) / goalMs);
+  const goalPct = dayGoalProgress(today, state.settings.dailyGoalMin);
+  const stoppedLine = stoppedEarlyText(today);
 
   const week = focusMinutesPerDay(state.dayStats, weekStartKey, todayKey);
   const weekFocusMinutes = week.reduce((total, point) => total + point.minutes, 0);
@@ -45,6 +50,7 @@ export function TodayWeekSection({ state, now }: { state: AppState; now: Date })
       <div className="fg-hero__progress">
         <Progress value={goalPct} label="Daily goal" />
       </div>
+      {stoppedLine && <p className="fg-card__desc">{stoppedLine}</p>}
       <svg
         role="img"
         aria-label={`Focus minutes for the last 7 days; the highest day reached ${chartMax} minutes.`}

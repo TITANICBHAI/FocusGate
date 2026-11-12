@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { isBlockingActive } from "../../shared/plan.ts";
 import type { AppState } from "../../shared/types.ts";
 import type { HeaderPill, StatusSummary } from "../lib/statusSummary.ts";
-import { Button } from "./primitives.tsx";
+import { useHiddenHints } from "../hooks/useHiddenHints.ts";
+import { Button, IconButton } from "./primitives.tsx";
+import { X } from "lucide-react";
 
 /** The label for the header pill, taken from the same summary as the strip. */
 export function pillFor(
@@ -22,6 +24,9 @@ export function pillFor(
 }
 
 type Tone = StatusSummary["tone"];
+
+/** The hidden-hint id for the "nothing is on" message. */
+const IDLE_HINT = "status-idle";
 
 /**
  * The gate closes when blocking starts: the strip's bar sweeps once. Not on
@@ -48,15 +53,29 @@ export function StatusStrip({
   onCta?(target: "rules" | "schedule"): void;
 }) {
   const previous = useRef<Tone | undefined>(undefined);
+  const hints = useHiddenHints();
   const sweep = shouldSweep(previous.current, summary.tone);
   useEffect(() => {
     previous.current = summary.tone;
   });
+  // Only the "nothing is on" message can be hidden. A message about blocking
+  // that is on always shows, so the strip never hides a rule that is working.
+  const hideable = summary.tone === "idle";
+  if (hideable && hints.isHidden(IDLE_HINT)) return null;
   return (
     <section
       className={`fg-nowline fg-nowline--${summary.tone}${sweep ? " fg-nowline--sweep" : ""}`}
       role="status"
     >
+      {hideable && (
+        <IconButton
+          label="Hide this message"
+          className="fg-nowline__dismiss"
+          onClick={() => hints.setHidden(IDLE_HINT, true)}
+        >
+          <X aria-hidden="true" />
+        </IconButton>
+      )}
       <p className="fg-nowline__headline">{summary.headline}</p>
       <p className="fg-nowline__detail">{summary.detail}</p>
       {summary.secondary.map((line) => (

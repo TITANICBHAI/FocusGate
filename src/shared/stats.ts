@@ -145,6 +145,29 @@ export function calculateStreaks(
   return { current, best };
 }
 
+/** Focused minutes that count toward the daily goal: all of them except the ones from stopped sessions. */
+export function goalFocusMs(day: DayStats | undefined): number {
+  if (!day) return 0;
+  return Math.max(0, day.focusMs - (day.stoppedMs ?? 0));
+}
+
+/** Focused minutes from sessions stopped early. */
+export function stoppedFocusMs(day: DayStats | undefined): number {
+  return Math.max(0, day?.stoppedMs ?? 0);
+}
+
+/** How far the day is toward the daily goal, from 0 to 1. */
+export function dayGoalProgress(day: DayStats | undefined, dailyGoalMin: number): number {
+  const goalMs = Math.max(1, dailyGoalMin) * 60_000;
+  return Math.min(1, goalFocusMs(day) / goalMs);
+}
+
+/** "12 min stopped early, not counted toward your goal.", or null when under a minute was stopped. */
+export function stoppedEarlyText(day: DayStats | undefined): string | null {
+  const minutes = Math.floor(stoppedFocusMs(day) / 60_000);
+  return minutes >= 1 ? `${minutes} min stopped early, not counted toward your goal.` : null;
+}
+
 export function calculateFocusScore(input: FocusScoreInput): number {
   const goalMs = Math.max(0, input.dailyGoalMin) * 60_000;
   const goalProgress = goalMs === 0 ? 1 : Math.min(1, input.focusMs / goalMs);

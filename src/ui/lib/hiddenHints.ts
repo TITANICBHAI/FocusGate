@@ -14,6 +14,29 @@ export interface HintStore {
 /** What was hidden this visit, for a browser that will not store it. */
 let memory = new Set<string>();
 
+const listeners = new Set<() => void>();
+
+/**
+ * Calls `listener` whenever a hint is hidden, shown or cleared, on this page or
+ * (through the browser's storage event) on another open page of FocusGate.
+ * Returns a function that stops listening.
+ */
+export function subscribeHiddenHints(listener: () => void): () => void {
+  listeners.add(listener);
+  const onStorage = (event: StorageEvent): void => {
+    if (event.key === null || event.key === KEY) listener();
+  };
+  if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
+  };
+}
+
+function notify(): void {
+  for (const listener of listeners) listener();
+}
+
 function browserStore(): HintStore | undefined {
   try {
     return typeof localStorage === "undefined" ? undefined : localStorage;
@@ -73,5 +96,18 @@ export function setHintHidden(
   } catch {
     // The copy kept above still holds for this visit.
   }
+  notify();
   return next;
+}
+
+/** Shows every hidden hint again. */
+export function clearHiddenHints(store: HintStore | undefined | null = browserStore()): Set<string> {
+  memory = new Set();
+  try {
+    store?.setItem(KEY, JSON.stringify([]));
+  } catch {
+    // Nothing is kept for this visit either, since memory was emptied above.
+  }
+  notify();
+  return new Set();
 }

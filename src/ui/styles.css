@@ -665,6 +665,7 @@ button { font: inherit; color: inherit; }
 .fg-panel__main > .fg-stack { max-width: 480px; margin: 0 auto; }
 /* The status line scrolls with the content. It is a block in the flow, never pinned. */
 .fg-panel__strip { max-width: 480px; margin: 0 auto 16px; }
+.fg-panel__strip:empty { display: none; }
 .fg-panel__strip .fg-nowline {
   border: 1px solid var(--nowline-edge);
   border-radius: var(--radius-card);
@@ -936,6 +937,9 @@ button { font: inherit; color: inherit; }
 .fg-nowline__headline { margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; }
 .fg-nowline__detail { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-muted); }
 .fg-nowline__cta { margin-top: 6px; }
+.fg-nowline__dismiss { position: absolute; top: 4px; right: 4px; }
+.fg-nowline__dismiss svg { width: 16px; height: 16px; }
+.fg-nowline:has(.fg-nowline__dismiss) .fg-nowline__headline { padding-right: 32px; }
 
 .fg-toggle__label { font-size: 13px; font-weight: 500; }
 .fg-hero__time--clickable { cursor: pointer; }
@@ -1822,4 +1826,73 @@ svg.fg-icon-16 { width: 16px; height: 16px; flex: none; }
   background: var(--accent-soft);
   border-color: var(--accent-edge);
   color: var(--accent);
+}
+
+/* done card: what FocusGate says when a session ends */
+.fg-done {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 40px 12px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.fg-done--completed::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-card) 0 0 var(--radius-card);
+  background: var(--break);
+}
+.fg-done__body { display: grid; gap: 2px; min-width: 0; }
+.fg-done__headline { margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; }
+.fg-done__line, .fg-done__extra { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.fg-done__dismiss { position: absolute; top: 4px; right: 4px; }
+.fg-done__dismiss svg { width: 16px; height: 16px; }
+
+.fg-goal-ring { position: relative; flex: none; display: grid; place-items: center; }
+.fg-goal-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fg-goal-ring__track { stroke: var(--surface-2); }
+.fg-goal-ring__value { stroke: var(--break); stroke-linecap: round; }
+.fg-goal-ring__percent { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.fg-goal-pill {
+  position: relative;
+  justify-self: start;
+  margin: 6px 0 0;
+  padding: 3px 10px;
+  border: 1px solid var(--break-edge);
+  border-radius: 999px;
+  background: var(--break-soft);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.fg-goal-dots { position: absolute; left: 50%; top: 0; width: 0; height: 0; pointer-events: none; }
+.fg-goal-dots__dot {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--break);
+  opacity: 0;
+}
+
+/* Motion runs once, and only for a person who has not asked for less of it. */
+@keyframes fg-ring-fill { from { stroke-dashoffset: var(--ring-from); } }
+@keyframes fg-goal-rise {
+  0% { opacity: 0; transform: translate(var(--dx), 4px); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), -34px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fg-goal-ring__value { animation: fg-ring-fill 900ms ease-out 150ms both; }
+  .fg-goal-dots__dot { animation: fg-goal-rise 1400ms ease-out var(--delay) 1 both; }
 }

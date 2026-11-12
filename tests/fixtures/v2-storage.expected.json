@@ -135,7 +135,8 @@
       "weeklyReport": true,
       "achievements": true,
       "endOfDay": false,
-      "allowanceAlerts": true
+      "allowanceAlerts": true,
+      "chime": true
     },
     "reminders": {
       "preStartMin": [10, 5, 1],

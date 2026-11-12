@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Info, Lock, Settings2, X } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, Info, Lock, X } from "lucide-react";
 import type { HeaderPill } from "../lib/statusSummary.ts";
 import {
   Children,
@@ -509,8 +509,8 @@ export function AppHeader({
           )}
           {pill.label}
         </span>
-        <IconButton label="Open settings" onClick={onOpenSettings}>
-          <Settings2 aria-hidden="true" />
+        <IconButton label="Open settings in full screen" onClick={onOpenSettings}>
+          <ExternalLink aria-hidden="true" />
         </IconButton>
       </div>
     </header>

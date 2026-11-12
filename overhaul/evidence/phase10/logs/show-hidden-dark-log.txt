@@ -1,0 +1,11 @@
+PASS idle card shown
+PASS hidden
+PASS Settings has the Show hidden messages button
+PASS it explains itself
+PASS a toast says they are back
+PASS the idle card is back on this page without a reload
+PASS nothing is left hidden in storage :: []
+PASS still shown after a reload
+PASS no page errors
+
+9 passed, 0 failed

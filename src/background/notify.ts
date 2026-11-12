@@ -5,6 +5,8 @@ export type SessionNotice =
   | {
       kind: "session_completed";
       elapsedMs: number;
+      /** How long the break that has just started is, in minutes. Absent when there is none. */
+      breakMin?: number;
       /** WP7-B1 debrief, present when a session record backed the notice. */
       debrief?: { blockedAttempts: number; headline: string; pace?: string };
     }
@@ -116,7 +118,8 @@ function noticeMessage(notice: SessionNotice): string {
     case "focus_started":
       return `Focus started — ${notice.durationMin} min.`;
     case "session_completed": {
-      const base = `${formatDuration(notice.elapsedMs)} done — nice work.`;
+      const take = notice.breakMin !== undefined ? ` Take ${notice.breakMin}.` : "";
+      const base = `Nice. ${formatDuration(notice.elapsedMs)} done.${take}`;
       if (!notice.debrief) return base;
       const pace = notice.debrief.pace ? ` (${notice.debrief.pace})` : "";
       return `${base} ${notice.debrief.headline}${pace}.`;

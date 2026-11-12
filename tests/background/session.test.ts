@@ -129,6 +129,27 @@ describe("background-owned session service", () => {
     expect(harness.notices.map(({ kind }) => kind)).toContain("break_ended");
   });
 
+  it("tells the completion notice how long the break that starts is", async () => {
+    const harness = createHarness();
+    await harness.service.start({ durationMin: 2, lockLevel: "none" });
+    harness.advance(120_000);
+    await harness.service.handleAlarm("session_phase_end");
+    const notice = harness.notices.find((item) => item.kind === "session_completed");
+    expect(notice).toMatchObject({ kind: "session_completed", elapsedMs: 120_000, breakMin: 5 });
+  });
+
+  it("gives no break length when breaks are off", async () => {
+    const initial = createDefaultState();
+    initial.settings.breaks.enabled = false;
+    const harness = createHarness(initial);
+    await harness.service.start({ durationMin: 2, lockLevel: "none" });
+    harness.advance(120_000);
+    await harness.service.handleAlarm("session_phase_end");
+    const notice = harness.notices.find((item) => item.kind === "session_completed");
+    expect(notice).toBeDefined();
+    expect(notice).not.toHaveProperty("breakMin");
+  });
+
   it("serializes duplicate due alarms so a phase is recorded once", async () => {
     const harness = createHarness();
     await harness.service.start({ durationMin: 1, lockLevel: "none" });

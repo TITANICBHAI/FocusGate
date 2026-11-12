@@ -1,0 +1,64 @@
+
+dark
+  ok   15.69  (need 4.5)  text #E9EDF6 on bg #0F1420  - repo test
+  ok   14.53  (need 4.5)  text #E9EDF6 on surface #151C2B  - repo test
+  ok   12.92  (need 4.5)  text #E9EDF6 on surface-2 #1D2638  - repo test
+  ok    7.50  (need 4.5)  text-muted #9AA6BD on bg #0F1420  - repo test
+  ok    6.95  (need 4.5)  text-muted #9AA6BD on surface #151C2B  - repo test
+  ok    6.18  (need 4.5)  text-muted #9AA6BD on surface-2 #1D2638  - repo test
+  ok    6.34  (need 4.5)  text-subtle #8C98B0 on bg #0F1420  - repo test
+  ok    5.87  (need 4.5)  text-subtle #8C98B0 on surface #151C2B  - repo test
+  ok    5.22  (need 4.5)  text-subtle #8C98B0 on surface-2 #1D2638  - repo test
+  ok    5.74  (need 4.5)  accent #7C83FF on bg #0F1420  - repo test
+  ok    5.31  (need 4.5)  accent #7C83FF on surface #151C2B  - repo test
+  ok    4.72  (need 4.5)  accent #7C83FF on surface-2 #1D2638  - repo test
+  ok    7.34  (need 4.5)  danger #FF7B7B on bg #0F1420  - repo test
+  ok    6.79  (need 4.5)  danger #FF7B7B on surface #151C2B  - repo test
+  ok    6.04  (need 4.5)  danger #FF7B7B on surface-2 #1D2638  - repo test
+  ok   10.24  (need 4.5)  warning #FFB23E on bg #0F1420  - repo test
+  ok    9.48  (need 4.5)  warning #FFB23E on surface #151C2B  - repo test
+  ok    8.43  (need 4.5)  warning #FFB23E on surface-2 #1D2638  - repo test
+  ok    9.54  (need 4.5)  info #5CC8E8 on bg #0F1420  - repo test
+  ok    8.83  (need 4.5)  info #5CC8E8 on surface #151C2B  - repo test
+  ok    7.85  (need 4.5)  info #5CC8E8 on surface-2 #1D2638  - repo test
+  ok    5.74  (need 4.5)  accent-contrast #0F1420 on accent #7C83FF  - repo test: label on the primary button
+  ok    7.39  (need 4.5)  danger-contrast #2A0708 on danger #FF7B7B  - label on a danger button
+  ok    9.28  (need 4.5)  warning-contrast #2B1B00 on warning #FFB23E  - label on an amber chip or bar
+  ok    9.27  (need 4.5)  break #4BD6A0 on surface #151C2B  - green text on a panel
+  ok    8.24  (need 4.5)  break #4BD6A0 on surface-2 #1D2638  - green text on a raised row
+  ok    5.31  (need 3)  accent #7C83FF on surface #151C2B  - accent bar or focus ring against the panel (UI component, WCAG 1.4.11)
+  ok    9.48  (need 3)  warning #FFB23E on surface #151C2B  - amber status bar against the panel (UI component, WCAG 1.4.11)
+  ok    1.51  (need 1.2)  border #2A3550 on bg #0F1420  - hairline against the page (decorative, no WCAG minimum)
+
+light
+  ok   16.21  (need 4.5)  text #131A2B on bg #F6F7FB  - repo test
+  ok   17.35  (need 4.5)  text #131A2B on surface #FFFFFF  - repo test
+  ok   15.07  (need 4.5)  text #131A2B on surface-2 #ECEFF6  - repo test
+  ok    5.92  (need 4.5)  text-muted #52607A on bg #F6F7FB  - repo test
+  ok    6.34  (need 4.5)  text-muted #52607A on surface #FFFFFF  - repo test
+  ok    5.51  (need 4.5)  text-muted #52607A on surface-2 #ECEFF6  - repo test
+  ok    5.23  (need 4.5)  text-subtle #5B6882 on bg #F6F7FB  - repo test
+  ok    5.60  (need 4.5)  text-subtle #5B6882 on surface #FFFFFF  - repo test
+  ok    4.87  (need 4.5)  text-subtle #5B6882 on surface-2 #ECEFF6  - repo test
+  ok    6.46  (need 4.5)  accent #4349C9 on bg #F6F7FB  - repo test
+  ok    6.92  (need 4.5)  accent #4349C9 on surface #FFFFFF  - repo test
+  ok    6.01  (need 4.5)  accent #4349C9 on surface-2 #ECEFF6  - repo test
+  ok    6.14  (need 4.5)  danger #B42318 on bg #F6F7FB  - repo test
+  ok    6.57  (need 4.5)  danger #B42318 on surface #FFFFFF  - repo test
+  ok    5.71  (need 4.5)  danger #B42318 on surface-2 #ECEFF6  - repo test
+  ok    5.20  (need 4.5)  warning #9A5800 on bg #F6F7FB  - repo test
+  ok    5.57  (need 4.5)  warning #9A5800 on surface #FFFFFF  - repo test
+  ok    4.84  (need 4.5)  warning #9A5800 on surface-2 #ECEFF6  - repo test
+  ok    5.63  (need 4.5)  info #0A6B8A on bg #F6F7FB  - repo test
+  ok    6.03  (need 4.5)  info #0A6B8A on surface #FFFFFF  - repo test
+  ok    5.24  (need 4.5)  info #0A6B8A on surface-2 #ECEFF6  - repo test
+  ok    6.92  (need 4.5)  accent-contrast #FFFFFF on accent #4349C9  - repo test: label on the primary button
+  ok    6.57  (need 4.5)  danger-contrast #FFFFFF on danger #B42318  - label on a danger button
+  ok    5.57  (need 4.5)  warning-contrast #FFFFFF on warning #9A5800  - label on an amber chip or bar
+  ok    5.35  (need 4.5)  break #0B7A53 on surface #FFFFFF  - green text on a panel
+  ok    4.65  (need 4.5)  break #0B7A53 on surface-2 #ECEFF6  - green text on a raised row
+  ok    6.92  (need 3)  accent #4349C9 on surface #FFFFFF  - accent bar or focus ring against the panel (UI component, WCAG 1.4.11)
+  ok    5.57  (need 3)  warning #9A5800 on surface #FFFFFF  - amber status bar against the panel (UI component, WCAG 1.4.11)
+  ok    1.44  (need 1.2)  border #C9D0E0 on bg #F6F7FB  - hairline against the page (decorative, no WCAG minimum)
+
+all pairs meet their target
