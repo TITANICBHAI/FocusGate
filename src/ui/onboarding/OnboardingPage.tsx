@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BUILT_IN_PRESETS, getPresetDomains } from "../../shared/presets.ts";
 import { normalizeDomain } from "../../shared/domains.ts";
 import {
@@ -15,6 +15,8 @@ import { ThemeRoot } from "../theme.tsx";
 import { sendPasswordMessage } from "../lib/passwordActions.ts";
 import { emptyPasswordDraft, passwordDraftError } from "../lib/passwordDraft.ts";
 import type { PasswordDraft } from "../lib/passwordDraft.ts";
+import { openFocusGatePanel } from "../lib/openPanel.ts";
+import type { PanelOpenerApi } from "../lib/openPanel.ts";
 import { markSetupHandled } from "../lib/setupOffer.ts";
 import { SetupDone } from "./SetupDone.tsx";
 
@@ -112,6 +114,21 @@ function OnboardingFlow() {
   // Both fields empty means "skip": a password is optional.
   const wantsPassword = passwordDraft.password !== "" || passwordDraft.confirmation !== "";
   const passwordError = wantsPassword ? passwordDraftError(passwordDraft) : null;
+
+  const windowIdRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    // Looked up ahead of the click so opening the panel does not have to wait for it.
+    try {
+      void chrome.windows?.getCurrent().then(
+        (win) => {
+          windowIdRef.current = win.id;
+        },
+        () => undefined,
+      );
+    } catch {
+      // No chrome.windows here (Firefox on Android): the panel opens in a tab instead.
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -214,33 +231,17 @@ function OnboardingFlow() {
     }
   }
 
-  async function openFocusGate() {
-    const fallback =
-      "Setup is saved. Open FocusGate from your browser toolbar to continue.";
+  function openFocusGate() {
+    const fallback = "Setup is saved. Open FocusGate from your browser toolbar to continue.";
     if (typeof chrome === "undefined" || !chrome.runtime?.id) {
       setProtectionMessage(fallback);
       return;
     }
-    try {
-      const sidePanel = (
-        chrome as unknown as {
-          sidePanel?: {
-            open(options: { windowId?: number; tabId?: number }): Promise<void>;
-          };
-        }
-      ).sidePanel;
-      if (sidePanel?.open) {
-        const win = await chrome.windows.getCurrent();
-        await sidePanel.open({ windowId: win.id });
-      } else {
-        setProtectionMessage(fallback);
-        return;
-      }
-      const tab = await chrome.tabs.getCurrent();
-      if (tab?.id !== undefined) await chrome.tabs.remove(tab.id);
-    } catch {
-      setProtectionMessage(fallback);
-    }
+    // Nothing is awaited before the panel is asked to open; see openFocusGatePanel.
+    const api = chrome as unknown as PanelOpenerApi;
+    void openFocusGatePanel(api, windowIdRef.current).then((result) => {
+      if (result === "failed") setProtectionMessage(fallback);
+    });
   }
 
   async function refreshProtection() {

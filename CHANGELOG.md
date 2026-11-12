@@ -30,6 +30,8 @@ The end of a session now feels like something. A card at the top of the Focus ta
 
 FocusGate now has a Firefox build (`npm run package:firefox`, or `focusgate-firefox.zip` on the release page). It uses a Firefox background script and opens the sidebar from the toolbar button. Where Firefox lacks something (side panel, notifications, shortcuts on Android), FocusGate carries on without it, and Settings shows Firefox steps for shortcuts and site access instead of a link Firefox will not open. It has not been tested in a real Firefox yet.
 
+The "Open FocusGate in the side panel" button at the end of setup now opens the side panel in Chrome and Edge, the sidebar in Firefox, and a tab where neither exists, instead of only showing a message.
+
 ## [1.0.1] - 2026-11-06
 
 Focus sessions and schedules end on time again. The dashboard opens again. "Check a URL" no longer blanks the side panel. A crash now shows a message instead of a blank screen.

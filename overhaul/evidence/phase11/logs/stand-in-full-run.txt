@@ -84,6 +84,7 @@ tests/ui/guardState.test.ts: 2 passed, 0 failed
 tests/ui/hiddenHints.test.ts: 6 passed, 0 failed
 tests/ui/jsxImports.test.ts: 1 passed, 0 failed
 tests/ui/lockedControls.test.tsx: 3 passed, 0 failed
+tests/ui/openPanel.test.ts: 9 passed, 0 failed
 tests/ui/pages.test.ts: 6 passed, 0 failed
 tests/ui/panelRender.test.tsx: 8 passed, 0 failed
 tests/ui/passwordDraft.test.ts: 12 passed, 0 failed
