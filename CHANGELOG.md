@@ -2,11 +2,9 @@
 
 Notable changes to FocusGate are documented here.
 
-FocusGate now has a Firefox build (`npm run package:firefox`, or `focusgate-firefox.zip` on the release page). It uses a Firefox background script and opens the sidebar from the toolbar button. Where Firefox lacks something (side panel, notifications, shortcuts on Android), FocusGate carries on without it, and Settings shows Firefox steps for shortcuts and site access instead of a link Firefox will not open. It has not been tested in a real Firefox yet.
+## [1.0.2] - 2026-11-12
 
-## [1.0.1] - 2026-11-06
-
-Focus sessions and schedules end on time again. The dashboard opens again. "Check a URL" no longer blanks the side panel. A crash now shows a message instead of a blank screen.
+FocusGate has been redone from the inside out. The whole interface is new, from the side panel and dashboard to the block page and setup, and the things below ship with it. This release also adds a Firefox build.
 
 Changes you make to your site lists, keywords, schedules and daily limits now reach the blocker straight away instead of at the next alarm. The Alt+Shift+B shortcut blocks the site at once. When the browser starts, FocusGate ends sessions that ran out while it was closed and restores its alarms. A focus phase that has already ended no longer blocks sites or locks your rules.
 
@@ -18,7 +16,7 @@ The You tab now starts with your name and your own reason for focusing, then wha
 
 FocusGate has a new look. The icon has clean corners, colours are periwinkle with amber only where something is blocking right now, and labels are sentence case with a steadier number font. The side panel uses plain lists with a coloured bar instead of stacked boxes, and long site names and chips no longer overlap on a narrow panel. The dashboard Overview shows today at the top, a full-width week chart, and a side column with your schedules, limits and when protection was off. The block page puts the reason first, left-aligned, with Close tab as the main button. The status bar sweeps once when blocking starts. The About card shows the version.
 
-Screen readers get a cleaner panel. Switches and segmented controls are announced once, in the way each one works, progress bars say what they measure, the tab bar is a proper tab list with the page title above it, and headings no longer skip a level. Settings has a Keyboard shortcuts card that shows the keys Chrome has set for FocusGate, says when one is not set, and has a Change in Chrome button. Every control shows a clear focus ring, including text fields. The side panel now fits narrow windows and 200% zoom without scrolling sideways.
+Screen readers get a cleaner panel. Switches and segmented controls are announced once, in the way each one works, progress bars say what they measure, the tab bar is a proper tab list with the page title above it, and headings no longer skip a level. Settings has a Keyboard shortcuts card that shows the keys Chrome has set for FocusGate, says when one is not set, and has a Change in Chrome button. Every control shows a clear focus ring, including text fields. The side panel now fits narrow windows and 200% zoom without scrolling sideways. The week chart on the Overview is now read as a list of days.
 
 One password now protects your rules. Type your own, 8 to 28 characters, or press Generate a password to get a random one of 20 to 28 characters, shown in a monospace type on one line so you can copy it or write it down. A random password leaves out look-alike characters such as 0, O, 1, I and l. FocusGate keeps only a scrambled copy and will not show the password again. Removing or loosening a site on your Always list, a keyword, a schedule or a daily limit asks for the password, and the Settings card lists everything the password covers. During a Strict or Commit session, or a Block now window, those rules stay locked even with the password. When you start a Strict session, FocusGate asks about the password first: use your saved password with one tap, set a new one, or start without one and stop early with the phrase "I GIVE UP" and a 15-second wait. If you have rules but no password, the Rules tab says so and offers a quick way to set one. A password you saved earlier still works, even a longer one, but a new one can be at most 28 characters.
 
@@ -29,6 +27,12 @@ The first time you open the side panel, a card offers the full-screen setup, whe
 Stopping a session early no longer counts toward your daily goal. The minutes still show in Focused today, and a line says how many ("20 min stopped early, not counted toward your goal."), but the goal ring, the goal percentage, the focus score and the Quiet Win achievement use only the time you finished. The stop dialog now says this before you confirm. The "Nothing is blocking right now" message can be hidden with its X, in the side panel and on the dashboard (Settings has a "Show hidden messages" button that brings back every tip and note you hid), and the side panel's settings button is now a box-with-an-arrow icon that opens Settings in full screen.
 
 The end of a session now feels like something. A card at the top of the Focus tab says how long you focused ("25 min, done") with one line that is true of that session: you reached your daily goal, you are back after some days, it was your longest yet, you said no to 3 or more distractions, it was your 2nd session today, or how many minutes are left to your goal. Achievements you unlocked appear on the same card, and when a break starts it says how long the break is. The goal ring fills, and when a session takes you to your daily goal a mint "Daily goal reached" appears with a few dots rising once; with reduced motion on, the dots and the fill are left out. A soft chime plays when the card appears, once per session, in the open side panel only; turn it off in Settings under Notifications ("Soft chime when a session ends"). If you stop a session early the card is plain and neutral: "You focused for 12 minutes. Pick it up whenever you’re ready." The end-of-session notification now reads "Nice. 25 min done. Take 5."
+
+FocusGate now has a Firefox build (`npm run package:firefox`, or `focusgate-firefox.zip` on the release page). It uses a Firefox background script and opens the sidebar from the toolbar button. Where Firefox lacks something (side panel, notifications, shortcuts on Android), FocusGate carries on without it, and Settings shows Firefox steps for shortcuts and site access instead of a link Firefox will not open. It has not been tested in a real Firefox yet.
+
+## [1.0.1] - 2026-11-06
+
+Focus sessions and schedules end on time again. The dashboard opens again. "Check a URL" no longer blanks the side panel. A crash now shows a message instead of a blank screen.
 
 ## [1.1.0] - 2026-10-31
 

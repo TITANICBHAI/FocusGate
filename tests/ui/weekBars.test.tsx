@@ -61,4 +61,10 @@ describe("WeekBars", () => {
   it("marks today's bar", () => {
     expect(html.match(/fg-weekbars__item--today/g) ?? []).toHaveLength(1);
   });
+
+  it("keeps its list role, so the day items sit inside a list (axe: listitem)", () => {
+    expect(html).toMatch(/^<ol /);
+    expect(html).not.toMatch(/<ol [^>]*role=/);
+    expect(html).toContain('aria-label="Focus minutes for the last 7 days');
+  });
 });

@@ -37,7 +37,7 @@ export function WeekBars({
     points[0] ?? { dateKey: "", minutes: 0 },
   );
   return (
-    <ol className="fg-weekbars" role="group" aria-label={weekSummary(points, locale)}>
+    <ol className="fg-weekbars" aria-label={weekSummary(points, locale)}>
       {points.map((point) => {
         const { weekday, day } = parts(point.dateKey, locale);
         const today = point.dateKey === todayKey;

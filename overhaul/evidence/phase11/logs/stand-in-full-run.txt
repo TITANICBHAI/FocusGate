@@ -28,7 +28,7 @@ tests/claims.test.ts: 16 passed, 0 failed
 tests/content/sites.test.ts: 8 passed, 0 failed
 tests/content/v2.test.ts: 10 passed, 0 failed
 tests/edgeCases.test.ts: 10 passed, 0 failed
-tests/release.test.ts: 2 passed, 0 failed
+tests/release.test.ts: 3 passed, 0 failed
 tests/scripts/firefoxManifest.test.ts: 11 passed, 0 failed
 tests/scripts/githubRelease.test.ts: 12 passed, 0 failed
 tests/shared/achievements.test.ts: 14 passed, 0 failed
@@ -119,7 +119,7 @@ tests/ui/strictWiring.test.ts: 3 passed, 0 failed
 tests/ui/stripScroll.test.ts: 2 passed, 0 failed
 tests/ui/themeTokens.test.ts: 4 passed, 0 failed
 tests/ui/typography.test.ts: 4 passed, 0 failed
-tests/ui/weekBars.test.tsx: 7 passed, 0 failed
+tests/ui/weekBars.test.tsx: 8 passed, 0 failed
 tests/ui/weekCoverage.test.ts: 6 passed, 0 failed
 tests/ui/weekStrip.test.tsx: 3 passed, 0 failed
 tests/ui/youScreen.test.tsx: 6 passed, 0 failed

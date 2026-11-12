@@ -399,7 +399,7 @@ Evidence:
 | 2026-11-12 | P10.C | src/ui/lib/hiddenHints.ts, src/ui/hooks/useHiddenHints.ts, src/ui/dashboard/DashboardSettings.tsx; tests/ui/showHiddenHints.test.tsx (new, 5); evidence `logs/show-hidden-{light,dark}-log.txt`, `screens/*-settings-hidden-messages.png` | Red first: the test could not load (`clearHiddenHints` did not exist). Green after. Chromium, dashboard, light and dark: 9 checks each pass (hide the card, open Settings, press the button, a toast shows, the card is back on the same page without a reload, storage holds `[]`, still shown after a reload) | pass in the stand-in |
 | 2026-11-12 | P10.6 | CHANGELOG.md; overhaul/evidence/phase10/ (README, 26 screens, logs, harness); this tracker | End of phase, stand-in runner: per file 118 files, 900 passed, 1 failed (`storage`); whole suite in one process 118 files, 899 passed, 2 failed (the same two `storage` cases as in Phase 9); strict UI check exit 0 with no output; `contrast-check.mjs` and `colour-report.mjs` pass | pass, with the known stand-in limit |
 
-## Phase 11: Firefox readiness and the release script (v1.0.1, no bump)
+## Phase 11: Firefox readiness, release script, store kit and the 1.0.2 bump (v1.0.2)
 
 Owner asked (2026-11-12): "aren't we already good to go with firefox, if not then make us pls", "is it ok to run on firefox mobile or do we need optimisations", and for a script that turns a finished build into a GitHub release. Short answer given to the owner: the Chrome build alone was not ready for Firefox. It is now built and checked as far as a sandbox without Firefox can check it; nothing here has run in a real Firefox.
 
@@ -413,6 +413,18 @@ Owner asked (2026-11-12): "aren't we already good to go with firefox, if not the
 | `action` badge and title | yes | yes | partly | Optional-chained |
 | `about:` and `chrome://` links | open | blocked for extensions (UNVERIFIED, about 80% sure) | n/a | Settings shows written steps on Firefox instead of a link |
 | Host permissions | granted at install | the user grants them (Add-ons manager, Permissions) | same | Steps text in Settings |
+
+### Version decision (owner, 2026-11-13)
+
+The owner decided the release is **1.0.2**, not 1.0.1: "we shall be version v1.0.2 instead of v1.0.1 (take some things from its changelog for v1.0.2 and say we redid our ui too)". This overrides the earlier "never bump" rule for this release only. `package.json` and `public/manifest.json` are 1.0.2. CHANGELOG: new `## [1.0.2] - 2026-11-12` section (a "redone interface" intro, the earlier 1.0.1 notes except the hotfix paragraph, the Firefox paragraph, and a line about the week chart); `## [1.0.1] - 2026-11-06` keeps only its original hotfix paragraph. The Firefox paragraph had been placed above the first heading by mistake, and is now inside 1.0.2.
+
+### Owner's smoke log (2026-11-13)
+
+The attached log was the Browser smoke test (Playwright and axe), not Vitest: 51 passed, 2 failed. Both failures were the same axe `listitem` error on the dashboard Overview: `WeekBars` rendered `<ol role="group">`, so its 7 `<li>` items were not in a list. Fix: removed `role="group"` (the `aria-label` stays). New test in `tests/ui/weekBars.test.tsx` was seen failing first. The `block-current-site: UNASSIGNED` line in the log is Chromium reporting the Alt+Shift+B shortcut as unassigned in the test profile; the smoke test only prints it. A real Vitest log is still not seen.
+
+### Store kit
+
+`marketplace/` holds six 1280 x 800 screenshots, a 440 x 280 tile, the icon, unframed light and dark captures (`raw/`) and `LISTING.md` (name, short description, Firefox summary, search terms, description, release notes, permission justifications). Screenshots come from the real built pages in headless Chromium with demo data (stand-in styles, not real Tailwind output), so look at them before uploading.
 
 | Date | Task | Files | Red first, then green | Result |
 |---|---|---|---|---|
@@ -458,6 +470,7 @@ Owner's report "the tests are failing" (real run): asked for the zipped log twic
 | 2026-11-09 | tests/background/pinProtectsRules.test.ts, tests/ui/pinNudge.test.tsx, rulesPinNudge.test.tsx | New files only. No existing test changed | P8.6 |
 | 2026-11-10 | tests/ui/setupOffer.test.ts, tests/ui/setupOfferCard.test.tsx | New files only. No existing test changed. The You tab card now holds two rows inside a list wrapper; youScreen, panelRender and aria tests pass unchanged | P8.7 |
 | 2026-11-10 | tests/ui/colourLayer.test.ts | New file only. No existing test was edited: tests/ui/blockedWhy.test.tsx first failed on a lookup of the last `.fg-block-inner {` and I changed the CSS, not the test | P8.8 |
+| 2026-11-13 | tests/release.test.ts | Expects version 1.0.2, the 1.0.2 entry above 1.0.1 above 1.1.0 (it had pinned 1.0.1 above 1.1.0), and the 1.0.1 hotfix text kept in its own entry | Owner's version decision above |
 
 | 2026-11-10 | tests/shared/password.test.ts | Rewritten. The Phase 8 cases for the PIN (six digits from the secure random API, every digit and leading zeros, within the policy, other lengths, and "accepts a PIN of 4 to 64 characters and rejects the rest") are replaced by: a typed password of 8 to 28 characters is accepted and 7 or 29 is refused with the pinned message; a generated password is 20 to 28 characters from the secure random API; it is drawn only from an alphabet without 0, 1, I, O, i, l and o; 600 draws use every length from 20 to 28 and every character, and never repeat; every generated password meets the rule, so it can be saved as it is. New: a 40-character password saved under the earlier rule still unlocks and a 39-character guess does not. The PBKDF2 and legacy-upgrade cases are unchanged | P9.1 |
 | 2026-11-10 | tests/claims.test.ts (C31) | Pinned `GENERATED_PIN_LENGTH = 6`, `PIN_MIN_LENGTH = 4`, `PIN_MAX_LENGTH = 64` and `crypto.getRandomValues`. Now pins `GENERATED_PASSWORD_MIN_LENGTH = 20`, `GENERATED_PASSWORD_MAX_LENGTH = 28`, `PASSWORD_MIN_LENGTH = 8`, `PASSWORD_MAX_LENGTH = 28` and still `crypto.getRandomValues`. Test renamed | P9.1 |
@@ -526,3 +539,4 @@ Owner's report "the tests are failing" (real run): asked for the zipped log twic
 - 2026-11-11: Phase 9 (P9.1 to P9.3, plus the wrap-up) written and tested in the stand-in runner and in headless Chromium; stopped for the owner. Nothing pushed. Version still 1.0.1. Boxes stay unticked until the real gates are run. See the Phase 9 notes for what is open.
 - 2026-11-12: Phase 10 (P10.1 to P10.5, the owner's two mid-phase changes, the Show hidden messages button, and the wrap-up) written and tested in the stand-in runner and in headless Chromium; stopped for the owner. Nothing pushed. Version still 1.0.1. Boxes stay unticked until the owner-run checks pass.
 - 2026-11-12: Phase 11 (F11.1 to F11.5: Firefox adapter fallbacks, Firefox manifest generator, Firefox wording, GitHub release script) written and tested in the stand-in runner; stopped for the owner. Nothing pushed. Version still 1.0.1. Not run in a real Firefox. Boxes stay unticked until the real gates are run.
+- 2026-11-13: Version set to 1.0.2 by the owner; WeekBars list-role fix from the owner's smoke log; store kit (`marketplace/`). Not pushed. Gates run in the stand-in only.
