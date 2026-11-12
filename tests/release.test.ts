@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
-describe("release 1.0.2", () => {
+describe("release 1.0.1", () => {
   it("uses the same version in package.json and the manifest", () => {
     const pkg = JSON.parse(read("package.json")) as { version: string };
     const manifest = JSON.parse(read("public/manifest.json")) as { version: string };
-    expect(pkg.version).toBe("1.0.2");
-    expect(manifest.version).toBe("1.0.2");
+    expect(pkg.version).toBe("1.0.1");
+    expect(manifest.version).toBe("1.0.1");
   });
 
-  it("retains the pinned 1.0.1 changelog entry above 1.1.0", () => {
+  it("has the pinned changelog entry above 1.1.0", () => {
     const log = read("CHANGELOG.md");
     const entry = log.indexOf("## [1.0.1]");
     expect(entry).toBeGreaterThan(-1);

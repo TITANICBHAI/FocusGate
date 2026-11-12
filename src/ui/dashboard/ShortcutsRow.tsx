@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "../components/primitives.tsx";
+import { isFirefox } from "../lib/protectionStatus.ts";
 
 export const SHORTCUTS_URL = "chrome://extensions/shortcuts";
 
@@ -50,19 +51,27 @@ export function openShortcutsPage(): void {
   }
 }
 
+const FIREFOX_STEPS =
+  "Open Add-ons and themes (Ctrl+Shift+A), press the gear, then choose Manage Extension Shortcuts.";
+
 export function ShortcutsList({
   commands,
   onChange,
+  browser = "chrome",
 }: {
   commands: readonly ShortcutCommand[];
   onChange: () => void;
+  browser?: "chrome" | "firefox";
 }) {
   const rows = shortcutRows(commands);
+  const firefox = browser === "firefox";
   return (
     <>
       {rows.length === 0 && (
         <p className="fg-muted">
-          FocusGate could not read your shortcuts here. Chrome has the full list.
+          {firefox
+            ? "FocusGate could not read your shortcuts here. Firefox has the full list."
+            : "FocusGate could not read your shortcuts here. Chrome has the full list."}
         </p>
       )}
       {rows.map((row) => (
@@ -71,7 +80,9 @@ export function ShortcutsList({
             <span>{row.label}</span>
             {row.key === null && (
               <span className="fg-field__helper">
-                Not set. Another app or Chrome itself may be using this key.
+                {firefox
+                  ? "Not set. Another app or Firefox itself may be using this key."
+                  : "Not set. Another app or Chrome itself may be using this key."}
               </span>
             )}
           </div>
@@ -80,9 +91,13 @@ export function ShortcutsList({
           </div>
         </div>
       ))}
-      <div className="fg-wrap">
-        <Button onClick={onChange}>Change in Chrome</Button>
-      </div>
+      {firefox ? (
+        <p className="fg-muted">{FIREFOX_STEPS}</p>
+      ) : (
+        <div className="fg-wrap">
+          <Button onClick={onChange}>Change in Chrome</Button>
+        </div>
+      )}
     </>
   );
 }
@@ -98,5 +113,8 @@ export function ShortcutsRow() {
       live = false;
     };
   }, []);
-  return <ShortcutsList commands={commands} onChange={openShortcutsPage} />;
+  const browser = isFirefox(typeof navigator === "undefined" ? "" : navigator.userAgent)
+    ? "firefox"
+    : "chrome";
+  return <ShortcutsList commands={commands} browser={browser} onChange={openShortcutsPage} />;
 }

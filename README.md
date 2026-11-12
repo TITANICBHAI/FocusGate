@@ -87,10 +87,27 @@ returns with the project import.
 
 ### Firefox
 
-Firefox support is not automatically guaranteed by a Chromium Manifest V3
-build. Firefox's extension APIs and store metadata differ in some areas.
-Temporary testing is available from `about:debugging` → **This Firefox** →
-**Load Temporary Add-on**, then select the extracted `manifest.json`.
+`npm run package:firefox` (after `npm run build:extension`) writes
+`build/focusgate-firefox.zip` with a Firefox manifest: a background script
+instead of a service worker, a sidebar instead of the Chrome side panel, and a
+stable add-on ID. Firefox on Android has no sidebar, so the toolbar button opens
+the panel in a tab, and features Android lacks (notifications, shortcuts, idle
+detection) are skipped instead of failing.
+
+Temporary testing: `about:debugging` → **This Firefox** → **Load Temporary
+Add-on**, then select the extracted `manifest.json`. Firefox asks you to grant
+site access in its Add-ons manager. This build has not been tested in a real
+Firefox yet, so do not describe it as Firefox-supported until it has been.
+
+### Making a GitHub release
+
+After the "Build browser extension" workflow succeeds, run
+`npm run release:github` (needs the GitHub CLI, signed in, and `unzip`). It reads the
+release notes from the `## [version]` section of `CHANGELOG.md`, downloads the
+build's artifacts, checks each zip, and publishes `focusgate-chrome.zip`,
+`focusgate-edge.zip` and `focusgate-firefox.zip` on release `v<version>`.
+Options: `--dry-run`, `--draft`, `--run <id>`, `--tag`, `--repo`. If the release
+already exists, its files and notes are replaced.
 
 See [`STORE_PUBLISHING.md`](STORE_PUBLISHING.md) before submitting to a store.
 After the docs site is published, follow [`AFTER_PUBLISHING.md`](AFTER_PUBLISHING.md)

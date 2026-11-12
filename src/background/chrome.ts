@@ -36,7 +36,7 @@ type ChromeMessageEvent = {
   ): void;
 };
 
-interface ChromeLike {
+export interface ChromeLike {
   storage: {
     local: {
       get(
@@ -66,7 +66,8 @@ interface ChromeLike {
     getAll(): Promise<Array<{ name: string; scheduledTime: number }>>;
     onAlarm: ChromeEvent<{ name: string; scheduledTime: number }>;
   };
-  notifications: {
+  /** Missing on Firefox for Android. */
+  notifications?: {
     create(id: string, options: unknown): string | Promise<string>;
     onButtonClicked?: ChromeEvent<string> & {
       addListener(
@@ -77,13 +78,16 @@ interface ChromeLike {
       ): void;
     };
   };
-  action: {
+  /** Missing or limited on Firefox for Android. */
+  action?: {
     setBadgeText(details: { text: string }): void | Promise<void>;
     setBadgeBackgroundColor?(details: { color: string }): void | Promise<void>;
     setTitle?(details: { title: string }): void | Promise<void>;
   };
   tabs: {
-    query(query: unknown): Promise<Array<{ id?: number; url?: string }>>;
+    query(
+      query: unknown,
+    ): Promise<Array<{ id?: number; url?: string; active?: boolean; audible?: boolean }>>;
     update(
       tabId: number,
       properties: { url?: string },
@@ -101,15 +105,18 @@ interface ChromeLike {
       frameId: number;
     }>;
   };
-  commands: { onCommand: ChromeEvent<string> };
-  windows: {
+  /** Missing on Firefox for Android (no keyboard). */
+  commands?: { onCommand: ChromeEvent<string> };
+  /** Missing or limited on Firefox for Android (one browser window). */
+  windows?: {
     getLastFocused(): Promise<{
       focused?: boolean;
       tabs?: Array<{ active?: boolean; url?: string; audible?: boolean }>;
     }>;
     onFocusChanged: ChromeEvent<number>;
   };
-  idle: {
+  /** Missing on Firefox for Android. */
+  idle?: {
     queryState(
       detectionIntervalSeconds: number,
     ): Promise<"active" | "idle" | "locked">;
@@ -164,9 +171,24 @@ export function adaptEvent<TArgument, TEvent>(
   };
 }
 
-export function createChromeWorker(): ReturnType<typeof createWorker> {
-  const chrome = chromeApi();
+/** An event that never fires, for an API the browser does not have. */
+function inertEvent<T>(): WorkerEventSource<T> {
+  return {
+    addListener() {
+      // The browser has no such event: nothing will ever call the listener.
+    },
+    removeListener() {
+      // Nothing was attached.
+    },
+  };
+}
 
+/**
+ * Maps the browser's APIs onto what the worker uses. Notifications, shortcuts,
+ * windows, idle and the toolbar badge are missing or limited on Firefox for
+ * Android, so each has a quiet fallback: the worker starts either way.
+ */
+export function buildWorkerApi(chrome: ChromeLike): WorkerBrowserApi {
   const api: WorkerBrowserApi = {
     now: () => Date.now(),
     onError: (effect, error) => {
@@ -180,15 +202,28 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
       onAlarm: adaptEvent(chrome.alarms.onAlarm, (alarm) => alarm.name),
     },
     notifications: {
-      create: (id, options) => chrome.notifications.create(id, options),
-      ...(chrome.notifications.onButtonClicked
+      create: async (id, options) => {
+        if (!chrome.notifications) return "";
+        return await chrome.notifications.create(id, options);
+      },
+      ...(chrome.notifications?.onButtonClicked
         ? {
             onButtonClicked:
               chrome.notifications.onButtonClicked as unknown as TaskReminderButtonEvents,
           }
         : {}),
     },
-    action: chrome.action,
+    action: {
+      setBadgeText: async (details) => {
+        await chrome.action?.setBadgeText(details);
+      },
+      setBadgeBackgroundColor: async (details) => {
+        await chrome.action?.setBadgeBackgroundColor?.(details);
+      },
+      setTitle: async (details) => {
+        await chrome.action?.setTitle?.(details);
+      },
+    },
     tabs: {
       queryActive: async () =>
         await chrome.tabs.query({ active: true, currentWindow: true }),
@@ -208,9 +243,21 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
       onCommitted: chrome.webNavigation.onCommitted,
       onHistoryStateUpdated: chrome.webNavigation.onHistoryStateUpdated,
     },
-    commands: { onCommand: chrome.commands.onCommand },
+    commands: { onCommand: chrome.commands?.onCommand ?? inertEvent<string>() },
     windows: {
       getLastFocused: async () => {
+        if (!chrome.windows) {
+          // One browser window: its foreground tab is the active tab.
+          const tabs = await chrome.tabs.query({ active: true });
+          return {
+            focused: true,
+            tabs: tabs.map((tab) => ({
+              active: tab.active === true,
+              ...(tab.url === undefined ? {} : { url: tab.url }),
+              ...(tab.audible === undefined ? {} : { audible: tab.audible }),
+            })),
+          };
+        }
         const window = await chrome.windows.getLastFocused();
         return {
           focused: window.focused === true,
@@ -222,7 +269,11 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
         };
       },
     },
-    idle: { queryState: (seconds) => chrome.idle.queryState(seconds) },
+    idle: {
+      // Without an idle API, count the person as active.
+      queryState: async (seconds) =>
+        chrome.idle ? await chrome.idle.queryState(seconds) : "active",
+    },
     declarativeNetRequest: {
       getDynamicRules: async () =>
         (await chrome.declarativeNetRequest.getDynamicRules()) as DnrRule[],
@@ -261,48 +312,69 @@ export function createChromeWorker(): ReturnType<typeof createWorker> {
       tabActivated: adaptEvent(chrome.tabs.onActivated, () => {
         // Tab/window/idle events carry no payload the sampler needs.
       }),
-      windowFocusChanged: adaptEvent(chrome.windows.onFocusChanged, () => {
-        // Intentionally empty: see tabActivated.
-      }),
-      idleStateChanged: adaptEvent(chrome.idle.onStateChanged, () => {
-        // Intentionally empty: see tabActivated.
-      }),
+      windowFocusChanged: chrome.windows
+        ? adaptEvent(chrome.windows.onFocusChanged, () => {
+            // Intentionally empty: see tabActivated.
+          })
+        : inertEvent<void>(),
+      idleStateChanged: chrome.idle
+        ? adaptEvent(chrome.idle.onStateChanged, () => {
+            // Intentionally empty: see tabActivated.
+          })
+        : inertEvent<void>(),
     },
   };
+  return api;
+}
 
-  // The toolbar action opens the side panel on Chromium 116+; on Firefox the
-  // sidebar API is used instead. Feature-detected, never throwing.
+interface ToolbarChrome {
+  sidePanel?: {
+    setPanelBehavior(options: { openPanelOnActionClick: boolean }): Promise<void>;
+  };
+  sidebarAction?: { open(): Promise<void> };
+  action?: {
+    onClicked?: {
+      addListener(listener: (tab: { windowId: number }) => void): void;
+    };
+  };
+  tabs?: { create(properties: { url: string }): Promise<unknown> };
+  runtime?: { getURL(path: string): string };
+}
+
+/**
+ * What the toolbar button does. Chrome and Edge open the side panel. Firefox
+ * for desktop opens its sidebar (the call takes no arguments there). Firefox
+ * for Android has neither, so the panel opens in a tab. Never throws.
+ */
+export function configureToolbarAction(chrome: ToolbarChrome): void {
   try {
-    const globalChrome = (globalThis as unknown as {
-      chrome?: {
-        sidePanel?: {
-          setPanelBehavior(options: {
-            openPanelOnActionClick: boolean;
-          }): Promise<void>;
-        };
-        sidebarAction?: { open(windowId: number): Promise<void> };
-        action?: {
-          onClicked?: {
-            addListener(listener: (tab: { windowId: number }) => void): void;
-          };
-        };
-      };
-    }).chrome;
-    if (globalChrome?.sidePanel?.setPanelBehavior) {
-      void globalChrome.sidePanel.setPanelBehavior({
-        openPanelOnActionClick: true,
+    if (chrome.sidePanel?.setPanelBehavior) {
+      void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+      return;
+    }
+    const onClicked = chrome.action?.onClicked;
+    if (!onClicked) return;
+    if (chrome.sidebarAction?.open) {
+      onClicked.addListener(() => {
+        void chrome.sidebarAction?.open();
       });
-    } else if (
-      globalChrome?.sidebarAction?.open &&
-      globalChrome.action?.onClicked
-    ) {
-      globalChrome.action.onClicked.addListener((tab) => {
-        void globalChrome.sidebarAction?.open(tab.windowId);
+    } else if (chrome.tabs?.create && chrome.runtime?.getURL) {
+      onClicked.addListener(() => {
+        void chrome.tabs?.create({ url: chrome.runtime?.getURL("panel.html") ?? "panel.html" });
       });
     }
   } catch {
-    // Feature-detected: no side panel or sidebar API, nothing to configure.
+    // Feature-detected: no toolbar API to configure.
   }
+}
+
+export function createChromeWorker(): ReturnType<typeof createWorker> {
+  const chrome = chromeApi();
+  const api = buildWorkerApi(chrome);
+
+  configureToolbarAction(
+    (globalThis as unknown as { chrome?: ToolbarChrome }).chrome ?? {},
+  );
 
   return createWorker(api);
 }

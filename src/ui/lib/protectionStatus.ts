@@ -99,6 +99,28 @@ export async function requestHostAccess(
   }
 }
 
+export function isFirefox(userAgent: string): boolean {
+  return /Firefox\//i.test(userAgent);
+}
+
+/**
+ * Where a person goes to change this extension's permissions. Chrome and Edge
+ * have a page an extension can open. Firefox does not let a page open
+ * about:addons, so it gets steps to follow instead.
+ */
+export function extensionSettingsAccess(
+  userAgent: string,
+  extensionId?: string,
+): { href: string | null; help: string | null } {
+  if (isFirefox(userAgent)) {
+    return {
+      href: null,
+      help: "In Firefox, open Add-ons and themes (Ctrl+Shift+A), choose FocusGate, then open Permissions.",
+    };
+  }
+  return { href: extensionSettingsUrl(userAgent, extensionId), help: null };
+}
+
 export function extensionSettingsUrl(
   userAgent: string,
   extensionId?: string,

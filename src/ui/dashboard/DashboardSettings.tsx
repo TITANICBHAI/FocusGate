@@ -14,7 +14,7 @@ import { weakeningLockReason } from "../lib/guardState.ts";
 import {
   canRequestHostAccess,
   checkProtection,
-  extensionSettingsUrl,
+  extensionSettingsAccess,
   getBrowserProtectionApi,
   requestHostAccess,
   summarizeProtectionGaps,
@@ -82,10 +82,11 @@ export function DashboardSettings({ state }: { state: AppState }) {
   });
   const [checkingProtection, setCheckingProtection] = useState(false);
   const browserApi = getBrowserProtectionApi();
-  const browserSettingsUrl = extensionSettingsUrl(
+  const settingsAccess = extensionSettingsAccess(
     browserApi?.userAgent ?? "",
     browserApi?.id,
   );
+  const browserSettingsUrl = settingsAccess.href;
   const lockReason = weakeningLockReason(state);
 
   async function refreshProtection() {
@@ -716,7 +717,8 @@ export function DashboardSettings({ state }: { state: AppState }) {
             </a>
           )}
         </div>
-        {!browserSettingsUrl && (
+        {settingsAccess.help && <p className="fg-muted">{settingsAccess.help}</p>}
+        {!browserSettingsUrl && !settingsAccess.help && (
           <p className="fg-muted">
             Browser settings could not be opened from this browser.
           </p>
