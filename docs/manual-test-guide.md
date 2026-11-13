@@ -201,7 +201,10 @@ plan; `EC##` tags map to the edge-case catalogue.
       whole-word works; YouTube in-page search blocked — `__`
 - [ ] Fragment-only keyword ignored (EC51); `%20`/`+` decoded (EC52);
       non-Latin whole-word works (EC53) — `__`
-- [ ] Toggles on/off live and reversible without reload; off during breaks;
+- [ ] Toggles on/off live and reversible without reload; a filter that is on
+      hides its section with no session running (Beta: check Shorts, home
+      feed, Reels on live pages); turning one off asks for the password and is
+      refused during Block now;
       no console errors on 20 cold loads (EC54) — `__`
 
 ### Block now (standalone) and block page

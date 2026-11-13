@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   buildFilterCss,
+  CONTENT_FILTER_OPTIONS,
   CONTENT_SCRIPT_MATCHES,
   CONTENT_SITES,
   getContentSiteForHost,
   getContentSiteForUrl,
   getEnabledKeywordTargets,
   getSiteSelectors,
+  shortsRedirectTarget,
 } from "../../src/content/sites.ts";
 import { EXISTING_USER_CONTENT_FILTER_DEFAULTS } from "../../src/shared/contentFilterDefaults.ts";
 import { createDefaultState } from "../../src/shared/defaults.ts";
@@ -68,8 +70,35 @@ describe("content filter site table", () => {
     expect(linkedIn).toBeDefined();
     expect(getEnabledKeywordTargets(linkedIn!, {})).toEqual([]);
     expect(
-      getEnabledKeywordTargets(linkedIn!, { linkedinFeed: true }),
+      getEnabledKeywordTargets(linkedIn!, { keywordHide: true }),
     ).toHaveLength(1);
+    // The LinkedIn feed filter hides the whole feed with CSS, not by keyword.
+    expect(
+      getEnabledKeywordTargets(linkedIn!, { linkedinFeed: true }),
+    ).toEqual([]);
+    expect(buildFilterCss(linkedIn!, { linkedinFeed: true }, false)).toContain(
+      ".feed-shared-update-v2 { display: none !important; }",
+    );
+  });
+
+  it("gives every filter switch a plain description", () => {
+    for (const option of CONTENT_FILTER_OPTIONS) {
+      expect(option.description.length, option.id).toBeGreaterThan(10);
+    }
+  });
+
+  it("only hides a Shorts address for YouTube, as a normal video", () => {
+    const at = (href: string) => shortsRedirectTarget(new URL(href));
+    expect(at("https://www.youtube.com/shorts/abc123XYZ_-")).toBe(
+      "https://www.youtube.com/watch?v=abc123XYZ_-",
+    );
+    expect(at("https://m.youtube.com/shorts/abc123XYZ_-?feature=share")).toBe(
+      "https://m.youtube.com/watch?v=abc123XYZ_-",
+    );
+    expect(at("https://www.youtube.com/watch?v=abc123XYZ_-")).toBeNull();
+    expect(at("https://www.youtube.com/shorts/")).toBeNull();
+    expect(at("https://example.com/shorts/abc123XYZ_-")).toBeNull();
+    expect(at("https://notyoutube.com/shorts/abc123XYZ_-")).toBeNull();
   });
 
   it("provides unique selectors for the development health report", () => {

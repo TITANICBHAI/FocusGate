@@ -21,6 +21,7 @@ import { guard } from "../../shared/gating.ts";
 import { RESET_CONFIRMATION_PHRASE } from "../../shared/dataActions.ts";
 import type { DataActionResult } from "../../background/dataActions.ts";
 import { sendDataActionMessage } from "../lib/dataActions.ts";
+import { BlockNow } from "../panel/views/BlockNow.tsx";
 import { RulesScreen } from "../panel/views/RulesScreen.tsx";
 import type { RuleSection } from "../panel/views/RulesScreen.tsx";
 import { StatusStrip, pillFor } from "../components/StatusStrip.tsx";
@@ -126,12 +127,31 @@ function DashboardShell() {
             </>
           )}
           {tab === "rules" && <RulesScreen state={state} density="wide" jumpTo={jump} />}
+          {tab === "blocknow" && <BlockNowPanel state={state} />}
           {tab === "reports" && <ReportsPanel state={state} />}
           {tab === "settings" && <DashboardSettings state={state} />}
           {tab === "data" && <BackupPanel state={state} />}
         </main>
       </div>
     </div>
+  );
+}
+
+function BlockNowPanel({ state }: { state: AppState }) {
+  return (
+    <section className="fg-stack" aria-labelledby="blocknow-title">
+      <h1 id="blocknow-title" className="fg-sr-only">Block now</h1>
+      <SectionLabel>Block now</SectionLabel>
+      <p className="fg-muted">
+        Block chosen sites for a set time without starting a focus session. It
+        has no early stop and never uses your password.
+      </p>
+      <BlockNow
+        state={state}
+        layout="page"
+        canStart={state.session.status === "idle"}
+      />
+    </section>
   );
 }
 
@@ -327,7 +347,7 @@ function BackupPanel({ state }: { state: AppState }) {
         <Card title="Your browser data">
           <p className="fg-muted">
             Your data stays in browser storage. Backups never contain your
-            password, active session, standalone block, usage ledger, or
+            password, active session, Block now, usage ledger, or
             enforcement health.
           </p>
         </Card>
@@ -402,8 +422,13 @@ function BackupPanel({ state }: { state: AppState }) {
         >
           Reset all data
         </Button>
-        {resetLocked && (
+        {resetLocked ? (
           <p className="fg-muted" role="status">{resetDecision.reason}</p>
+        ) : (
+          <p className="fg-muted">
+            Reset is refused while Block now or a Strict or Commit session is
+            running. {state.password !== null ? "Your password is asked for when you confirm." : ""}
+          </p>
         )}
       </Card>
       <Modal
@@ -436,7 +461,7 @@ function BackupPanel({ state }: { state: AppState }) {
       <Modal
         open={resetOpen}
         title="Reset all FocusGate data?"
-        description="You won't be able to undo this unless you first export a backup. Reset is refused while a strict, commitment, or standalone block is active."
+        description="You won't be able to undo this unless you first export a backup. Reset is refused while Block now or a Strict or Commit session is running, even with your password."
         onClose={() => {
           setResetOpen(false);
           setResetText("");

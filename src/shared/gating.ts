@@ -129,11 +129,13 @@ function lockSource(state: GuardState): LockSource | null {
 }
 
 function locked(source: LockSource, locale?: string): GuardResult {
-  const name =
-    source.level === "standalone" ? "standalone block" : `${source.level} session`;
+  const by =
+    source.level === "standalone"
+      ? "Block now"
+      : `your ${source.level} session`;
   return {
     result: "locked",
-    reason: `Locked until ${formatClockTime(source.until, locale)} by your ${name}.`,
+    reason: `Locked until ${formatClockTime(source.until, locale)} by ${by}.`,
     until: source.until,
   };
 }

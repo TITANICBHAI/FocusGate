@@ -3,7 +3,7 @@ import { AboutLine } from "./AboutLine.tsx";
 import { useEffect, useState } from "react";
 import type { Settings } from "../../shared/types.ts";
 import type { AppState } from "../../shared/types.ts";
-import { Button, Card, Field, SectionLabel, Toggle } from "../components/primitives.tsx";
+import { Button, Card, Chip, Field, SectionLabel, Toggle } from "../components/primitives.tsx";
 import { useToast } from "../components/feedback.tsx";
 import { uiStorageStore } from "../hooks/storageStore.ts";
 import { clearHiddenHints } from "../lib/hiddenHints.ts";
@@ -578,15 +578,26 @@ export function DashboardSettings({ state }: { state: AppState }) {
       <SectionLabel>Content</SectionLabel>
       <Card
         title="Content filters"
-        description="Choose which feed sections FocusGate hides on supported sites."
+        description="Hide feed sections on supported sites. A filter that is on hides its section all the time, not only during a focus session."
+        actions={<Chip tone="warning">Beta</Chip>}
       >
-        {CONTENT_FILTER_OPTIONS.map(({ id, label }) => {
+        <p className="fg-muted">
+          Beta: websites change their layout often, so a filter can stop working
+          until FocusGate is updated. If a section still shows, reload the page
+          first. Blocking a site is more reliable than hiding part of it.
+        </p>
+        <p className="fg-muted">
+          All filters start off. Turning one off again needs your password if
+          you set one, and is not possible while Block now or a Strict or Commit
+          session is running.
+        </p>
+        {CONTENT_FILTER_OPTIONS.map(({ id, label, description }) => {
           const enabled = state.settings.contentFilters[id] === true;
           return (
             <Toggle
               key={id}
               label={label}
-              description={enabled && lockReason ? lockReason : undefined}
+              description={enabled && lockReason ? lockReason : description}
               checked={enabled}
               disabled={enabled && Boolean(lockReason)}
               onCheckedChange={(value) =>

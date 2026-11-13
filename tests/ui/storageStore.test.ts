@@ -286,4 +286,64 @@ describe("staged UI storage store", () => {
       vi.unstubAllGlobals();
     }
   });
+  describe("keys that are not guarded rules", () => {
+    function extensionRuntime() {
+      const extensionArea = {
+        get: vi.fn(async () => ({})),
+        set: vi.fn(async () => undefined),
+      };
+      const runtime: StorageRuntime = {
+        getExtensionArea: () => extensionArea,
+        getLocalStorage: () => undefined,
+        subscribeExtensionChanges: () => () => undefined,
+        subscribeLocalChanges: () => () => undefined,
+      };
+      return { extensionArea, runtime };
+    }
+
+    it("saves habits and check-ins directly without asking the worker", async () => {
+      const sendMessage = vi.fn();
+      vi.stubGlobal("chrome", { runtime: { sendMessage } });
+      const { extensionArea, runtime } = extensionRuntime();
+      try {
+        const store = new StorageStore(createBrowserStorageBackend(runtime));
+        const habit = {
+          id: "h1",
+          name: "Read",
+          emoji: "📌",
+          createdAt: 1,
+        };
+        await store.set("habits", (latest) => [...latest, habit]);
+        await store.set("habitEntries", { h1: ["2026-11-13"] });
+
+        expect(extensionArea.set).toHaveBeenCalledWith({ habits: [habit] });
+        expect(extensionArea.set).toHaveBeenCalledWith({
+          habitEntries: { h1: ["2026-11-13"] },
+        });
+        expect(sendMessage).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it.each(["password", "session", "standalone", "usage", "health"] as const)(
+      "still refuses to write %s from the page, with a plain message",
+      async (key) => {
+        vi.stubGlobal("chrome", { runtime: { sendMessage: vi.fn() } });
+        const { extensionArea, runtime } = extensionRuntime();
+        try {
+          const store = new StorageStore(createBrowserStorageBackend(runtime));
+          await expect(
+            store.set(key, DEFAULT_STATE[key] as never),
+          ).rejects.toMatchObject({
+            code: "UNSUPPORTED_STATE_KEY",
+            message: expect.stringContaining("reopen FocusGate"),
+          });
+          expect(extensionArea.set).not.toHaveBeenCalled();
+        } finally {
+          vi.unstubAllGlobals();
+        }
+      },
+    );
+  });
 });

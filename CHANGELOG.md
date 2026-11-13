@@ -2,6 +2,14 @@
 
 Notable changes to FocusGate are documented here.
 
+## [Unreleased]
+
+Habits work again. Adding a habit, checking it in or removing it used to fail with "This setting must be changed through its dedicated control", because the settings store refused every value that was not a rule. Habits, check-ins, reflections, the keyword match log and the quick-block choice now save, while the password, the running session, Block now and usage can still only be changed by their own actions. If a save is ever refused, the message now says what to do: close the page, reopen FocusGate and try again.
+
+Block now has its own Dashboard tab, between Rules and Reports; the side panel keeps its card. Starting a Block now offers your sites to pick from with one tap: your focus sites, your always-blocked sites, your custom presets and the built-in presets, each with an "Add all" button. While it runs, the same list adds sites to the block. Both screens say plainly that Block now never uses your password, and that while it runs even the password cannot remove or loosen rules, turn content filters off, change or remove the password, or reset your data. Lock messages now read "Locked until 3:00 PM by Block now."
+
+Content filters now hide a section whenever its switch is on. Before, they only worked while a focus session, schedule or Block now was running, so with nothing running Shorts, the home feed and the rest stayed visible. The YouTube selectors are refreshed for Shorts shelves, single Shorts in grids and results, the Shorts menu entry and end-of-video suggestions. A Shorts link now opens as a normal video. The LinkedIn feed switch hides the post feed, and each switch has a one-line description. Content filters are marked Beta because they depend on each site's page layout, which FocusGate cannot check from the build. Every filter now starts off, including the three that earlier versions switched on for you; a choice you made yourself is kept. Turning a filter off needs your password if you set one and is locked while Block now or a Strict or Commit session runs.
+
 ## [1.0.2] - 2026-11-12
 
 FocusGate has been redone from the inside out. The whole interface is new, from the side panel and dashboard to the block page and setup, and the things below ship with it. This release also adds a Firefox build.

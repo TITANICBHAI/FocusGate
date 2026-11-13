@@ -1,3 +1,0 @@
-Command: bash <scratch>/uicheck/run.sh   (strict tsc over src/ui, src/shared, src/lib with stand-in types)
-Exit code: 0
-Lines of output: 0 (silence means clean)

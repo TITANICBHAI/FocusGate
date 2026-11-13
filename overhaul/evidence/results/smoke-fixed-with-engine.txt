@@ -1,8 +1,0 @@
-commands: _execute_action=UNASSIGNED, block-current-site=UNASSIGNED, toggle-focus=Alt+Shift+F
-
-PASS 31  FAIL 4
-  FAIL  engine: an added site is blocked at the network layer within 1 s -> rules: []
-  FAIL  engine: a removed site stops being blocked within 1 s (no ghost rule) -> rules: ["engine-a.test"]
-  FAIL  engine: a schedule that is active now blocks at the network layer within 1 s -> rules: ["engine-a.test"]
-  FAIL  engine: deleting that schedule lifts its rule within 1 s -> rules: ["engine-b.test"]
-exit code: 1

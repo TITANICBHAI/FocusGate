@@ -22,7 +22,7 @@ describe("weakening lock explanation", () => {
       until: 20_000,
     };
     expect(weakeningLockReason(state, 1_000)).toContain(
-      "by your standalone block.",
+      "by Block now.",
     );
   });
 

@@ -281,11 +281,12 @@ describe("staged v2 content script", () => {
     controller.stop();
   });
 
-  it("does not enable content filters when title scope is off and no block applies", async () => {
+  it("injects nothing when no content filter is on and keyword scope is off", async () => {
     const state = makeState();
     state.session.status = "idle";
     state.session.phaseEndsAt = 0;
     state.blockedSites = [];
+    state.settings.contentFilters = {};
     state.settings.keywords.scope.title = false;
     state.keywords = [{ text: "gambling", mode: "hide", when: "always" }];
     const fixture = makeDependencies(state);
@@ -295,6 +296,85 @@ describe("staged v2 content script", () => {
     expect(fixture.container.getAttribute("data-fg-hidden")).toBeNull();
     expect(fixture.styles.size).toBe(0);
     expect(fixture.dependencies.createObserver).not.toHaveBeenCalled();
+    controller.stop();
+  });
+
+  it("hides a toggled filter's section even when nothing is blocking and no session runs", async () => {
+    const state = makeState(false);
+    state.session.status = "idle";
+    state.session.phaseEndsAt = 0;
+    state.blockedSites = [];
+    state.schedules = [];
+    state.settings.contentFilters = { ytShorts: true };
+    const fixture = makeDependencies(state);
+    const controller = new ContentScriptController(fixture.dependencies);
+    await controller.start();
+
+    const css = fixture.styles.get("focusgate-filters")?.textContent ?? "";
+    expect(css).toContain("ytd-reel-shelf-renderer { display: none !important; }");
+    expect(css).not.toContain("#related");
+    expect(fixture.dependencies.createObserver).not.toHaveBeenCalled();
+    controller.stop();
+  });
+
+  it("removes the hiding again when the filter is switched off", async () => {
+    const state = makeState(false);
+    state.session.status = "idle";
+    state.blockedSites = [];
+    state.settings.contentFilters = { ytShorts: true };
+    const fixture = makeDependencies(state);
+    const controller = new ContentScriptController(fixture.dependencies);
+    await controller.start();
+    const style = fixture.styles.get("focusgate-filters");
+    expect(style?.textContent).toContain("ytd-reel-shelf-renderer");
+
+    const next = structuredClone(state);
+    next.settings.contentFilters = { ytShorts: false };
+    fixture.setState(next);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(style?.removed).toBe(true);
+    controller.stop();
+  });
+
+  it("opens a Shorts page as a normal video when the Shorts filter is on", async () => {
+    const state = makeState(false);
+    state.session.status = "idle";
+    state.blockedSites = [];
+    state.settings.contentFilters = { ytShorts: true };
+    const fixture = makeDependencies(state);
+    const redirect = vi.fn();
+    fixture.dependencies.location = {
+      href: "https://www.youtube.com/shorts/abc123XYZ_-",
+      hostname: "www.youtube.com",
+    };
+    const controller = new ContentScriptController({
+      ...fixture.dependencies,
+      redirect,
+    });
+    await controller.start();
+
+    expect(redirect).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=abc123XYZ_-",
+    );
+    controller.stop();
+  });
+
+  it("leaves Shorts pages alone when the Shorts filter is off", async () => {
+    const state = makeState(false);
+    state.settings.contentFilters = { ytHomeFeed: true };
+    const fixture = makeDependencies(state);
+    const redirect = vi.fn();
+    fixture.dependencies.location = {
+      href: "https://www.youtube.com/shorts/abc123XYZ_-",
+      hostname: "www.youtube.com",
+    };
+    const controller = new ContentScriptController({
+      ...fixture.dependencies,
+      redirect,
+    });
+    await controller.start();
+
+    expect(redirect).not.toHaveBeenCalled();
     controller.stop();
   });
 
@@ -311,7 +391,7 @@ describe("staged v2 content script", () => {
     controller.stop();
   });
 
-  it("limits non-keyword filters when an always-hide keyword is active", async () => {
+  it("hides keyword matches and toggled sections together when an always-hide keyword is active", async () => {
     const state = makeState();
     state.session.status = "idle";
     state.session.phaseEndsAt = 0;
@@ -324,12 +404,12 @@ describe("staged v2 content script", () => {
     const css = fixture.styles.get("focusgate-filters")?.textContent ?? "";
     expect(fixture.container.getAttribute("data-fg-hidden")).toBe("1");
     expect(css).toContain('[data-fg-hidden="1"]');
-    expect(css).not.toContain("ytd-reel-shelf-renderer");
+    expect(css).toContain("ytd-reel-shelf-renderer");
     controller.stop();
   });
 
-  it("turns filters off when the active schedule reaches its boundary", async () => {
-    const state = makeState(false);
+  it("stops hiding \"during blocks\" keyword matches when the active schedule reaches its boundary", async () => {
+    const state = makeState(true);
     state.session.status = "idle";
     state.blockedSites = [];
     state.schedules = [
@@ -342,15 +422,13 @@ describe("staged v2 content script", () => {
         end: "24:00",
         sites: [],
         keywords: [],
-        useGlobalLists: false,
+        useGlobalLists: true,
       },
     ];
     const fixture = makeDependencies(state);
     const controller = new ContentScriptController(fixture.dependencies);
     await controller.start();
-    expect(fixture.styles.get("focusgate-filters")?.textContent).toContain(
-      "ytd-reel-shelf-renderer",
-    );
+    expect(fixture.container.getAttribute("data-fg-hidden")).toBe("1");
 
     const boundaryTimer = fixture.scheduled.find(
       (timer) => timer.delay > 200 && !timer.cancelled,
@@ -360,7 +438,9 @@ describe("staged v2 content script", () => {
     boundaryTimer!.callback();
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(fixture.styles.get("focusgate-filters")?.removed).toBe(true);
+    expect(fixture.container.getAttribute("data-fg-hidden")).toBeNull();
+    // The toggled Shorts section stays hidden: it does not depend on a block.
+    expect(fixture.styles.get("focusgate-filters")?.removed).not.toBe(true);
     controller.stop();
   });
 

@@ -1,5 +1,0 @@
-Command: tsc --noEmit -p tsconfig.json, paths trimmed, line and column numbers stripped, sorted, compared with the 83-line baseline kept from Phase 7
-Lines now: 83    Lines in baseline: 83
-In the new list but not in the baseline: 0
-In the baseline but not in the new list: 0
-(The 83 lines are errors that come from this sandbox having no node_modules: 64 are the missing JSX types, the rest are missing react and Vite types. They are the same on every tree, so only a change in the list matters.)

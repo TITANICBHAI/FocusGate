@@ -1,0 +1,60 @@
+name: Publish GitHub release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build run to publish (empty = latest successful Build browser extension run)"
+        required: false
+        default: ""
+      tag:
+        description: "Release tag (empty = v<version in package.json>)"
+        required: false
+        default: ""
+      draft:
+        description: "Create it as a draft"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Download and check the files, but do not publish"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # create the release and upload files
+  actions: read     # download the build artifacts
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish release from the latest build
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          TAG: ${{ inputs.tag }}
+          DRAFT: ${{ inputs.draft }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=(--repo "$GITHUB_REPOSITORY")
+          [ -n "$RUN_ID" ] && args+=(--run "$RUN_ID")
+          [ -n "$TAG" ] && args+=(--tag "$TAG")
+          [ "$DRAFT" = "true" ] && args+=(--draft)
+          [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
+          node scripts/github-release.cjs "${args[@]}"
+
+      - name: Keep the files from a dry run
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preview
+          path: build/release/
+          retention-days: 7

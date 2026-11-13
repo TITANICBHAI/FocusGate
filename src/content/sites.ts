@@ -41,10 +41,23 @@ export const CONTENT_SITES: readonly ContentSiteDefinition[] = [
       {
         id: "ytShorts",
         selectors: [
+          // Shelves on the home page, search results and watch page.
           "ytd-rich-shelf-renderer[is-shorts]",
           "ytd-reel-shelf-renderer",
+          "ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])",
+          "ytd-rich-section-renderer:has(ytd-reel-shelf-renderer)",
+          // Single Shorts that sit in normal grids and result lists.
+          "ytd-rich-item-renderer:has(ytm-shorts-lockup-view-model)",
+          "ytd-rich-item-renderer:has(ytm-shorts-lockup-view-model-v2)",
+          'ytd-rich-item-renderer:has(a[href^="/shorts/"])',
+          'ytd-video-renderer:has(a[href^="/shorts/"])',
+          'ytd-compact-video-renderer:has(a[href^="/shorts/"])',
+          // The Shorts entry in the left menu.
           'ytd-guide-entry-renderer a[title="Shorts"]',
           'ytd-mini-guide-entry-renderer a[title="Shorts"]',
+          'ytd-guide-entry-renderer:has(a[title="Shorts"])',
+          'ytd-mini-guide-entry-renderer:has(a[title="Shorts"])',
+          'ytd-mini-guide-entry-renderer[aria-label="Shorts"]',
         ],
         verified: UNVERIFIED,
         defaultForExistingUsers:
@@ -57,12 +70,19 @@ export const CONTENT_SITES: readonly ContentSiteDefinition[] = [
       },
       {
         id: "ytRecommendations",
-        selectors: ["#related", "ytd-watch-next-secondary-results-renderer"],
+        selectors: [
+          "#related",
+          "ytd-watch-next-secondary-results-renderer",
+          "ytd-watch-flexy #secondary-inner #related",
+          // The suggestions that cover the player when a video ends.
+          ".ytp-ce-element",
+          ".ytp-endscreen-content",
+        ],
         verified: UNVERIFIED,
       },
       {
         id: "ytComments",
-        selectors: ["ytd-comments#comments"],
+        selectors: ["ytd-comments#comments", "ytd-comments", "#comments"],
         verified: UNVERIFIED,
       },
       {
@@ -117,7 +137,11 @@ export const CONTENT_SITES: readonly ContentSiteDefinition[] = [
     filters: [
       {
         id: "xTrends",
-        selectors: ['[data-testid="trend"]', '[aria-label="Who to follow"]'],
+        selectors: [
+          '[data-testid="trend"]',
+          '[aria-label="Timeline: Trending now"]',
+          '[aria-label="Who to follow"]',
+        ],
         verified: UNVERIFIED,
       },
       {
@@ -197,16 +221,12 @@ export const CONTENT_SITES: readonly ContentSiteDefinition[] = [
     filters: [
       {
         id: "linkedinFeed",
-        selectors: [],
-        verified: UNVERIFIED,
-        keywordTargets: [
-          {
-            containerSelector: ".feed-shared-update-v2",
-            textSelectors: [
-              ".feed-shared-update-v2__commentary, .feed-shared-inline-show-more-text",
-            ],
-          },
+        selectors: [
+          ".feed-shared-update-v2",
+          '[data-view-name="feed-full-update"]',
+          '[data-finite-scroll-hotkey-context="FEED"]',
         ],
+        verified: UNVERIFIED,
       },
       {
         id: "keywordHide",
@@ -238,12 +258,45 @@ const CONTENT_FILTER_LABELS: Record<string, string> = {
   keywordHide: "Keyword hiding",
 };
 
+/** One plain line per filter, shown under its switch in Settings. */
+const CONTENT_FILTER_DESCRIPTIONS: Record<string, string> = {
+  ytShorts:
+    "Hides Shorts shelves and the Shorts menu entry, and opens Shorts links as normal videos.",
+  ytHomeFeed: "Hides the video grid on the YouTube home page.",
+  ytRecommendations:
+    "Hides the suggested videos beside the player and the end-of-video suggestions.",
+  ytComments: "Hides comments under YouTube videos.",
+  igReels: "Hides the Reels tab and Reels links on Instagram.",
+  igExplore: "Hides the Explore tab on Instagram.",
+  xTrends: "Hides trending topics and “Who to follow” on X.",
+  tiktokFeed: "Hides the For You and Explore videos on TikTok.",
+  linkedinFeed: "Hides the post feed on LinkedIn.",
+  keywordHide:
+    "Hides posts and results that contain your hide words, on YouTube, Reddit, X, Instagram, TikTok, LinkedIn and Google search.",
+};
+
 export const CONTENT_FILTER_OPTIONS = [
   ...new Set(CONTENT_SITES.flatMap((site) => site.filters.map((filter) => filter.id))),
 ].map((id) => ({
   id,
   label: CONTENT_FILTER_LABELS[id] ?? id,
+  description: CONTENT_FILTER_DESCRIPTIONS[id] ?? "",
 }));
+
+const SHORTS_PATH = /^\/shorts\/([A-Za-z0-9_-]{5,})/;
+
+/**
+ * Where a YouTube Shorts page should go instead, or null when the page is not
+ * a Short. The same video opens in the normal player, so this does not depend
+ * on YouTube's page layout.
+ */
+export function shortsRedirectTarget(
+  url: Pick<URL, "hostname" | "pathname" | "origin">,
+): string | null {
+  if (!matchesDomain(url.hostname, "youtube.com")) return null;
+  const match = SHORTS_PATH.exec(url.pathname);
+  return match ? `${url.origin}/watch?v=${match[1]}` : null;
+}
 
 export const CONTENT_SCRIPT_MATCHES = CONTENT_SITES.flatMap((site) => [
   ...site.matches,

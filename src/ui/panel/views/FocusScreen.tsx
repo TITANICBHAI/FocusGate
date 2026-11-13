@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { CalendarPlus, ShieldX } from "lucide-react";
-import { normalizeDomain } from "../../../shared/domains.ts";
+import { CalendarPlus } from "lucide-react";
 import { computeBlockPlan, isBlockingActive } from "../../../shared/plan.ts";
 import { isScheduleActiveAt } from "../../../shared/time.ts";
 import {
@@ -12,12 +11,6 @@ import {
 import { buildDoneCard, shouldChime } from "../../../shared/celebration.ts";
 import { calculateStreaks, dayGoalProgress, stoppedEarlyText } from "../../../shared/stats.ts";
 import type { AppState, LockLevel } from "../../../shared/types.ts";
-import {
-  fromLocalDateTimeInput,
-  isValidStandaloneExpiry,
-  STANDALONE_ACKNOWLEDGEMENT_MS,
-  toLocalDateTimeInput,
-} from "../../../shared/standalone.ts";
 import {
   Button,
   Card,
@@ -30,7 +23,6 @@ import {
   ListRow,
   Progress,
   Segmented,
-  Sheet,
   Stat,
 } from "../../components/primitives.tsx";
 import type { InfoState } from "../../components/primitives.tsx";
@@ -39,21 +31,14 @@ import { Modal, useToast } from "../../components/feedback.tsx";
 import { useHiddenHints } from "../../hooks/useHiddenHints.ts";
 import { useStrictPassword } from "../../hooks/useStrictPassword.tsx";
 import { sendSessionMessage } from "../../lib/sessionActions.ts";
-import { sendStandaloneMessage } from "../../lib/standaloneActions.ts";
+import { BlockNow } from "./BlockNow.tsx";
 import { blockScopeSummary } from "../../lib/blockSummary.ts";
 import { playChime } from "../../lib/chime.ts";
 import { markDoneChimed, markDoneDismissed, readDoneSeen } from "../../lib/doneSeen.ts";
 import { STOP_EARLY_NOTICE } from "../../lib/stopNotice.ts";
 
 const DURATION_PRESETS = [15, 25, 45, 60, 90] as const;
-const STANDALONE_EXPIRY_PRESETS = [
-  { label: "+30 min", minutes: 30 },
-  { label: "+1 hour", minutes: 60 },
-  { label: "+4 hours", minutes: 240 },
-  { label: "+24 hours", minutes: 1_440 },
-] as const;
 const SESSION_EXTENSIONS = [10, 15, 20, 30, 45, 60] as const;
-const STANDALONE_EXTENSIONS = [15, 30, 60, 120] as const;
 const LOCK_OPTIONS = [
   { value: "none", label: "None" },
   { value: "strict", label: "Strict" },
@@ -103,13 +88,6 @@ export function LockHint({
   );
 }
 
-function standaloneSiteEntries(value: string): string[] {
-  return value
-    .split(/[,\n]/)
-    .map((site) => site.trim())
-    .filter(Boolean);
-}
-
 function localDateKeyOf(value: number): string {
   const date = new Date(value);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
@@ -153,15 +131,6 @@ export function FocusScreen({
   const [stopCredential, setStopCredential] = useState("");
   const [waitReady, setWaitReady] = useState(true);
   const waitTimer = useRef<number | null>(null);
-  const [standaloneSheetOpen, setStandaloneSheetOpen] = useState(false);
-  const [standaloneUntilText, setStandaloneUntilText] = useState(() =>
-    toLocalDateTimeInput(Date.now() + 60 * 60_000),
-  );
-  const [standaloneLongAcknowledged, setStandaloneLongAcknowledged] =
-    useState(false);
-  const [standaloneSitesText, setStandaloneSitesText] = useState("");
-  const [standaloneSiteInput, setStandaloneSiteInput] = useState("");
-  const [standaloneError, setStandaloneError] = useState("");
 
   useEffect(() => {
     const timer = window.setInterval(
@@ -249,24 +218,6 @@ export function FocusScreen({
     setDoneSeen(markDoneChimed(card.recordId));
     playChime();
   }, [card?.recordId, card?.kind, card?.endedAt, chimeEnabled]);
-
-  const standaloneUntil = fromLocalDateTimeInput(standaloneUntilText);
-  const standaloneEntries = useMemo(
-    () => standaloneSiteEntries(standaloneSitesText),
-    [standaloneSitesText],
-  );
-  const standalonePreviewSites = useMemo(
-    () => [
-      ...new Set(
-        standaloneEntries
-          .map(normalizeDomain)
-          .filter((site): site is string => site !== null),
-      ),
-    ],
-    [standaloneEntries],
-  );
-  const standaloneUntilDelta =
-    standaloneUntil === null ? 0 : standaloneUntil - Date.now();
 
   const closeStopDialog = useCallback(() => {
     setStopOpen(false);
@@ -379,82 +330,6 @@ export function FocusScreen({
     if (!reply.ok) {
       showToast(reply.message ?? "Could not skip the break.", "error");
     }
-  }
-
-  async function startStandalone(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const at = Date.now();
-    const until = fromLocalDateTimeInput(standaloneUntilText);
-    if (until === null || !isValidStandaloneExpiry(until, at)) {
-      setStandaloneError("Choose an end time from 5 minutes to 30 days from now.");
-      return;
-    }
-    if (standaloneEntries.length === 0) {
-      setStandaloneError("Add at least one website to block.");
-      return;
-    }
-    if (standalonePreviewSites.length > 500) {
-      setStandaloneError("A standalone block can contain at most 500 sites.");
-      return;
-    }
-    if (
-      until - at > STANDALONE_ACKNOWLEDGEMENT_MS &&
-      !standaloneLongAcknowledged
-    ) {
-      setStandaloneError(
-        "Confirm that you understand this block has no early stop.",
-      );
-      return;
-    }
-    const reply = await sendStandaloneMessage({
-      type: "standalone/start",
-      until,
-      sites: standalonePreviewSites,
-    });
-    if (!reply.ok) {
-      setStandaloneError(reply.message ?? "The block could not be started.");
-      return;
-    }
-    setStandaloneError("");
-    setStandaloneSheetOpen(false);
-    setStandaloneSitesText("");
-    setStandaloneLongAcknowledged(false);
-    showToast("Standalone block started.", "success");
-    if (reply.warning) showToast(reply.warning, "error");
-  }
-
-  async function extendStandalone(minutes: number): Promise<void> {
-    const reply = await sendStandaloneMessage({
-      type: "standalone/extend",
-      minutes,
-    });
-    if (!reply.ok) {
-      showToast(reply.message ?? "The block could not be extended.", "error");
-      return;
-    }
-    showToast(`Block extended by ${minutes} minutes.`, "success");
-    if (reply.warning) showToast(reply.warning, "error");
-  }
-
-  async function addStandaloneSite(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const site = standaloneSiteInput.trim();
-    if (!site) {
-      setStandaloneError("Enter a website to add.");
-      return;
-    }
-    const reply = await sendStandaloneMessage({
-      type: "standalone/addSites",
-      sites: [site],
-    });
-    if (!reply.ok) {
-      setStandaloneError(reply.message ?? "The site could not be added.");
-      return;
-    }
-    setStandaloneSiteInput("");
-    setStandaloneError("");
-    showToast("Site added to the active block.", "success");
-    if (reply.warning) showToast(reply.warning, "error");
   }
 
   /* ---------------- hero state derivation ---------------- */
@@ -712,73 +587,7 @@ export function FocusScreen({
         )}
       </Card>
 
-      {standaloneActive ? (
-        <Card title="Block now">
-          <ListRow
-            title={`${state.standalone.sites.length} site${
-              state.standalone.sites.length === 1 ? "" : "s"
-            } blocked`}
-            sub={`Ends ${new Date(state.standalone.until).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}`}
-          />
-          <form
-            className="fg-wrap"
-            onSubmit={(event) => void addStandaloneSite(event)}
-          >
-            <input
-              className="fg-input fg-grow"
-              value={standaloneSiteInput}
-              placeholder="Add a site to this block"
-              aria-label="Add a site to this block"
-              onChange={(event) => setStandaloneSiteInput(event.target.value)}
-            />
-            <Button variant="secondary" size="dense" type="submit">
-              Add
-            </Button>
-          </form>
-          <div className="fg-wrap" role="group" aria-label="Extend block">
-            {STANDALONE_EXTENSIONS.map((minutes) => (
-              <Button
-                key={minutes}
-                variant="secondary"
-                size="dense"
-                onClick={() => void extendStandalone(minutes)}
-              >
-                +{minutes < 60 ? `${minutes} min` : `${minutes / 60} h`}
-              </Button>
-            ))}
-          </div>
-        </Card>
-      ) : (
-        !isRunning && (
-          <Card title="Block now">
-            <ListRow
-              swatch={<ShieldX aria-hidden="true" className="fg-icon-16" />}
-              title="Timed block with no early stop"
-              sub="Block selected sites without starting a focus session."
-              actions={
-                <Button
-                  variant="secondary"
-                  size="dense"
-                  onClick={() => {
-                    setStandaloneError("");
-                    setStandaloneUntilText(
-                      toLocalDateTimeInput(Date.now() + 60 * 60_000),
-                    );
-                    setStandaloneLongAcknowledged(false);
-                    setStandaloneSitesText("");
-                    setStandaloneSheetOpen(true);
-                  }}
-                >
-                  Set up…
-                </Button>
-              }
-            />
-          </Card>
-        )
-      )}
+      <BlockNow state={state} canStart={!isRunning} />
 
       <Modal
         open={stopOpen}
@@ -830,95 +639,6 @@ export function FocusScreen({
           )}
         </form>
       </Modal>
-
-      <Sheet
-        open={standaloneSheetOpen}
-        title="Block now"
-        onClose={() => setStandaloneSheetOpen(false)}
-        footer={
-          <Button
-            variant="primary"
-            wide
-            type="submit"
-            form="standalone-start-form"
-          >
-            Confirm and start
-          </Button>
-        }
-      >
-        <form
-          id="standalone-start-form"
-          className="fg-stack"
-          onSubmit={startStandalone}
-        >
-          <Field
-            id="standalone-until"
-            label="End date and time"
-            helper="Choose an end time from 5 minutes to 30 days from now. There is no early stop; you can extend or add sites."
-            error={standaloneError || undefined}
-          >
-            <div className="fg-wrap" role="group" aria-label="End time presets">
-              {STANDALONE_EXPIRY_PRESETS.map((preset) => (
-                <Button
-                  key={preset.minutes}
-                  variant="secondary"
-                  size="dense"
-                  onClick={() => {
-                    setStandaloneUntilText(
-                      toLocalDateTimeInput(Date.now() + preset.minutes * 60_000),
-                    );
-                    setStandaloneLongAcknowledged(false);
-                    setStandaloneError("");
-                  }}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-            <input
-              id="standalone-until"
-              className="fg-input"
-              type="datetime-local"
-              value={standaloneUntilText}
-              onChange={(event) => {
-                setStandaloneUntilText(event.target.value);
-                setStandaloneLongAcknowledged(false);
-                setStandaloneError("");
-              }}
-            />
-          </Field>
-          <Field
-            id="standalone-sites"
-            label="Sites to block"
-            helper="Domains or URLs, one per line or comma-separated (up to 500)."
-          >
-            <textarea
-              id="standalone-sites"
-              className="fg-textarea"
-              rows={4}
-              value={standaloneSitesText}
-              placeholder={"example.com\nreddit.com"}
-              onChange={(event) => setStandaloneSitesText(event.target.value)}
-            />
-          </Field>
-          {standaloneUntilDelta > STANDALONE_ACKNOWLEDGEMENT_MS && (
-            <label className="fg-field">
-              <span className="fg-field__label">
-                <input
-                  type="checkbox"
-                  checked={standaloneLongAcknowledged}
-                  onChange={(event) =>
-                    setStandaloneLongAcknowledged(event.target.checked)
-                  }
-                  className="fg-mr-8"
-                />
-                I understand this block lasts over 24 hours and has no early-stop
-                action.
-              </span>
-            </label>
-          )}
-        </form>
-      </Sheet>
 
       {strictPassword.sheet}
 

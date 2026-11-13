@@ -268,7 +268,7 @@ describe("lock message wording", () => {
       locale: "en-US",
     });
     expect(standalone).toMatchObject({
-      reason: "Locked until 12:42 AM by your standalone block.",
+      reason: "Locked until 12:42 AM by Block now.",
     });
   });
 

@@ -22,7 +22,7 @@ describe("v1 storage migration", () => {
     expect(result.remove).toContain("app_password_hash");
   });
 
-  it("preserves explicit content-filter choices while defaulting legacy filters on", () => {
+  it("preserves explicit content-filter choices and starts every other filter off", () => {
     const result = migrateV1(
       {
         settings: {
@@ -39,7 +39,7 @@ describe("v1 storage migration", () => {
     expect(result.set.settings.contentFilters).toEqual({
       ytShorts: false,
       igReels: true,
-      tiktokFeed: true,
+      tiktokFeed: false,
       ytHomeFeed: true,
     });
   });

@@ -152,9 +152,9 @@
       "sound": false
     },
     "contentFilters": {
-      "ytShorts": true,
-      "igReels": true,
-      "tiktokFeed": true
+      "ytShorts": false,
+      "igReels": false,
+      "tiktokFeed": false
     },
     "keywords": {
       "scope": { "searchQuery": true, "url": true, "title": false },

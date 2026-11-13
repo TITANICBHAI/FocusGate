@@ -1,9 +1,5 @@
 import { matchKeyword } from "../shared/keywords.ts";
-import {
-  computeBlockPlan,
-  isBlockContextActive,
-  isFilteringActive,
-} from "../shared/plan.ts";
+import { computeBlockPlan, isFilteringActive } from "../shared/plan.ts";
 import { getState, onStateChanged } from "../shared/storage.ts";
 import type { AppState } from "../shared/types.ts";
 import {
@@ -19,6 +15,7 @@ import {
   getAllKeywordTargets,
   getContentSiteForUrl,
   getEnabledKeywordTargets,
+  shortsRedirectTarget,
   type ContentSiteDefinition,
 } from "./sites.ts";
 
@@ -32,6 +29,8 @@ export interface ContentScriptDependencies {
   document: Document;
   window: Window;
   location: Pick<Location, "href" | "hostname">;
+  /** Sends this tab to another address. Leave out where redirects are unwanted. */
+  redirect?: (url: string) => void;
   getState: () => Promise<AppState>;
   onStateChanged: (listener: () => void) => () => void;
   now: () => number;
@@ -168,9 +167,17 @@ export class ContentScriptController {
       return;
     }
 
+    const contentFilters = this.state.settings.contentFilters;
+    if (contentFilters.ytShorts === true) {
+      const target = shortsRedirectTarget(url);
+      if (target && this.dependencies.redirect) {
+        this.dependencies.redirect(target);
+        return;
+      }
+    }
+
     const now = this.dependencies.now();
     const plan = computeBlockPlan(this.state, now);
-    const blockContextActive = isBlockContextActive(this.state, now);
     const filteringActive = isFilteringActive(
       this.state,
       now,
@@ -180,23 +187,16 @@ export class ContentScriptController {
       ? plan.hideWords
       : [];
     const enabledTargets = filteringActive && activeHideWords.length > 0
-      ? getEnabledKeywordTargets(
-          nextSite,
-          this.state.settings.contentFilters,
-        )
+      ? getEnabledKeywordTargets(nextSite, contentFilters)
       : [];
     const activeFilterIds = new Set(
       enabledTargets.map(({ filterId }) => filterId),
     );
 
+    // A filter that is switched on hides its section all the time. Only the
+    // keyword filter follows the hide words' own "during blocks" or "always".
     this.setStyles(
-      blockContextActive || enabledTargets.length > 0
-        ? buildFilterCss(
-            nextSite,
-            blockContextActive ? this.state.settings.contentFilters : {},
-            enabledTargets.length > 0,
-          )
-        : "",
+      buildFilterCss(nextSite, contentFilters, enabledTargets.length > 0),
     );
     this.updateKeywordVisibility(
       nextSite,
@@ -411,6 +411,7 @@ export function createContentScriptDependencies(
     document: documentRef,
     window: windowRef,
     location: windowRef.location,
+    redirect: (url) => windowRef.location.replace(url),
     getState,
     onStateChanged,
     now: Date.now,

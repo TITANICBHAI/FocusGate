@@ -125,6 +125,23 @@ export function createBrowserStorageRuntime(): StorageRuntime {
   };
 }
 
+/**
+ * Keys the UI may write straight to storage. They hold personal records, not
+ * blocking rules, so no lock or password applies to them. Everything else that
+ * is not a guarded rule key (password, session, Block now, usage, health…) is
+ * changed only by its own worker action and is refused here.
+ */
+const DIRECT_WRITE_KEYS: readonly StorageKey[] = [
+  "habits",
+  "habitEntries",
+  "dayStats",
+  "keywordMatches",
+  "quickBlockMode",
+];
+
+export const UNSUPPORTED_KEY_MESSAGE =
+  "FocusGate can't save this from here. Close this page, reopen FocusGate and try again.";
+
 export function createBrowserStorageBackend(
   runtime: StorageRuntime = createBrowserStorageRuntime(),
 ): StorageBackend {
@@ -187,9 +204,13 @@ export function createBrowserStorageBackend(
     write: writeDirect,
     async writeGuarded(key, value) {
       if (!guardedKeys.includes(key as GuardedStateKey)) {
+        if (DIRECT_WRITE_KEYS.includes(key)) {
+          await writeDirect(key, value);
+          return;
+        }
         throw new GuardedStorageWriteError(
           "UNSUPPORTED_STATE_KEY",
-          "This setting must be changed through its dedicated control.",
+          UNSUPPORTED_KEY_MESSAGE,
         );
       }
       const extensionArea = runtime.getExtensionArea();
