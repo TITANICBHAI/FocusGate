@@ -4,3 +4,27 @@ export function extractReleaseNotes(changelog: string, version: string): string;
 export function findBrowserZips(dir: string): Record<"chrome" | "edge" | "firefox", string>;
 export function manifestProblems(manifest: Record<string, unknown>, browser: string, version: string): string[];
 export function readZipManifest(zipPath: string): Record<string, unknown>;
+export const DEFAULT_REPO: string;
+export const STORE_LINKS: { firefox: string; edge: string };
+export function parseHighlightsFile(text: string): { tagline: string; highlights: string };
+export function firstSentence(paragraph: string, max?: number): string;
+export function deriveHighlights(changelogNotes: string): string;
+export function buildReleaseNotes(input: {
+  version: string;
+  tag: string;
+  repo?: string;
+  tagline?: string;
+  highlights?: string;
+  changelogNotes: string;
+  minChrome?: string;
+  minFirefox?: string;
+  minFirefoxAndroid?: string;
+}): string;
+export function loadReleaseNotes(input: {
+  root: string;
+  version: string;
+  tag: string;
+  repo?: string;
+  changelogPath?: string;
+  notesDir?: string;
+}): string;

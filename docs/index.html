@@ -1,262 +1,217 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FocusGate — Hard-Enforcement Website Blocker for Chrome | TBTechs</title>
-    <meta name="description" content="FocusGate by TBTechs — the hardest-to-bypass screen time blocker, now available as a Chrome extension. Block distracting websites, enforce deep work sessions, and reclaim your time.">
-    <meta name="keywords" content="FocusGate, distraction blocker, website blocker, productivity extension, chrome extension, focus timer, digital wellbeing">
-    <meta name="author" content="TBTechs">
-    <link rel="icon" type="image/png" sizes="1024x1024" href="assets/focusgate-favicon.png">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://github.com/TITANICBHAI/FocusGate">
-    <meta property="og:title" content="FocusGate — Hard-Enforcement Website Blocker for Chrome | TBTechs">
-    <meta property="og:description" content="Block distracting websites, filter content by keyword, and help you reclaim your time. Open source and privacy-first.">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://github.com/TITANICBHAI/FocusGate">
-    <meta property="twitter:title" content="FocusGate — Hard-Enforcement Website Blocker for Chrome | TBTechs">
-    <meta property="twitter:description" content="Block distracting websites, filter content by keyword, and help you reclaim your time. Open source and privacy-first.">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neutral: {
-                            850: '#1f1f1f',
-                            950: '#0a0a0a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0a0a0a;
-            color: #f5f5f5;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FocusGate: Website Blocker &amp; Focus Timer for Chrome, Edge, Firefox</title>
+<meta name="description" content="Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No acco...">
+<meta name="keywords" content="website blocker, focus timer, block distracting websites, site blocker, distraction blocker, productivity extension, pomodoro, browser extension, block websites, study timer">
+<meta name="author" content="TBTechs">
+<meta name="application-name" content="FocusGate">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="https://titanicbhai.github.io/FocusGate/">
+<meta name="theme-color" content="#e8ebfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1420" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<link rel="alternate" type="text/plain" href="llms.txt" title="FocusGate summary for AI assistants">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FocusGate">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="FocusGate: Website Blocker &amp; Focus Timer for Chrome, Edge, Firefox">
+<meta property="og:description" content="Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No acco...">
+<meta property="og:url" content="https://titanicbhai.github.io/FocusGate/">
+<meta property="og:image" content="https://titanicbhai.github.io/FocusGate/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="FocusGate: Website blocker and focus timer, shown on the side panel and dashboard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FocusGate: Website Blocker &amp; Focus Timer for Chrome, Edge, Firefox">
+<meta name="twitter:description" content="Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No acco...">
+<meta name="twitter:image" content="https://titanicbhai.github.io/FocusGate/assets/og-image.png">
+<link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://titanicbhai.github.io/FocusGate/#org","name":"TBTechs","url":"https://titanicbhai.github.io/FocusGate/","logo":{"@type":"ImageObject","url":"https://titanicbhai.github.io/FocusGate/assets/icon-512.png","width":512,"height":512},"sameAs":["https://github.com/TITANICBHAI/FocusGate"]},{"@type":"WebSite","@id":"https://titanicbhai.github.io/FocusGate/#website","url":"https://titanicbhai.github.io/FocusGate/","name":"FocusGate","description":"Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No account; your data stays in your browser.","inLanguage":"en","publisher":{"@id":"https://titanicbhai.github.io/FocusGate/#org"}},{"@type":"WebPage","@id":"https://titanicbhai.github.io/FocusGate/#webpage","url":"https://titanicbhai.github.io/FocusGate/","name":"FocusGate: Website Blocker & Focus Timer for Chrome, Edge, Firefox","description":"Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No acco...","isPartOf":{"@id":"https://titanicbhai.github.io/FocusGate/#website"},"dateModified":"2026-11-13","inLanguage":"en","primaryImageOfPage":{"@type":"ImageObject","url":"https://titanicbhai.github.io/FocusGate/assets/og-image.png"}},{"@type":"SoftwareApplication","@id":"https://titanicbhai.github.io/FocusGate/#app","name":"FocusGate: Website Blocker & Focus Timer","alternateName":"FocusGate","description":"Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No account; your data stays in your browser.","url":"https://titanicbhai.github.io/FocusGate/","applicationCategory":"BrowserApplication","operatingSystem":"Chrome, Microsoft Edge, Firefox","browserRequirements":"Chrome 116 or later (and Microsoft Edge on the same engine), Firefox 140 or later","softwareVersion":"1.0.2","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://opensource.org/licenses/MIT","downloadUrl":"https://github.com/TITANICBHAI/FocusGate/releases/latest/download/focusgate-chrome.zip","installUrl":"https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/","sameAs":["https://github.com/TITANICBHAI/FocusGate","https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/","https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk"],"author":{"@id":"https://titanicbhai.github.io/FocusGate/#org"},"publisher":{"@id":"https://titanicbhai.github.io/FocusGate/#org"},"image":"https://titanicbhai.github.io/FocusGate/assets/og-image.png","screenshot":["https://titanicbhai.github.io/FocusGate/assets/img/dash-overview-light.webp","https://titanicbhai.github.io/FocusGate/assets/img/dash-rules-light.webp","https://titanicbhai.github.io/FocusGate/assets/img/panel-focus-light.webp","https://titanicbhai.github.io/FocusGate/assets/img/blocked-light.webp"],"featureList":["Block distracting websites during focus sessions, on schedules or all day","Block or hide keywords","Schedules for work hours, study time or sleep, including overnight","Daily time and page-open limits per site","Focus timer in the side panel (sidebar in Firefox) with session locks: None, Strict, Commit","Block now: a timed block with no early stop that never uses your password","Progress: daily goal, streaks, focus score, weekly reports, habits and achievements","Content filters for YouTube, Instagram, X, TikTok and LinkedIn (Beta, off by default)","Light and dark themes, keyboard and screen-reader friendly","Export and import a backup; all data stays in your browser"],"keywords":"website blocker, focus timer, block distracting websites, site blocker, distraction blocker, productivity extension, pomodoro, browser extension, block websites, study timer"}]}</script>
 </head>
-<body class="antialiased selection:bg-emerald-500/30">
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="wrap">
+<a class="brand" href="index.html"><img src="assets/focusgate-icon-128.png" width="30" height="30" alt="" decoding="async"><span>FocusGate</span></a>
+<nav class="nav" aria-label="Main"><a href="index.html" aria-current="page">Home</a><a href="install.html">Install</a><a href="features.html">Features</a><a href="faq.html">FAQ</a><a href="support.html">Support</a></nav>
+</div>
+</header>
+<main id="main">
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <img src="assets/focusgate-brand.jpeg" alt="FocusGate" class="w-8 h-8 rounded-xl object-cover border border-white/10">
-                    <span class="text-xl font-bold tracking-tight">FocusGate</span>
-                </div>
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-8">
-                        <a href="#features" class="text-neutral-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
-                        <a href="#products" class="text-neutral-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Our Products</a>
-                        <a href="chrome-install.html" class="text-neutral-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Install Guide</a>
-                    </div>
-                </div>
-                <div>
-                <a href="chrome-install.html" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
-                        Install guide
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<section class="hero">
+<div class="wrap hero__grid">
+<div>
+<div class="eyebrow"><span class="pill pill--accent">Free</span><span class="pill pill--accent">Open source</span><span class="pill pill--accent">No account</span></div>
+<h1>Block distractions. <span>Keep your focus.</span></h1>
+<p class="lead">FocusGate is a free, open-source website blocker and focus timer for Chrome, Edge and Firefox. It blocks the sites and keywords you choose during focus sessions, on schedules or all day, and your data never leaves your browser.</p>
+<div class="cta"><a class="btn btn--primary" href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Add to Firefox</a>
+<a class="btn btn--primary" href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Add to Edge</a>
+<a class="btn btn--secondary" href="install.html#chrome">Get for Chrome</a></div>
+<p class="hero__note">Not on the Chrome Web Store. Chrome installs from GitHub in about a minute: <a href="install.html#chrome">see the steps</a>.</p>
+</div>
+<div class="shots">
+<figure class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/panel-focus-dark.webp"><img src="assets/img/panel-focus-light.webp" width="400" height="700" alt="FocusGate side panel on the Focus tab with a focus session ready to start" fetchpriority="high" decoding="async"></picture><figcaption>Focus: start a session in one tap</figcaption></figure>
+<figure class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/panel-rules-dark.webp"><img src="assets/img/panel-rules-light.webp" width="400" height="700" alt="FocusGate side panel on the Rules tab listing blocked sites, keywords and schedules" fetchpriority="high" decoding="async"></picture><figcaption>Rules: sites, keywords, schedules</figcaption></figure>
+</div>
+</div>
+</section>
 
-    <!-- Hero Section -->
-    <main class="pt-32 pb-16 sm:pt-40 sm:pb-24 lg:pb-32 overflow-hidden">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none"></div>
-            
-            <div class="text-center relative z-10">
-                <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-8">
-                    Reclaim Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-500">Attention.</span>
-                </h1>
-                <p class="mt-4 text-xl text-neutral-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                    FocusGate by TBTechs — the hardest-to-bypass screen time blocker, now available as a Chrome extension. Block distracting websites, enforce deep work sessions, and reclaim your time.
-                </p>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="chrome-install.html" class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Add to Chrome — It's Free
-                    </a>
-                    <a href="#" class="bg-neutral-800 hover:bg-neutral-700 text-white px-8 py-4 rounded-xl text-lg font-bold transition-all border border-neutral-700 hover:border-neutral-600 flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
-                         Explore the FocusFlow family
-                    </a>
-                </div>
-                <div class="mt-8 text-sm text-neutral-500 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    100% Privacy-First. Your data never leaves your device.
-                </div>
-            </div>
-        </div>
-    </main>
+<section class="section section--alt" id="get">
+<div class="wrap">
+<div class="section__head">
+<h2>Get FocusGate for your browser</h2>
+<p>Pick your browser. Firefox and Edge install from their official add-on stores and update themselves. Chrome installs from the GitHub release.</p>
+</div>
+<div class="cards">
+<div class="card"><h3>Firefox</h3><p>Firefox 140 or later, and Firefox for Android 142 or later. Installs from Firefox Add-ons.</p><a class="btn btn--primary" href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Add to Firefox</a></div>
+<div class="card"><h3>Microsoft Edge</h3><p>Installs from Microsoft Edge Add-ons and updates itself.</p><a class="btn btn--primary" href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Add to Edge</a></div>
+<div class="card card--accent"><h3>Chrome</h3><p>Chrome 116 or later. Download <code>focusgate-chrome.zip</code> from GitHub, extract it and load it in <code>chrome://extensions</code>.</p><a class="btn btn--secondary" href="install.html#chrome">Chrome install guide</a></div>
+</div>
+</div>
+</section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20 bg-neutral-900 border-y border-neutral-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Everything you need to focus</h2>
-                <p class="text-neutral-400 max-w-2xl mx-auto">FocusGate is built with powerful features to adapt to your workflow, not the other way around.</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-emerald-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20 mb-6">
-                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Strict Blocking</h3>
-                    <p class="text-neutral-400 leading-relaxed">Block specific websites permanently or on a schedule. No bypass buttons, no weak limits.</p>
-                </div>
-                
-                <!-- Feature 2 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-blue-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 mb-6">
-                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Keyword Filtering</h3>
-                    <p class="text-neutral-400 leading-relaxed">Block URLs that contain specific keywords, helping you avoid entire categories of distractions.</p>
-                </div>
+<section class="section" id="what">
+<div class="wrap">
+<div class="section__head">
+<h2>Everything you need to stay on task</h2>
+<p>Block what pulls you away, focus on purpose, and see how much focused time you really get.</p>
+</div>
+<div class="cards">
+<div class="card"><h3>Block websites</h3><p>A focus list for sessions and schedules, plus an always-blocked list that works all day. Related addresses such as x.com and twitter.com share one entry.</p></div>
+<div class="card"><h3>Block keywords</h3><p>Stop searches and pages that match your words, or hide matches on supported pages such as YouTube and Google Search.</p></div>
+<div class="card"><h3>Schedules</h3><p>Work hours, study time or sleep, on any days and any hours, including overnight. Start from a template and see your whole week at a glance.</p></div>
+<div class="card"><h3>Daily limits</h3><p>Give a site a time or page-open budget. When it runs out, the site blocks.</p></div>
+<div class="card"><h3>Focus timer</h3><p>Start in one click from the side panel. Choose a lock: None, Strict or Commit, to keep your future self honest.</p></div>
+<div class="card"><h3>Block now <span class="pill">No early stop</span></h3><p>Pick sites and an end time, from 5 minutes to 30 days. It never uses your password, and nothing can be loosened until it ends.</p></div>
+</div>
+<p style="margin-top:20px"><a href="features.html">See all features</a></p>
+</div>
+</section>
 
-                <!-- Feature 3 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-purple-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20 mb-6">
-                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Daily Allowances</h3>
-                    <p class="text-neutral-400 leading-relaxed">Set time limits (e.g., 15 minutes of Twitter per day). Once it's gone, it's gone.</p>
-                </div>
+<section class="section section--alt">
+<div class="wrap">
+<div class="split">
+<div>
+<h2>See your focus at a glance</h2>
+<p class="lead" style="margin-top:12px">The dashboard shows today first, a week chart, your schedules and limits, and when protection was off. Reports, streaks, habits and achievements sit alongside.</p>
+<ul class="ticks">
+<li>Today, week and month views</li>
+<li>Focus score, streaks and pages blocked</li>
+<li>Only finished sessions count toward your daily goal</li>
+</ul>
+</div>
+<div class="split__media"><figure class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/dash-overview-dark.webp"><img src="assets/img/dash-overview-light.webp" width="1200" height="769" alt="FocusGate dashboard overview with today's focus time, a week chart, schedules and limits" loading="lazy" decoding="async"></picture><figcaption>The dashboard Overview</figcaption></figure></div>
+</div>
+<div class="split split--flip">
+<div>
+<h2>A block page that remembers why</h2>
+<p class="lead" style="margin-top:12px">When you hit a blocked site you see your own reason, how long is left and a Close tab button. No lecture, no stock message.</p>
+<ul class="ticks">
+<li>Shows which schedule or session blocked the site</li>
+<li>Says when the block ends</li>
+<li>Light and dark, easy on the eyes</li>
+</ul>
+</div>
+<div class="split__media"><figure class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/blocked-dark.webp"><img src="assets/img/blocked-light.webp" width="559" height="543" alt="FocusGate block page showing your own reason for focusing, the time left and a Close tab button" loading="lazy" decoding="async"></picture><figcaption>The block page</figcaption></figure></div>
+</div>
+</div>
+</section>
 
-                <!-- Feature 4 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-orange-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center border border-orange-500/20 mb-6">
-                        <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Custom Schedules</h3>
-                    <p class="text-neutral-400 leading-relaxed">Create routines. Block social media during work hours, or news sites in the evening.</p>
-                </div>
+<section class="section" id="facts">
+<div class="wrap">
+<div class="section__head">
+<h2>FocusGate at a glance</h2>
+<p>The facts, in one place.</p>
+</div>
+<dl class="facts"><dt>What it is</dt><dd>A browser extension that blocks websites and keywords and runs a focus timer</dd><dt>Price</dt><dd>Free. No ads and no account</dd><dt>Licence</dt><dd>MIT, open source</dd><dt>Publisher</dt><dd>TBTechs</dd><dt>Current version</dt><dd>1.0.2</dd><dt>Browsers</dt><dd>Chrome 116+, Microsoft Edge, Firefox 140+ (Firefox for Android 142+)</dd><dt>Where to get it</dt><dd>Firefox Add-ons, Microsoft Edge Add-ons, and GitHub Releases for Chrome</dd><dt>Your data</dt><dd>Stored in your browser. No server, no analytics, nothing sent anywhere</dd><dt>Shortcuts</dt><dd>Alt+Shift+F starts or stops a focus session; Alt+Shift+B blocks the current site</dd></dl>
+</div>
+</section>
 
-                <!-- Feature 5 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-red-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 mb-6">
-                        <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">PIN Protection</h3>
-                    <p class="text-neutral-400 leading-relaxed">Lock your settings with a PIN or a deliberate friction delay to prevent impulsive changes.</p>
-                </div>
+<section class="section section--alt" id="private">
+<div class="wrap">
+<div class="split">
+<div>
+<h2>Private by design</h2>
+<p class="lead" style="margin-top:12px">No account, no ads, no analytics and no remote servers. Your rules, history and settings live in your browser, and you can export or import a backup. FocusGate keeps only a scrambled copy of your password.</p>
+<p><a href="privacy-policy.html">Read the privacy policy</a> or <a href="https://github.com/TITANICBHAI/FocusGate">check the source code</a>.</p>
+</div>
+<div>
+<div class="status"><strong>Good to know</strong>
+<p>FocusGate needs access to the sites you browse so it can block them. It reads page addresses only to apply your rules.</p>
+<p>A lock slows you down; it does not make removal impossible. Someone with access to your browser can still disable the extension.</p>
+<p>Content filters are Beta and off by default, because they depend on each site's page layout.</p></div>
+</div>
+</div>
+</div>
+</section>
 
-                <!-- Feature 6 -->
-                <div class="bg-neutral-950 p-8 rounded-2xl border border-neutral-800 hover:border-yellow-500/50 transition-colors">
-                    <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center border border-yellow-500/20 mb-6">
-                        <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Insights & Stats</h3>
-                    <p class="text-neutral-400 leading-relaxed">Track your focus sessions, view your weekly digest, and see how much time you've reclaimed.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<section class="section" id="faq">
+<div class="wrap">
+<div class="section__head"><h2>Common questions</h2></div>
+<div class="faq"><details><summary>What is FocusGate?</summary><div class="answer"><p>FocusGate is a free, open-source website blocker and focus timer for Chrome, Edge and Firefox. It blocks the sites and keywords you choose during focus sessions, on schedules or all day, lets you set daily limits, and shows how much focused time you really get.</p></div></details>
+<details><summary>Is FocusGate free?</summary><div class="answer"><p>Yes. FocusGate is free and open source under the MIT licence. It has no ads and no account.</p></div></details>
+<details><summary>Is FocusGate on the Chrome Web Store?</summary><div class="answer"><p>No. FocusGate is not on the Chrome Web Store. On Chrome you install it from the GitHub release in about a minute: download <code>focusgate-chrome.zip</code>, extract it, and load it with <strong>Load unpacked</strong>. The <a href="install.html#chrome">step-by-step Chrome guide</a> has the details. On Firefox and Edge you install it from their official add-on stores.</p></div></details>
+<details><summary>How do I install FocusGate on Firefox or Edge?</summary><div class="answer"><p>Open the <a href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Firefox Add-ons page</a> or the <a href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Microsoft Edge Add-ons page</a> and choose to add it. The store updates it for you.</p></div></details>
+<details><summary>Does FocusGate collect or send my data?</summary><div class="answer"><p>No. Your rules, history and settings are stored in your browser. FocusGate has no server, no analytics and no ads, and it does not upload page contents or your browsing. The Firefox build declares that it collects no data. You can read the <a href="privacy-policy.html">privacy policy</a> or the source code to check.</p></div></details></div>
+<p style="margin-top:20px"><a href="faq.html">Read all questions</a></p>
+</div>
+</section>
 
-    <!-- Chrome Installation Callout -->
-    <section class="py-20 bg-neutral-950 border-b border-neutral-800">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-neutral-900 to-blue-500/10 p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-                <div class="max-w-2xl">
-                    <div class="inline-flex items-center gap-2 text-emerald-300 text-sm font-semibold uppercase tracking-widest mb-4">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        Chrome installation
-                    </div>
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-4">Ready to bring FocusGate to Chrome?</h2>
-                    <p class="text-neutral-300 leading-relaxed">FocusGate ships store-ready packages for Chrome, Edge, and Firefox. Until a store listing is published, our step-by-step guide also explains how to install the signed build locally for testing.</p>
-                </div>
-                <a href="chrome-install.html" class="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-6 py-3 rounded-xl font-bold transition-colors inline-flex items-center gap-2">
-                    Read the install guide
-                    <span aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Other Products -->
-    <section id="products" class="py-24 bg-neutral-900 border-b border-neutral-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="max-w-2xl mb-14">
-                <p class="text-emerald-400 text-sm font-semibold uppercase tracking-widest mb-4">The FocusFlow family</p>
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">More ways to protect your attention</h2>
-                <p class="text-neutral-400 text-lg leading-relaxed">FocusGate protects the browser. FocusFlow takes the same hard-enforcement philosophy to your phone and your Windows desktop.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <article class="bg-neutral-950 rounded-3xl border border-neutral-800 p-8 sm:p-10 hover:border-emerald-500/50 transition-colors flex flex-col">
-                    <div class="flex items-start justify-between gap-4 mb-8">
-                        <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 text-emerald-300 text-2xl" aria-hidden="true">✦</div>
-                        <span class="text-xs font-semibold uppercase tracking-widest text-emerald-400 border border-emerald-500/30 rounded-full px-3 py-1">Android</span>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">FocusFlow Android</h3>
-                    <p class="text-neutral-400 leading-relaxed mb-6">An app blocker that works at the operating-system level. Accessibility Service, a local VPN, and Device Admin work together to make sessions genuinely difficult to bypass — without root, an account, or a subscription.</p>
-                    <div class="flex flex-wrap gap-2 mb-8">
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">Open source</span>
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">Android 8+</span>
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">100% free</span>
-                    </div>
-                    <div class="mt-auto flex flex-wrap gap-3">
-                        <a href="https://focusflowapp.pages.dev/" target="_blank" rel="noopener noreferrer" class="bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-lg font-semibold transition-colors">Explore Android</a>
-                        <a href="https://github.com/TITANICBHAI/FocusFlow/releases" target="_blank" rel="noopener noreferrer" class="border border-neutral-700 hover:border-neutral-500 text-neutral-200 px-4 py-2.5 rounded-lg font-semibold transition-colors">Get the APK</a>
-                    </div>
-                </article>
-
-                <article class="bg-neutral-950 rounded-3xl border border-neutral-800 p-8 sm:p-10 hover:border-blue-500/50 transition-colors flex flex-col">
-                    <div class="flex items-start justify-between gap-4 mb-8">
-                        <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 text-blue-300 text-2xl" aria-hidden="true">▣</div>
-                        <span class="text-xs font-semibold uppercase tracking-widest text-blue-400 border border-blue-500/30 rounded-full px-3 py-1">Windows 10 / 11</span>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">FocusFlow PC</h3>
-                    <p class="text-neutral-400 leading-relaxed mb-6">Real desktop enforcement for Windows. Focus Launcher creates a distraction-free kiosk, while process blocking, firewall rules, schedules, daily allowances, and a PIN gate help make deep work stick.</p>
-                    <div class="flex flex-wrap gap-2 mb-8">
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">Microsoft Store</span>
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">Direct EXE</span>
-                        <span class="text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1">No subscription</span>
-                    </div>
-                    <div class="mt-auto flex flex-wrap gap-3">
-                        <a href="https://focusflowpc.pages.dev/" target="_blank" rel="noopener noreferrer" class="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors">Explore Windows</a>
-                        <a href="https://apps.microsoft.com/detail/9NJN9FPRQ7T1?cid=website" target="_blank" rel="noopener noreferrer" class="border border-neutral-700 hover:border-neutral-500 text-neutral-200 px-4 py-2.5 rounded-lg font-semibold transition-colors">Microsoft Store</a>
-                    </div>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-neutral-950 py-12 border-t border-neutral-900">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20">
-                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                </div>
-                <span class="font-bold text-neutral-300">FocusGate</span>
-            </div>
-            
-            <div class="flex gap-6 text-sm font-medium text-neutral-500">
-                <a href="privacy-policy.html" class="hover:text-neutral-300 transition-colors">Privacy Policy</a>
-                <a href="terms-of-service.html" class="hover:text-neutral-300 transition-colors">Terms of Service</a>
-                <a href="chrome-install.html" class="hover:text-neutral-300 transition-colors">Chrome install guide</a>
-                <a href="support.html" class="hover:text-neutral-300 transition-colors">Support</a>
-                <a href="https://focusflowpc.pages.dev/" target="_blank" rel="noopener noreferrer" class="hover:text-neutral-300 transition-colors">FocusFlow PC</a>
-            </div>
-            
-            <div class="text-sm text-neutral-600">
-                &copy; 2026 TBTechs. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
+<section class="section section--alt">
+<div class="wrap">
+<div class="section__head"><h2>Ready to focus?</h2><p>Add FocusGate in a minute. It's free.</p></div>
+<div class="cta"><a class="btn btn--primary" href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Add to Firefox</a>
+<a class="btn btn--primary" href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Add to Edge</a>
+<a class="btn btn--secondary" href="install.html#chrome">Get for Chrome</a></div>
+</div>
+</section>
+</main>
+<footer class="site-footer">
+<div class="wrap">
+<div class="footer__grid">
+<div>
+<a class="brand" href="index.html"><img src="assets/focusgate-icon-128.png" width="30" height="30" alt="" decoding="async"><span>FocusGate</span></a>
+<p class="muted small" style="margin-top:12px">Website blocker and focus timer for Chrome, Edge and Firefox. Free and open source. Your data stays in your browser.</p>
+</div>
+<nav aria-label="Get FocusGate">
+<h2>Get it</h2>
+<ul>
+<li><a href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Firefox Add-ons</a></li>
+<li><a href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Microsoft Edge Add-ons</a></li>
+<li><a href="install.html#chrome">Chrome (from GitHub)</a></li>
+<li><a href="https://github.com/TITANICBHAI/FocusGate/releases/latest">All downloads</a></li>
+</ul>
+</nav>
+<nav aria-label="Learn more">
+<h2>Learn more</h2>
+<ul>
+<li><a href="features.html">Features</a></li>
+<li><a href="faq.html">FAQ</a></li>
+<li><a href="support.html">Support</a></li>
+<li><a href="llms.txt">Summary for AI assistants</a></li>
+</ul>
+</nav>
+<nav aria-label="Project">
+<h2>Project</h2>
+<ul>
+<li><a href="https://github.com/TITANICBHAI/FocusGate">Source on GitHub</a></li>
+<li><a href="https://github.com/TITANICBHAI/FocusGate/issues">Report an issue</a></li>
+<li><a href="privacy-policy.html">Privacy policy</a></li>
+<li><a href="terms-of-service.html">Terms of service</a></li>
+</ul>
+</nav>
+</div>
+<div class="footer__fine">
+<span>&copy; 2026 TBTechs. FocusGate is open source under the <a href="https://github.com/TITANICBHAI/FocusGate/blob/main/LICENSE">MIT licence</a>.</span>
+<span>Chrome, Microsoft Edge and Firefox are trademarks of their owners. FocusGate is not affiliated with them.</span>
+</div>
+</div>
+</footer>
 </body>
 </html>

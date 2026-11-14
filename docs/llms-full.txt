@@ -1,0 +1,111 @@
+# FocusGate: Website Blocker & Focus Timer
+
+> Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No account; your data stays in your browser.
+
+Last updated: 2026-11-13. Site: https://titanicbhai.github.io/FocusGate/
+
+## Facts
+- What it is: A browser extension that blocks websites and keywords and runs a focus timer
+- Price: Free. No ads and no account
+- Licence: MIT, open source
+- Publisher: TBTechs
+- Current version: 1.0.2
+- Browsers: Chrome 116+, Microsoft Edge, Firefox 140+ (Firefox for Android 142+)
+- Where to get it: Firefox Add-ons, Microsoft Edge Add-ons, and GitHub Releases for Chrome
+- Your data: Stored in your browser. No server, no analytics, nothing sent anywhere
+- Shortcuts: Alt+Shift+F starts or stops a focus session; Alt+Shift+B blocks the current site
+
+## What FocusGate is
+FocusGate is a free, open-source website blocker and focus timer for Chrome, Edge and Firefox. It blocks the sites and keywords you choose during focus sessions, on schedules or all day, lets you set daily limits, and shows how much focused time you really get. It is published by TBTechs under the MIT licence.
+
+## How to install
+- Firefox (140+, Android 142+): https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/
+- Microsoft Edge: https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk
+- Chrome (116+): FocusGate is not on the Chrome Web Store. Download focusgate-chrome.zip from https://github.com/TITANICBHAI/FocusGate/releases/latest (direct: https://github.com/TITANICBHAI/FocusGate/releases/latest/download/focusgate-chrome.zip), extract it to a folder you will keep, open chrome://extensions, turn on Developer mode, choose Load unpacked and select the folder that contains manifest.json. Click the toolbar icon to open the side panel.
+- Chrome updates are manual: replace the files in the same folder and press reload on chrome://extensions. An unpacked extension's data belongs to its folder, so export a backup from Settings before moving it.
+
+## Features
+- Block distracting websites during focus sessions, on schedules or all day
+- Block or hide keywords
+- Schedules for work hours, study time or sleep, including overnight
+- Daily time and page-open limits per site
+- Focus timer in the side panel (sidebar in Firefox) with session locks: None, Strict, Commit
+- Block now: a timed block with no early stop that never uses your password
+- Progress: daily goal, streaks, focus score, weekly reports, habits and achievements
+- Content filters for YouTube, Instagram, X, TikTok and LinkedIn (Beta, off by default)
+- Light and dark themes, keyboard and screen-reader friendly
+- Export and import a backup; all data stays in your browser
+
+### Session locks
+- None: stop any time.
+- Strict: stopping early needs your password; without a password you stop with the phrase "I GIVE UP" and a 15-second wait.
+- Commit: no early stop.
+
+### Block now
+A timed block with no early stop. Choose sites and an end time from 5 minutes to 30 days, up to 500 sites. It never uses the password. While it runs, rules cannot be removed or loosened, content filters cannot be turned off, the password cannot be changed or removed, and data cannot be reset.
+
+### Content filters (Beta, off by default)
+- YouTube: Shorts shelves and menu entry (Shorts links open as normal videos), the home feed, suggested videos, comments
+- Instagram: Reels, Explore
+- X (Twitter): Trends and Who to follow
+- TikTok: The For You and Explore feed
+- LinkedIn: The post feed
+- Hide words: Posts and results that contain your words, on YouTube, Reddit, X, Instagram, TikTok, LinkedIn and Google search
+They depend on each site's page layout, which can change without notice.
+
+## Privacy
+All data is stored in the browser. FocusGate has no server, no analytics and no ads, and does not upload page contents or browsing. Only a hashed copy of the password is kept. The Firefox build declares no data collection. Permissions: storage, tabs, webNavigation, declarativeNetRequest, alarms, notifications, idle, sidePanel (Chrome and Edge) and access to all sites so rules can apply to any site you add.
+
+## Limits
+A lock slows you down; it does not make removal impossible. Someone with access to the browser can disable or remove the extension. Browser updates and site redesigns can occasionally affect blocking.
+
+## FAQ
+### What is FocusGate?
+FocusGate is a free, open-source website blocker and focus timer for Chrome, Edge and Firefox. It blocks the sites and keywords you choose during focus sessions, on schedules or all day, lets you set daily limits, and shows how much focused time you really get.
+
+### Is FocusGate free?
+Yes. FocusGate is free and open source under the MIT licence. It has no ads and no account.
+
+### Is FocusGate on the Chrome Web Store?
+No. FocusGate is not on the Chrome Web Store. On Chrome you install it from the GitHub release in about a minute: download focusgate-chrome.zip, extract it, and load it with Load unpacked. The step-by-step Chrome guide has the details. On Firefox and Edge you install it from their official add-on stores.
+
+### How do I install FocusGate on Firefox or Edge?
+Open the Firefox Add-ons page or the Microsoft Edge Add-ons page and choose to add it. The store updates it for you.
+
+### Does FocusGate collect or send my data?
+No. Your rules, history and settings are stored in your browser. FocusGate has no server, no analytics and no ads, and it does not upload page contents or your browsing. The Firefox build declares that it collects no data. You can read the privacy policy or the source code to check.
+
+### Why does FocusGate need access to all websites?
+So your rules can apply to any site you add. FocusGate reads page addresses on your device to apply your rules, and nothing is sent anywhere. On Firefox, site access is a separate switch: if blocking does not work after you install, open the FocusGate entry in the Add-ons manager and allow access to all websites.
+
+### Can I block a site only during certain hours?
+Yes. Schedules block your chosen sites on the days and hours you pick, including overnight. There are Work hours, Study and Sleep templates, and the Schedules screen shows what is on now, what starts next and your whole week.
+
+### What is Block now?
+Block now is a timed block with no early stop. Pick the sites and an end time (from 5 minutes up to 30 days, up to 500 sites) and they stay blocked until it ends. It never uses your password. While it runs, nothing can be removed or loosened, content filters cannot be turned off, the password cannot be changed or removed, and your data cannot be reset.
+
+### What do Strict and Commit session locks do?
+They keep you honest during a focus session. Strict needs your password to stop early; if you have not set one, you stop with the phrase "I GIVE UP" and a 15-second wait. Commit has no early stop at all. None lets you stop any time.
+
+### Can I get around a block by turning FocusGate off?
+A lock slows you down; it does not make removal impossible. Someone with access to your browser can still disable or remove the extension, and browser updates or site changes can occasionally affect blocking. If you need a firmer barrier, use Block now or a Commit session.
+
+### What are content filters, and why are they Beta?
+Content filters hide parts of a page, such as YouTube Shorts, the YouTube home feed, suggested videos and comments, Instagram Reels and Explore, X trends, the TikTok feed and the LinkedIn feed, plus posts that contain your hide words. They are marked Beta because they depend on each site's page layout, which can change without notice. They are all off by default.
+
+### Does FocusGate work on Firefox for Android?
+It is built to run on Firefox for Android 142 and later. Android has no sidebar, so the toolbar button opens FocusGate in a tab, and features Android lacks, such as keyboard shortcuts, notifications and idle detection, are skipped.
+
+### What keyboard shortcuts does FocusGate have?
+Alt+Shift+F starts or stops a focus session and Alt+Shift+B blocks the site you are on. You can change both in your browser's shortcut settings.
+
+### How do I back up or move my FocusGate data?
+In Settings you can export a backup and import it again. On Chrome with an unpacked install, the extension's data belongs to the folder it was loaded from, so export a backup before you move the folder or load it from a new place.
+
+### Where is the source code, and how do I report a bug?
+The code is on GitHub. To report a problem, open an issue with your browser and version, the FocusGate version and the steps to reproduce it. Please leave out private browsing history. The support page lists what to check first.
+
+## Links
+- Source and issues: https://github.com/TITANICBHAI/FocusGate
+- Privacy policy: https://titanicbhai.github.io/FocusGate/privacy-policy.html
+- Terms: https://titanicbhai.github.io/FocusGate/terms-of-service.html

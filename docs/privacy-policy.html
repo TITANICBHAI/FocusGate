@@ -1,98 +1,123 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - FocusGate</title>
-    <meta name="description" content="FocusGate's privacy policy: local storage, no analytics, and transparent browser permissions.">
-    <link rel="icon" type="image/png" sizes="1024x1024" href="assets/focusgate-favicon.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neutral: {
-                            850: '#1f1f1f',
-                            950: '#0a0a0a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0a0a0a;
-            color: #f5f5f5;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy | FocusGate</title>
+<meta name="description" content="FocusGate stores your rules, history and settings in your browser. No server, no analytics, no ads, and no personal information collected or sent.">
+<meta name="author" content="TBTechs">
+<meta name="application-name" content="FocusGate">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="https://titanicbhai.github.io/FocusGate/privacy-policy.html">
+<meta name="theme-color" content="#e8ebfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1420" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<link rel="alternate" type="text/plain" href="llms.txt" title="FocusGate summary for AI assistants">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FocusGate">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Privacy Policy | FocusGate">
+<meta property="og:description" content="FocusGate stores your rules, history and settings in your browser. No server, no analytics, no ads, and no personal information collected or sent.">
+<meta property="og:url" content="https://titanicbhai.github.io/FocusGate/privacy-policy.html">
+<meta property="og:image" content="https://titanicbhai.github.io/FocusGate/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="FocusGate: Website blocker and focus timer, shown on the side panel and dashboard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy | FocusGate">
+<meta name="twitter:description" content="FocusGate stores your rules, history and settings in your browser. No server, no analytics, no ads, and no personal information collected or sent.">
+<meta name="twitter:image" content="https://titanicbhai.github.io/FocusGate/assets/og-image.png">
+<link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://titanicbhai.github.io/FocusGate/#org","name":"TBTechs","url":"https://titanicbhai.github.io/FocusGate/","logo":{"@type":"ImageObject","url":"https://titanicbhai.github.io/FocusGate/assets/icon-512.png","width":512,"height":512},"sameAs":["https://github.com/TITANICBHAI/FocusGate"]},{"@type":"WebSite","@id":"https://titanicbhai.github.io/FocusGate/#website","url":"https://titanicbhai.github.io/FocusGate/","name":"FocusGate","description":"Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No account; your data stays in your browser.","inLanguage":"en","publisher":{"@id":"https://titanicbhai.github.io/FocusGate/#org"}},{"@type":"WebPage","@id":"https://titanicbhai.github.io/FocusGate/privacy-policy.html#webpage","url":"https://titanicbhai.github.io/FocusGate/privacy-policy.html","name":"Privacy Policy | FocusGate","description":"FocusGate stores your rules, history and settings in your browser. No server, no analytics, no ads, and no personal information collected or sent.","isPartOf":{"@id":"https://titanicbhai.github.io/FocusGate/#website"},"dateModified":"2026-11-13","inLanguage":"en","primaryImageOfPage":{"@type":"ImageObject","url":"https://titanicbhai.github.io/FocusGate/assets/og-image.png"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://titanicbhai.github.io/FocusGate/"},{"@type":"ListItem","position":2,"name":"Privacy policy","item":"https://titanicbhai.github.io/FocusGate/privacy-policy.html"}]}]}</script>
 </head>
-<body class="antialiased selection:bg-emerald-500/30">
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="wrap">
+<a class="brand" href="index.html"><img src="assets/focusgate-icon-128.png" width="30" height="30" alt="" decoding="async"><span>FocusGate</span></a>
+<nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="install.html">Install</a><a href="features.html">Features</a><a href="faq.html">FAQ</a><a href="support.html">Support</a></nav>
+</div>
+</header>
+<main id="main">
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="index.html" class="flex items-center gap-3">
-                    <img src="assets/focusgate-brand.jpeg" alt="FocusGate" class="w-8 h-8 rounded-xl object-cover border border-white/10">
-                    <span class="text-xl font-bold tracking-tight">FocusGate</span>
-                </a>
-                <div>
-                    <a href="index.html" class="text-neutral-300 hover:text-white text-sm font-medium transition-colors">
-                        &larr; Back to Home
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Content -->
-    <main class="pt-32 pb-24 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-bold mb-8 tracking-tight">Privacy Policy</h1>
-        
-        <div class="prose prose-invert prose-emerald max-w-none space-y-6 text-neutral-300 leading-relaxed">
-            <p><strong>Last Updated: August 10, 2026</strong></p>
-
-            <p>At FocusGate, we believe your data is yours. This Privacy Policy explains how the FocusGate browser extension stores and uses information. FocusGate is designed so the extension does not collect or transmit personal information.</p>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">1. Data Storage is 100% Local</h2>
-            <p>FocusGate is designed to operate entirely on your device. All your settings, blocked websites, focus history, schedules, and temptation logs are stored locally using the Chrome Storage API on your computer.</p>
-            <p>We do not operate a server, database, or cloud storage for extension data. Your FocusGate data stays on your device unless you choose to share it yourself, such as when opening a support issue.</p>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">2. No Analytics or Tracking</h2>
-            <p>We do not use any third-party analytics services (like Google Analytics or Mixpanel) inside the extension. We do not track how you use the extension, which websites you block, or how often you fail a focus session.</p>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">3. Permissions Explained</h2>
-            <p>To function correctly, FocusGate requires certain permissions in Chrome. Here is exactly why we need them:</p>
-            <ul class="list-disc pl-6 space-y-2">
-                <li><strong><code>storage</code>:</strong> Used to save your settings, blocked lists, and statistics locally on your device.</li>
-                <li><strong><code>tabs</code> &amp; <code>webNavigation</code>:</strong> Used to detect when you attempt to visit a blocked website and intervene when a page or route changes.</li>
-                <li><strong><code>&lt;all_urls&gt;</code> host access:</strong> Used to inspect and redirect pages across websites selected by you. Page contents and browsing data are not uploaded.</li>
-                <li><strong><code>declarativeNetRequest</code>:</strong> Used to efficiently block web requests to distracting sites at the browser network level.</li>
-                <li><strong><code>alarms</code>:</strong> Used to run background timers for daily allowances, scheduled blocks, and weekly digests.</li>
-                <li><strong><code>notifications</code>:</strong> Used to send you alerts, such as when a focus session ends or when your weekly digest is ready.</li>
-            </ul>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">4. Third-Party Links</h2>
-            <p>Our extension and website may contain links to third-party websites (like GitHub or the Chrome Web Store). We are not responsible for the privacy practices of those external sites.</p>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">5. Changes to This Policy</h2>
-            <p>Since we do not collect data, this policy is unlikely to change drastically. However, we may update it from time to time to reflect changes in the extension's features. Any updates will be reflected on this page.</p>
-
-            <h2 class="text-2xl font-bold text-white mt-10 mb-4">6. Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy or the open-source code, visit the <a href="support.html" class="text-emerald-400 hover:underline">Support page</a>, inspect the source code on GitHub, or open an issue in our repository.</p>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-neutral-950 py-12 border-t border-neutral-900">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center">
-            <div class="text-sm text-neutral-600">
-                &copy; 2026 FocusGate. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
+<div class="wrap page-head">
+<p class="crumbs"><a href="index.html">Home</a> / Privacy policy</p>
+<h1>Privacy Policy</h1>
+<p class="muted">Last updated: November 13, 2026</p>
+<p class="lead">At FocusGate, we believe your data is yours. This Privacy Policy explains how the FocusGate browser extension stores and uses information. FocusGate is designed so the extension does not collect or transmit personal information. It applies to the extension in Chrome, Microsoft Edge and Firefox, and to this website.</p>
+</div>
+<section class="section"><div class="wrap prose">
+<h2>1. Data storage is 100% local</h2>
+<p>FocusGate is designed to operate entirely on your device. Your settings, blocked websites, keywords, focus history, schedules, daily limits, habits, notes and statistics are stored locally using your browser's extension storage on your computer. FocusGate keeps only a scrambled (hashed) copy of your password, never the password itself.</p>
+<p>We do not operate a server, database, or cloud storage for extension data. Your FocusGate data stays on your device unless you choose to share it yourself, such as when you export a backup or open a support issue.</p>
+<h2>2. No analytics or tracking</h2>
+<p>We do not use any third-party analytics services (like Google Analytics or Mixpanel) inside the extension. We do not track how you use the extension, which websites you block, or how often you fail a focus session. The Firefox version declares that it collects no data.</p>
+<h2>3. Permissions explained</h2>
+<p>To function correctly, FocusGate requires certain permissions in your browser. Here is exactly why we need them:</p>
+<ul>
+<li><strong>storage:</strong> Used to save your settings, blocked lists, and statistics locally on your device.</li>
+<li><strong>tabs &amp; webNavigation:</strong> Used to detect when you attempt to visit a blocked website and intervene when a page or route changes, and to know which tab is in use for daily limits.</li>
+<li><strong>All-sites host access (&lt;all_urls&gt;):</strong> Used to inspect and redirect pages across websites selected by you. Page contents and browsing data are not uploaded.</li>
+<li><strong>declarativeNetRequest:</strong> Used to efficiently block web requests to distracting sites at the browser network level.</li>
+<li><strong>alarms:</strong> Used to run background timers for focus sessions, daily allowances, scheduled blocks, and weekly digests.</li>
+<li><strong>notifications:</strong> Used to send you alerts, such as when a focus session ends or when your weekly digest is ready.</li>
+<li><strong>idle:</strong> Used to stop counting time toward daily limits when you step away from the computer.</li>
+<li><strong>sidePanel (Chrome and Edge):</strong> Used to show the FocusGate timer and rules in the browser's side panel. Firefox uses its sidebar instead, which needs no extra permission.</li>
+</ul>
+<p>FocusGate also runs a small script on YouTube, Google, Reddit, X (Twitter), Instagram, TikTok and LinkedIn pages to apply keyword and content filters. That script works on your device and does not send page contents anywhere.</p>
+<h2>4. This website</h2>
+<p>This website is a static site. It has no forms, no accounts, no cookies of its own and no analytics. The service that hosts it may keep ordinary server logs under its own policy.</p>
+<h2>5. Third-party links</h2>
+<p>Our extension and website contain links to third-party websites, such as GitHub, Firefox Add-ons and Microsoft Edge Add-ons. We are not responsible for the privacy practices of those external sites.</p>
+<h2>6. Changes to this policy</h2>
+<p>Since we do not collect data, this policy is unlikely to change drastically. However, we may update it from time to time to reflect changes in the extension's features. Any updates will be reflected on this page, with the date above.</p>
+<h2>7. Contact us</h2>
+<p>If you have any questions about this Privacy Policy or the open-source code, visit the <a href="support.html">Support page</a>, inspect the <a href="https://github.com/TITANICBHAI/FocusGate">source code on GitHub</a>, or <a href="https://github.com/TITANICBHAI/FocusGate/issues">open an issue</a> in our repository.</p>
+</div></section>
+</main>
+<footer class="site-footer">
+<div class="wrap">
+<div class="footer__grid">
+<div>
+<a class="brand" href="index.html"><img src="assets/focusgate-icon-128.png" width="30" height="30" alt="" decoding="async"><span>FocusGate</span></a>
+<p class="muted small" style="margin-top:12px">Website blocker and focus timer for Chrome, Edge and Firefox. Free and open source. Your data stays in your browser.</p>
+</div>
+<nav aria-label="Get FocusGate">
+<h2>Get it</h2>
+<ul>
+<li><a href="https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/">Firefox Add-ons</a></li>
+<li><a href="https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk">Microsoft Edge Add-ons</a></li>
+<li><a href="install.html#chrome">Chrome (from GitHub)</a></li>
+<li><a href="https://github.com/TITANICBHAI/FocusGate/releases/latest">All downloads</a></li>
+</ul>
+</nav>
+<nav aria-label="Learn more">
+<h2>Learn more</h2>
+<ul>
+<li><a href="features.html">Features</a></li>
+<li><a href="faq.html">FAQ</a></li>
+<li><a href="support.html">Support</a></li>
+<li><a href="llms.txt">Summary for AI assistants</a></li>
+</ul>
+</nav>
+<nav aria-label="Project">
+<h2>Project</h2>
+<ul>
+<li><a href="https://github.com/TITANICBHAI/FocusGate">Source on GitHub</a></li>
+<li><a href="https://github.com/TITANICBHAI/FocusGate/issues">Report an issue</a></li>
+<li><a href="privacy-policy.html">Privacy policy</a></li>
+<li><a href="terms-of-service.html">Terms of service</a></li>
+</ul>
+</nav>
+</div>
+<div class="footer__fine">
+<span>&copy; 2026 TBTechs. FocusGate is open source under the <a href="https://github.com/TITANICBHAI/FocusGate/blob/main/LICENSE">MIT licence</a>.</span>
+<span>Chrome, Microsoft Edge and Firefox are trademarks of their owners. FocusGate is not affiliated with them.</span>
+</div>
+</div>
+</footer>
 </body>
 </html>

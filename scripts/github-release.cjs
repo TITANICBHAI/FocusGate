@@ -7,7 +7,7 @@
  *   node scripts/github-release.cjs --run 123456789      use that workflow run
  *   node scripts/github-release.cjs --dry-run            do everything except publish
  *
- * Steps: release notes from CHANGELOG.md -> download the build's artifacts with `gh` ->
+ * Steps: the release page (see scripts/release-notes.cjs) -> download the build's artifacts with `gh` ->
  * find focusgate-chrome/edge/firefox.zip -> check each (zip test, manifest version, Firefox rules) ->
  * copy them under their release names -> create the release, or replace files and notes if it exists.
  * Needs the GitHub CLI (`gh`), signed in. No other dependencies.
@@ -19,7 +19,7 @@ const { join, resolve } = require("node:path");
 const lib = require("./release-lib.cjs");
 
 const WORKFLOW = "build-extension.yml";
-const FLAGS_WITH_VALUE = ["--gh", "--out", "--version", "--tag", "--repo", "--run", "--changelog", "--workflow"];
+const FLAGS_WITH_VALUE = ["--gh", "--out", "--version", "--tag", "--repo", "--run", "--changelog", "--notes-dir", "--workflow"];
 
 function parseArgs(argv) {
   const options = { draft: false, dryRun: false };
@@ -53,13 +53,19 @@ function main() {
     return result;
   }
 
-  // 1. Notes first, so a missing changelog section stops everything before any download.
-  const changelog = readFileSync(resolve(options.changelog || join(root, "CHANGELOG.md")), "utf8");
-  const notes = lib.extractReleaseNotes(changelog, version);
+  // 1. The release page first, so a missing changelog section stops everything before any download.
+  const notes = lib.loadReleaseNotes({
+    root,
+    version,
+    tag,
+    repo: options.repo || process.env.GITHUB_REPOSITORY || lib.DEFAULT_REPO,
+    changelogPath: options.changelog,
+    notesDir: options["notes-dir"],
+  });
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, "assets"), { recursive: true });
   const notesFile = join(out, "notes.md");
-  writeFileSync(notesFile, `${notes}\n`);
+  writeFileSync(notesFile, notes);
   console.log(`Release notes for ${version}: ${notesFile}`);
 
   // 2. Which build.

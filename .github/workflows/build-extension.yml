@@ -54,7 +54,8 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${assets[@]}" --clobber
           else
+            node scripts/release-notes.cjs --tag "$tag" --repo "$GITHUB_REPOSITORY" --out build/release-notes.md
             gh release create "$tag" "${assets[@]}" \
-              --title "FocusGate $tag" \
-              --generate-notes
+              --title "FocusGate ${tag#v}" \
+              --notes-file build/release-notes.md
           fi

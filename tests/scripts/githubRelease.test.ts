@@ -7,6 +7,19 @@ import releaseLib from "../../scripts/release-lib.cjs";
 
 const lib = releaseLib as {
   RELEASE_ASSETS: string[];
+  STORE_LINKS: { firefox: string; edge: string };
+  parseHighlightsFile(text: string): { tagline: string; highlights: string };
+  firstSentence(paragraph: string, max?: number): string;
+  deriveHighlights(changelogNotes: string): string;
+  buildReleaseNotes(input: {
+    version: string;
+    tag: string;
+    repo?: string;
+    tagline?: string;
+    highlights?: string;
+    changelogNotes: string;
+  }): string;
+  loadReleaseNotes(input: { root: string; version: string; tag: string; repo?: string; changelogPath?: string; notesDir?: string }): string;
   extractReleaseNotes(changelog: string, version: string): string;
   findBrowserZips(dir: string): Record<"chrome" | "edge" | "firefox", string>;
   manifestProblems(manifest: Record<string, unknown>, browser: string, version: string): string[];
@@ -44,6 +57,71 @@ describe("the release notes", () => {
   it("are refused when the version is not in the changelog or its section is empty", () => {
     expect(() => lib.extractReleaseNotes(CHANGELOG, "9.9.9")).toThrow(/9\.9\.9/);
     expect(() => lib.extractReleaseNotes("## [2.0.0] - 2026-01-01\n\n## [1.0.0] - 2025-01-01\n\ntext", "2.0.0")).toThrow(/empty/i);
+  });
+});
+
+describe("the release page", () => {
+  const page = lib.buildReleaseNotes({
+    version: "2.0.0",
+    tag: "v2.0.0",
+    repo: "me/focus",
+    tagline: "Sharper than ever.",
+    highlights: "- **One.** First thing.\n- **Two.** Second thing.",
+    changelogNotes: "Long paragraph one.\n\nLong paragraph two.",
+  });
+
+  it("opens with the banner, the version, the tagline and the three get-it buttons", () => {
+    expect(page).toContain("raw.githubusercontent.com/me/focus/v2.0.0/store-assets/marketplace/promo-marquee-1400x560.png");
+    expect(page).toContain("<h1 align=\"center\">FocusGate 2.0.0</h1>");
+    expect(page).toContain("Sharper than ever.");
+    expect(page).toContain(`href="${lib.STORE_LINKS.firefox}"`);
+    expect(page).toContain(`href="${lib.STORE_LINKS.edge}"`);
+    expect(page).toContain("https://github.com/me/focus/releases/download/v2.0.0/focusgate-chrome.zip");
+  });
+
+  it("shows the highlights as the what's new list and tucks the full changelog into a collapsed block", () => {
+    expect(page).toContain("## What's new\n\n- **One.** First thing.\n- **Two.** Second thing.");
+    const details = page.slice(page.indexOf("<details>"), page.indexOf("</details>"));
+    expect(details).toContain("Long paragraph one.");
+    expect(page.slice(0, page.indexOf("<details>"))).not.toContain("Long paragraph one.");
+  });
+
+  it("explains the Chrome install and names the three files", () => {
+    expect(page).toContain("chrome://extensions");
+    expect(page).toContain("Load unpacked");
+    for (const name of lib.RELEASE_ASSETS) expect(page).toContain(name);
+  });
+
+  it("falls back to the first sentence of each changelog paragraph when there is no highlights file", () => {
+    const fallback = lib.buildReleaseNotes({ version: "2.0.0", tag: "v2.0.0", changelogNotes: "Alpha is new. More about alpha.\n\nBeta changed! Details.\n\n- a list item\n\n### Heading" });
+    expect(fallback).toContain("## What's new\n\n- Alpha is new.\n- Beta changed!\n\n");
+    expect(fallback).not.toContain("- a list item\n\n|");
+  });
+
+  it("cuts a very long first sentence at a word", () => {
+    const long = `${"word ".repeat(60).trim()}.`;
+    const cut = lib.firstSentence(long, 40);
+    expect(cut.length).toBeLessThanOrEqual(40);
+    expect(cut.endsWith("…")).toBe(true);
+    expect(cut).not.toMatch(/wor…$/);
+  });
+
+  it("reads a highlights file with a tagline in its front matter", () => {
+    expect(lib.parseHighlightsFile("---\ntagline: Hello there.\n---\n- **A.** b.\n")).toEqual({ tagline: "Hello there.", highlights: "- **A.** b." });
+    expect(lib.parseHighlightsFile("- just bullets")).toEqual({ tagline: "", highlights: "- just bullets" });
+  });
+
+  it("is built for this repository's current version from its own highlights file", () => {
+    const version = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
+    const real = lib.loadReleaseNotes({ root: process.cwd(), version, tag: `v${version}` });
+    expect(real).toContain(`FocusGate ${version}`);
+    expect(real).toContain("## What's new");
+    expect(real).toContain("Firefox 140+");
+    expect(real).toContain("Chrome 116+");
+    // Curated, not pasted: the bullets are short.
+    const list = real.slice(real.indexOf("## What's new"), real.indexOf("| | |")).split("\n").filter((line) => line.startsWith("- "));
+    expect(list.length).toBeGreaterThanOrEqual(3);
+    for (const line of list) expect(line.length).toBeLessThan(260);
   });
 });
 
@@ -133,7 +211,11 @@ describeEndToEnd("the release script, with a stand-in for GitHub", () => {
       expect(existsSync(join(dir, "out", "assets", name))).toBe(true);
       expect(execFileSync("unzip", ["-tq", join(dir, "out", "assets", name)], { encoding: "utf8" })).toContain("No errors");
     }
-    expect(readFileSync(join(dir, "out", "notes.md"), "utf8")).toBe("First paragraph of 1.0.1.\n\nSecond paragraph.\n");
+    const notes = readFileSync(join(dir, "out", "notes.md"), "utf8");
+    expect(notes).toContain("FocusGate 1.0.1");
+    expect(notes).toContain("- First paragraph of 1.0.1.");
+    expect(notes).toContain("<details>");
+    expect(notes).toContain("Second paragraph.");
     const calls = readFileSync(gh.log, "utf8");
     expect(calls).toMatch(/run list .*build-extension\.yml/);
     expect(calls).toMatch(/run download 4242/);

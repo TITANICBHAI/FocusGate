@@ -1,0 +1,24 @@
+# FocusGate: Website Blocker & Focus Timer
+
+> Free, open-source website blocker and focus timer for Chrome, Edge and Firefox. Block distracting sites and keywords, set schedules and daily limits. No account; your data stays in your browser.
+
+FocusGate is a Manifest V3 browser extension published by TBTechs. Current version 1.0.2. It is free and open source (MIT) and has no account, ads or analytics. It is not on the Chrome Web Store: Chrome installs from the GitHub release, Firefox from Firefox Add-ons and Edge from Microsoft Edge Add-ons.
+
+## Get it
+- [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/focusgate-web/): install for Firefox 140+ and Firefox for Android 142+
+- [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/mmjhejklaaljidnmabjiloceniacihkk): install for Edge
+- [Chrome install guide](https://titanicbhai.github.io/FocusGate/install.html#chrome): download focusgate-chrome.zip from GitHub and load it unpacked (Chrome 116+)
+- [GitHub releases](https://github.com/TITANICBHAI/FocusGate/releases/latest): focusgate-chrome.zip, focusgate-edge.zip, focusgate-firefox.zip
+
+## Learn more
+- [Features](https://titanicbhai.github.io/FocusGate/features.html): sites, keywords, schedules, daily limits, focus timer with locks, Block now, content filters (Beta), progress
+- [FAQ](https://titanicbhai.github.io/FocusGate/faq.html): short answers on price, install, privacy, Block now and session locks
+- [Support](https://titanicbhai.github.io/FocusGate/support.html): troubleshooting and how to report a problem
+- [Privacy policy](https://titanicbhai.github.io/FocusGate/privacy-policy.html): data stays in the browser; no server, analytics or ads
+- [Terms of service](https://titanicbhai.github.io/FocusGate/terms-of-service.html)
+
+## Source
+- [GitHub repository](https://github.com/TITANICBHAI/FocusGate): source code, issues and releases
+
+## Optional
+- [Full text for AI assistants](https://titanicbhai.github.io/FocusGate/llms-full.txt): the facts, features and FAQ in one file
